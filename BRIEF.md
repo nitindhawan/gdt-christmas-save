@@ -32,6 +32,8 @@ A relaxing puzzle game where players unscramble beautiful Christmas-themed image
 - **Star Display:** Visible on each completed level thumbnail
 - **Progression:** Linear unlock (complete Level N to unlock Level N+1)
 - **Navigation:** Smooth scrolling for additional levels
+- **UI Elements:**
+    - Settings button (top-right, to open settings popup)
 - **Level selection:**
 	- You can select a previously beaten level or just unlocked level.
 	- You cannot selected a locked level.
@@ -73,6 +75,23 @@ A level consists of a base image, puzzle type, and some constants which change b
 - Show completed image (along with Download button, and share button)
 - "Continue" button (continues to next level).
 
+### 6. Settings Screen (Popup/Modal)
+
+- **Display:** Modal overlay that can be opened from Level Selection or Gameplay screens
+- **UI Elements:**
+    - Close button (X)
+    - **Toggles:**
+        - Sound (on/off toggle)
+        - Music (on/off toggle)
+        - Vibrations (on/off toggle)
+    - **Buttons:**
+        - "Send Feedback" button
+        - "Remove Ads" button (IAP)
+    - **Links:**
+        - Privacy policy link
+        - Terms & conditions link
+- **Behavior:** Settings are saved locally and persist across sessions
+
 ---
 
 ## Progression System
@@ -95,10 +114,11 @@ A level consists of a base image, puzzle type, and some constants which change b
 
 ---
 
-## Audio (Optional for MVP)
+## Audio
 
-- Soft background Christmas music (can be toggled)
-- Subtle tile click sounds
+- Soft background Christmas music (can be toggled via Settings)
+- Subtle tile click sounds (can be toggled via Settings)
+- Haptic feedback/vibrations (can be toggled via Settings)
 - Victory jingle on level complete
 
 ---
@@ -115,6 +135,7 @@ A level consists of a base image, puzzle type, and some constants which change b
 ## Future Features (Post-MVP)
 
 - **Twist Mechanic:** Add tile rotation for increased difficulty
+- **Spiral Puzzle Type:** Circular/spiral puzzle arrangement
 - **Daily Puzzle:** New puzzle every day with special rewards
 - **Monthly Awards:** Trophy system tracking monthly completions
 - **Achievement System:** Badges for milestones (complete all Easy, get all stars, etc.)
@@ -123,8 +144,7 @@ A level consists of a base image, puzzle type, and some constants which change b
 - **Gallery:** View completed images in full resolution
 - **Multiple Theme Packs:** Halloween, Easter, Summer, etc.
 - **Social Features:** Share completed puzzles, leaderboards
-- **Settings Menu:** Sound, music, vibrations toggle
 - **Ad Integration:** Banner ads, rewarded video for hints
-- **In-App Purchases:** Remove ads, unlock hint packs, buy level packs
+- **In-App Purchases:** Unlock hint packs, buy level packs
 
 ---
