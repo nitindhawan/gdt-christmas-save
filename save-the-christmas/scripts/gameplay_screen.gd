@@ -105,18 +105,32 @@ func _calculate_tile_size() -> Vector2:
 	var rows = grid_size.x
 	var columns = grid_size.y
 
+	# Get the actual image size to maintain aspect ratio
+	var image_size = source_texture.get_size()
+	var image_aspect = image_size.x / image_size.y
+
+	# Calculate tile dimensions based on image aspect ratio
+	var tile_width_from_image = image_size.x / columns
+	var tile_height_from_image = image_size.y / rows
+
 	# Available space (approximate, accounting for margins and HUD)
 	var available_width = 900.0
 	var available_height = 1500.0
 
-	# Calculate tile dimensions
-	var tile_width = available_width / columns
-	var tile_height = available_height / rows
+	# Calculate maximum size that fits while maintaining aspect ratio
+	var max_width = available_width / columns
+	var max_height = available_height / rows
 
-	# Use the smaller dimension to maintain aspect ratio
-	var tile_size_val = min(tile_width, tile_height)
+	# Use the limiting dimension
+	var scale_by_width = max_width / tile_width_from_image
+	var scale_by_height = max_height / tile_height_from_image
+	var scale = min(scale_by_width, scale_by_height)
 
-	return Vector2(tile_size_val, tile_size_val)
+	# Calculate final tile size maintaining image aspect ratio
+	var tile_width = tile_width_from_image * scale
+	var tile_height = tile_height_from_image * scale
+
+	return Vector2(tile_width, tile_height)
 
 ## Handle tile clicked
 func _on_tile_clicked(tile_node) -> void:
@@ -139,27 +153,19 @@ func _on_tile_clicked(tile_node) -> void:
 
 		print("Swapping tiles %d and %d" % [tile1_index, tile2_index])
 
-		# Swap in puzzle state
-		PuzzleManager.swap_tiles(puzzle_state, tile1_index, tile2_index)
-
-		# Animate swap
-		_animate_tile_swap(selected_tile_node, tile_node)
-
-		# Deselect
+		# Deselect first
 		selected_tile_node.set_selected(false)
 		selected_tile_node = null
 
+		# Swap in puzzle state
+		PuzzleManager.swap_tiles(puzzle_state, tile1_index, tile2_index)
+
+		# Refresh the entire grid to show new positions
+		_refresh_tile_positions()
+
 		# Check if puzzle solved
-		await get_tree().create_timer(GameConstants.TILE_SWAP_DURATION + 0.1).timeout
+		await get_tree().create_timer(0.1).timeout
 		_check_puzzle_solved()
-
-## Animate tile swap
-func _animate_tile_swap(tile_node1, tile_node2) -> void:
-	var pos1 = tile_node1.position
-	var pos2 = tile_node2.position
-
-	tile_node1.animate_to_position(pos2)
-	tile_node2.animate_to_position(pos1)
 
 ## Check if puzzle is solved
 func _check_puzzle_solved() -> void:

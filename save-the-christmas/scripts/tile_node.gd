@@ -30,8 +30,7 @@ func setup(tile: Tile, index: int, source_texture: Texture2D) -> void:
 
 	tile_texture.texture = atlas_texture
 
-	# Configure border styling (white border between tiles)
-	# The selection border will be styled differently
+	# Configure selection visual
 	_update_selection_visual()
 
 ## Set selection state
