@@ -1,42 +1,47 @@
-# Save the Christmas - Godot 4.5.1 Mobile Game Project
+# CLAUDE.md
+
+This file provides guidance to Claude Code (claude.ai/code) when working with code in this repository.
 
 ## Project Overview
-- **Engine**: Godot 4.5.1 (CRITICAL: Only use 4.5.1 compatible APIs)
-- **Platform**: 2D Mobile Game (iOS/Android)
-- **Language**: GDScript for game logic
-- **Genre**: Puzzle game with Christmas theme
 
-## Repository Structure
-```
-gdt-christmas-save/
-├── save-the-christmas/    # Main Godot project files
-│   ├── scenes/             # .tscn scene files
-│   ├── scripts/            # .gd script files
-│   ├── assets/             # Game assets (images, audio)
-│   │   ├── levels/         # Level images (2048×2048 PNG)
-│   │   ├── ui/             # UI sprites and icons
-│   │   └── audio/          # Music and sound effects (OGG)
-│   ├── data/               # Game data files
-│   │   └── levels.json     # Level definitions
-│   └── project.godot       # Godot project file
-├── ref/                    # Reference materials
-│   ├── wireframes/         # UI wireframes (PNG)
-│   └── game-docs/          # Sample game documentation
-├── BRIEF.md                # Game design document
-├── ARCHITECTURE-MASTER.md  # System architecture
-├── GAME-RULES.md           # Game mechanics and rules
-├── SCREEN-REQUIREMENTS.md  # UI specifications
-├── DATA-SCHEMA.md          # Data structures and schemas
-├── CLAUDE.md               # This file - development guidelines
-└── MILESTONES-AND-TASKS.md # Project milestones and task tracking
+**Save the Christmas** is a 2D mobile puzzle game built with Godot 4.5.1. Players unscramble Christmas-themed images by rearranging jumbled rectangular tiles. The game features 20 levels with three difficulty modes (Easy, Normal, Hard), earning up to 3 stars per level.
+
+**Platform**: Mobile (iOS/Android) - Portrait mode only
+**Status**: Planning complete, implementation not yet started
+
+## Development Commands
+
+### Running Godot Editor
+```bash
+"C:\dev\godot\Godot.exe"
 ```
 
-## Critical Constraints
-- **Godot 4.5.1 ONLY** - If unsure about API compatibility, verify before implementing
-- **Mobile-First Design** - All UI and interactions optimized for touch input
-- **Portrait Orientation** - 1080×1920 resolution (9:16 aspect ratio), portrait locked
-- **Performance Target**: 60 FPS on mid-range devices (iPhone 11, Samsung A52)
+### Script Validation
+Always validate GDScript files after creation or modification:
+```bash
+"C:\dev\godot\Godot.exe" --headless --check-only --script path/to/script.gd
+```
 
+### Running the Game
+Open project in Godot editor and press F5, or:
+```bash
+"C:\dev\godot\Godot.exe" --path save-the-christmas
+```
+
+## Project Structure
+
+```
+save-the-christmas/          # Godot project root
+  ├── scenes/                # Scene files (.tscn)
+  ├── scripts/               # GDScript files (.gd)
+  ├── assets/
+  │   ├── levels/            # Level images (2048×2048 PNG)
+  │   ├── levels/thumbnails/ # Thumbnails (512×512 PNG)
+  │   ├── ui/                # UI sprites and assets
+  │   └── audio/             # Music and SFX (OGG format)
+  └── data/
+      └── levels.json        # Level definitions
+```
 ## Development Workflow
 
 ### Scene Setup
@@ -92,83 +97,184 @@ gdt-christmas-save/
 - **PascalCase** for enum names, **CONSTANT_CASE** for members
 - Example: `enum Difficulty { EASY, NORMAL, HARD }`
 
-## AutoLoad Singletons
-The following scripts should be added to Project Settings → AutoLoad:
+## Architecture Overview
 
-1. **GameManager** (`scripts/game_manager.gd`)
-   - Manages global game state, current level, current difficulty
-   - Scene transitions and navigation
+### AutoLoad Singletons (5 Core Systems)
+These must be configured in Project Settings → AutoLoad:
 
-2. **ProgressManager** (`scripts/progress_manager.gd`)
-   - Save/load player progress
-   - Star tracking and level unlocking
-   - Persistent storage (ConfigFile)
+1. **GameConstants** (`scripts/game_constants.gd`)
+   - File paths, difficulty configs, enums
+   - Constants: TOTAL_LEVELS=20, tile dimensions, animation durations
 
-3. **LevelManager** (`scripts/level_manager.gd`)
-   - Load and parse levels.json
-   - Provide level data to gameplay systems
-   - Level image loading and caching
+2. **GameManager** (`scripts/game_manager.gd`)
+   - Scene navigation and transitions
+   - Current level/difficulty state tracking
 
-4. **AudioManager** (`scripts/audio_manager.gd`)
-   - Background music management
-   - Sound effect playback
-   - Audio settings persistence
+3. **ProgressManager** (`scripts/progress_manager.gd`)
+   - Save/load system using ConfigFile (user://save_data.cfg)
+   - Star tracking, level unlock logic
+   - Functions: `is_level_unlocked()`, `is_difficulty_unlocked()`, `set_star()`
 
-5. **PuzzleManager** (`scripts/puzzle_manager.gd`)
-   - Puzzle generation from level images
-   - Tile scrambling algorithm
-   - Puzzle validation and solving detection
+4. **LevelManager** (`scripts/level_manager.gd`)
+   - Loads and parses data/levels.json
+   - Manages level images and thumbnails
+   - Caches loaded textures for performance
 
-## Key Architecture Decisions
+5. **AudioManager** (`scripts/audio_manager.gd`)
+   - Background music and SFX playback
+   - Settings persistence (music/sound/vibrations toggles)
 
-### Scene Navigation Flow
+### Core Data Classes
+
+**LevelData** (`scripts/level_data.gd`): Level definition from levels.json
+- Properties: level_id, image_path, difficulty_configs {easy, normal, hard}
+- Each difficulty specifies grid: {rows, columns, tile_count}
+
+**PuzzleState** (`scripts/puzzle_state.gd`): Runtime puzzle state
+- Tracks current tile arrangement, selected tiles, swap count
+- Method: `is_puzzle_solved()` validates all tiles in correct positions
+
+**Tile** (`scripts/tile.gd`): Individual tile data
+- Properties: current_position, correct_position, texture_region
+- Method: `is_correct()` compares positions
+
+### Scene Flow
+
 ```
-LoadingScreen
-    ├─> GameplayScreen (if current_level == 1)
-    └─> LevelSelection (if current_level > 1)
-        ├─> DifficultySelection (for beaten levels)
-        │   └─> GameplayScreen
-        └─> GameplayScreen (for unlocked unbeaten levels, Easy mode)
-            └─> LevelCompleteScreen
-                ├─> GameplayScreen (next level)
-                └─> LevelSelection (if last level)
+LoadingScreen (initial boot)
+  ├─> GameplayScreen (if level == 1)
+  └─> LevelSelection (if level > 1)
+      ├─> DifficultySelection (for beaten levels)
+      │   └─> GameplayScreen (selected difficulty)
+      └─> GameplayScreen (Easy mode for new levels)
+          └─> LevelCompleteScreen
+              ├─> GameplayScreen (next level)
+              └─> LevelSelection (if last level)
 ```
 
-### Data Persistence
-- Use Godot's ConfigFile for save data (`user://save_data.cfg`)
-- Save on: level completion, settings change, app pause/background
-- Save data includes: progress, stars, settings, statistics
+### Progression Rules
 
-### Puzzle Generation
-- Slice source image into tiles based on difficulty grid
-- Use AtlasTexture for tile regions
-- Scramble using Fisher-Yates shuffle with solvability validation
-- Validate solution by comparing tile positions
+- Level 1 starts unlocked on Easy
+- Complete Easy of Level N → Unlocks Level N+1 Easy + Level N Normal
+- Complete Normal → Unlocks Level N Hard
+- Stars: Easy=1⭐, Normal=2⭐⭐, Hard=3⭐⭐⭐
 
-### Input Handling
-- Two-tap swap mechanic (tap tile 1, tap tile 2, swap)
-- Touch target minimum: 88×88 pixels (44×44 points @2x)
-- Visual feedback: Selection highlight, swap animation
+## Godot 4 Naming Conventions
 
-## Quality Standards
-- All scripts must compile in Godot 4.5.1
-- Mobile-optimized touch handling (no mouse-only interactions)
-- Clear code comments and documentation
-- **STRICT adherence to Godot 4 naming conventions above**
-- Performance: 60 FPS minimum on target devices
+**Critical**: Follow these strictly as they're Godot best practices:
+
+- **Files/Folders**: `snake_case` (e.g., `level_selection.tscn`, `game_manager.gd`)
+- **Scene Root Nodes**: `PascalCase` (e.g., `LevelSelection`, `GameplayScreen`)
+- **Class Names**: `PascalCase` with `class_name` keyword (e.g., `class_name LevelData`)
+- **Variables/Functions**: `snake_case` (e.g., `current_level`, `get_tile_count()`)
+- **Constants**: `CONSTANT_CASE` (e.g., `MAX_SPEED`, `TOTAL_LEVELS`)
+- **Signals**: `snake_case`, past tense (e.g., `level_completed`, `tile_swapped`)
+- **Enums**: Enum names `PascalCase`, members `CONSTANT_CASE`
+  ```gdscript
+  enum Difficulty { EASY, NORMAL, HARD }
+  ```
+
+## Godot 4.4.1 API Constraints
+
+**AVOID** these unsupported features (will cause errors):
+
+- ❌ **Type aliases**: `typedef` does NOT exist in GDScript
+  ```gdscript
+  # BROKEN - Don't use
+  typedef RingColor = GameConstants.RingColor
+
+  # CORRECT - Use full paths
+  var color: int = GameConstants.RingColor.RED
+  ```
+
+**VERIFIED** working APIs:
+- ✅ Enums with explicit values
+- ✅ Global enum access from AutoLoad singletons
+- ✅ Enum type annotations in function parameters
+
+## Puzzle Mechanics
+
+### Rectangle Jigsaw Puzzle Type
+- Image divided into rectangular grid (MVP only supports this type)
+- **Easy**: 2×3 grid (6 tiles)
+- **Normal**: 3×4 grid (12 tiles)
+- **Hard**: 5×6 grid (30 tiles)
+
+### Tile Interaction
+1. **First tap**: Select tile (highlight with gold border)
+2. **Second tap**: Swap with first tile (0.3s tween animation)
+3. **Validation**: After each swap, check if puzzle solved
+
+### Hint System
+- Automatically swaps one incorrect tile to correct position
+- Limited to 3 hints per level (configurable in levels.json)
+- Animation: Sparkle/glow effect on hinted tile
+
+## Data Schema
+
+### levels.json Structure
+```json
+{
+  "version": "1.0",
+  "total_levels": 20,
+  "levels": [
+    {
+      "level_id": 1,
+      "name": "Cozy Fireplace",
+      "image_path": "res://assets/levels/level_01.png",
+      "thumbnail_path": "res://assets/levels/thumbnails/level_01_thumb.png",
+      "puzzle_type": "rectangle_jigsaw",
+      "difficulty_configs": {
+        "easy": {"rows": 2, "columns": 3, "tile_count": 6},
+        "normal": {"rows": 3, "columns": 4, "tile_count": 12},
+        "hard": {"rows": 5, "columns": 6, "tile_count": 30}
+      },
+      "hint_limit": 3
+    }
+  ]
+}
+```
+
+### Save Data (user://save_data.cfg)
+```ini
+[progress]
+current_level = 5
+highest_level_unlocked = 5
+
+[stars]
+level_1_easy = true
+level_1_normal = true
+level_1_hard = false
+
+[settings]
+sound_enabled = true
+music_enabled = true
+vibrations_enabled = true
+```
+
+## UI Specifications
+
+### Resolution & Layout
+- **Base Resolution**: 1080×1920 (9:16 portrait)
+- **Viewport Mode**: canvas_items stretch with aspect expand
+- **Safe Areas**: 40px top/bottom margins for notches
+
+### Key Measurements
+- **Level Cell**: 460×560px (in 2-column grid)
+- **Puzzle Area**: Varies by difficulty, max 900px width
+- **Buttons**: Minimum touch target 88×88px
+- **Tile Border**: 2px white (normal), 8px gold (selected)
 
 ## Testing Workflow
-1. **Script Validation**: Use `C:\dev\godot\Godot.exe --headless --check-only --script <script_file>`
+
+### Validation Checklist
+1. Run script validation on all new/modified .gd files. Use `C:\dev\godot\Godot.exe --headless --check-only --script <script_file>`
    - Run from within `save-the-christmas/` directory only
    - Example: `"C:\dev\godot\Godot.exe" --headless --check-only --script scripts/level_manager.gd`
-
-2. **Scene Testing**: Open individual scenes in Godot editor, test in isolation
-
-3. **Integration Testing**: Test full game flow from Loading to Level Complete
-
-4. **Mobile Testing**: Export to Android APK or iOS IPA, test on actual devices
-
-5. **Performance Testing**: Monitor FPS, memory usage, load times
+2. Test scene in isolation before integrating
+3. Verify AutoLoad singletons load without errors
+4. Check save data persistence (close and reopen)
+5. Test on target resolution (1080×1920)
 
 ## Development Guidelines
 
@@ -197,38 +303,67 @@ If uncertain about an API:
 - Update architecture docs if significant changes made
 - Request user testing after completing each milestone
 
-## Asset Requirements Summary
+## Common Patterns
 
-### Level Images (20 total)
-- **Full Resolution**: 2048×2048 PNG, Christmas-themed
-- **Thumbnails**: 512×512 PNG
-- **Naming**: `level_01.png` to `level_20.png`
-- **Content**: Festive scenes (ornaments, snow, Santa, reindeer, etc.)
+### Scene Navigation
+```gdscript
+# From any script
+get_tree().change_scene_to_file("res://scenes/level_selection.tscn")
 
-### UI Assets
-- Button sprites (play, settings, close, share, hint)
-- Icons (star, lock, back arrow, gear)
-- Background textures/gradients
-- Logo/branding assets
-
-### Audio Assets
-- **Music**: 1-2 looping Christmas tracks (OGG)
-- **Sound Effects**: tile_select.ogg, tile_swap.ogg, level_complete.ogg, button_click.ogg, hint_used.ogg
-
-## Script Validation Example
-```bash
-# From save-the-christmas/ directory
-"C:\dev\godot\Godot.exe" --headless --check-only --script scripts/game_manager.gd
-"C:\dev\godot\Godot.exe" --headless --check-only --script scripts/progress_manager.gd
-"C:\dev\godot\Godot.exe" --headless --check-only --script scripts/level_manager.gd
+# Or via GameManager
+GameManager.navigate_to_level_selection()
 ```
 
-## Mobile Export Configuration
-- **Android**: Target SDK 33+, minimum SDK 21
-- **iOS**: Target iOS 13+
-- **Permissions**: Storage (for save data), optional photo library (for download feature)
-- **Renderer**: Mobile renderer (Forward+)
-- **Texture Compression**: ASTC for Android, PVRTC/ASTC for iOS
+### Accessing Singletons
+```gdscript
+# Check if level unlocked
+var unlocked = ProgressManager.is_level_unlocked(5)
+
+# Load level data
+var level = LevelManager.get_level(3)
+
+# Play sound effect
+AudioManager.play_sfx("tile_swap")
+```
+
+### Save Data Persistence
+```gdscript
+# Set star and save
+ProgressManager.set_star(level_id, "easy", true)
+ProgressManager.save_progress()
+
+# Load on game start
+ProgressManager.load_save_data()
+```
+
+## Important Implementation Notes
+
+### Tile Generation
+- Use AtlasTexture to split source image into tile regions
+- Tiles must track both current_position and correct_position
+- Scramble using Fisher-Yates shuffle (ensures solvability)
+
+### Animation Standards
+- **Tile swap**: 0.3s ease-in-out tween
+- **Selection**: 0.1s scale to 1.05×
+- **Screen transition**: 0.3s fade with 50px slide
+- **Stars pop-in**: 0.3s each with 0.2s delay between
+
+### Mobile Considerations
+- Texture compression: Use ASTC/ETC2 for mobile
+- Load level images on-demand, unload previous
+- Debounce rapid tapping to prevent double-actions
+- Test on physical devices for accurate performance
+
+## Reference Documentation
+
+See project root for detailed specs:
+- **ARCHITECTURE-MASTER.md**: Complete architecture documentation
+- **GAME-RULES.md**: Detailed gameplay mechanics and progression
+- **SCREEN-REQUIREMENTS.md**: Pixel-perfect UI specifications
+- **DATA-SCHEMA.md**: Complete data structure definitions
+- **MILESTONES-AND-TASKS.md**: Implementation roadmap with task breakdown
+- **BRIEF.md**: Original game design document
 
 ## Notes for AI Assistant (Claude)
 - Mark all tasks as completed in MILESTONES-AND-TASKS.md when finished
@@ -237,8 +372,17 @@ If uncertain about an API:
 - If API compatibility unclear, mark with NEEDS_VERIFICATION_4.5.1 comment
 - Update architecture documents if implementation differs from plan
 
----
-
 **Project Status**: Planning Phase Complete, Ready for Implementation
 
-**Next Steps**: Begin Milestone 1 - Project Setup & Core Systems (see MILESTONES-AND-TASKS.md)
+## Current Milestone
+
+**Milestone 1: Project Setup & Core Systems** (Not Started)
+
+Next immediate tasks:
+1. Set up Godot project settings (resolution, stretch mode, orientation)
+2. Create folder structure (scenes/, scripts/, assets/, data/)
+3. Implement 5 AutoLoad singletons (GameConstants, GameManager, etc.)
+4. Create core data classes (LevelData, PuzzleState, Tile)
+5. Set up test data (3 test levels in levels.json)
+
+All .gd files MUST be validated with `--check-only` before marking complete.
