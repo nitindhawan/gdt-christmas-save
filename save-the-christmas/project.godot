@@ -14,6 +14,23 @@ config/name="Save the Christmas"
 config/features=PackedStringArray("4.5", "Mobile")
 config/icon="res://icon.svg"
 
+[autoload]
+
+GameConstants="*res://scripts/game_constants.gd"
+GameManager="*res://scripts/game_manager.gd"
+ProgressManager="*res://scripts/progress_manager.gd"
+LevelManager="*res://scripts/level_manager.gd"
+AudioManager="*res://scripts/audio_manager.gd"
+
+[display]
+
+window/size/viewport_width=1080
+window/size/viewport_height=1920
+window/size/mode=2
+window/stretch/mode="canvas_items"
+window/stretch/aspect="expand"
+window/handheld/orientation=1
+
 [rendering]
 
 renderer/rendering_method="mobile"
