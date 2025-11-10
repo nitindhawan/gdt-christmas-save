@@ -14,22 +14,22 @@ signal settings_closed
 func _ready() -> void:
 	_load_settings()
 
-## Load current settings from AudioManager
+## Load current settings from ProgressManager
 func _load_settings() -> void:
-	if AudioManager:
-		sound_toggle.button_pressed = AudioManager.sound_enabled
-		music_toggle.button_pressed = AudioManager.music_enabled
-		vibration_toggle.button_pressed = AudioManager.vibrations_enabled
+	if ProgressManager:
+		sound_toggle.button_pressed = ProgressManager.sound_enabled
+		music_toggle.button_pressed = ProgressManager.music_enabled
+		vibration_toggle.button_pressed = ProgressManager.vibrations_enabled
 
-## Save current settings via AudioManager
+## Save current settings via ProgressManager
 func _save_settings() -> void:
-	if AudioManager:
-		AudioManager.save_settings()
+	if ProgressManager:
+		ProgressManager.save_progress()
 
 ## Handle Sound toggle changed
 func _on_sound_toggle_toggled(button_pressed: bool) -> void:
 	if AudioManager:
-		AudioManager.sound_enabled = button_pressed
+		AudioManager.set_sound_enabled(button_pressed)
 		_save_settings()
 
 		# Play feedback sound if enabled
@@ -39,19 +39,13 @@ func _on_sound_toggle_toggled(button_pressed: bool) -> void:
 ## Handle Music toggle changed
 func _on_music_toggle_toggled(button_pressed: bool) -> void:
 	if AudioManager:
-		AudioManager.music_enabled = button_pressed
+		AudioManager.set_music_enabled(button_pressed)
 		_save_settings()
-
-		# Toggle music playback
-		if button_pressed:
-			AudioManager.play_music()
-		else:
-			AudioManager.stop_music()
 
 ## Handle Vibration toggle changed
 func _on_vibration_toggle_toggled(button_pressed: bool) -> void:
-	if AudioManager:
-		AudioManager.vibrations_enabled = button_pressed
+	if ProgressManager:
+		ProgressManager.vibrations_enabled = button_pressed
 		_save_settings()
 
 ## Handle Close button pressed
