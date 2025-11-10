@@ -41,16 +41,20 @@ func _on_loading_complete() -> void:
 	print("Loading complete!")
 
 	# Navigate based on current level
-	# If first time playing (level 1), go directly to gameplay
-	# Otherwise, show level selection
+	# TODO: When gameplay screen is implemented, uncomment first-time player logic
+	# For now, always show level selection
 	await get_tree().create_timer(0.5).timeout  # Small delay for visual feedback
 
-	if ProgressManager.current_level == 1 and not _has_any_stars():
-		# First time player - go directly to Level 1 Easy
-		GameManager.navigate_to_gameplay(1, GameConstants.Difficulty.EASY)
-	else:
-		# Returning player - show level selection
-		GameManager.navigate_to_level_selection()
+	# Always navigate to level selection (gameplay screen not implemented yet)
+	GameManager.navigate_to_level_selection()
+
+	# Original logic (restore when gameplay screen is ready):
+	# if ProgressManager.current_level == 1 and not _has_any_stars():
+	# 	# First time player - go directly to Level 1 Easy
+	# 	GameManager.navigate_to_gameplay(1, GameConstants.Difficulty.EASY)
+	# else:
+	# 	# Returning player - show level selection
+	# 	GameManager.navigate_to_level_selection()
 
 ## Check if player has earned any stars (not first time playing)
 func _has_any_stars() -> bool:
