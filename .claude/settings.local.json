@@ -1,0 +1,24 @@
+{
+  "permissions": {
+    "allow": [
+      "Read",
+      "Write",
+      "Update",
+      "Edit",
+      "Search",
+      "Find",
+      "Bash(uv run:*)",
+      "Bash(xcopy:*)",
+      "Bash(dir:*)",
+      "Bash(mv:*)",
+      "Bash(ls:*)",
+      "Bash(find:*)",
+      "WebSearch",
+      "WebFetch(domain:docs.godotengine.org)",
+      "WebFetch(domain:www.gdquest.com)",
+      "Bash(\"C:\\dev\\godot\\Godot.exe\" --headless --check-only --script:*)"
+    ],
+    "deny": [],
+    "ask": []
+  }
+}
