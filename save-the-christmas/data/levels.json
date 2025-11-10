@@ -1,0 +1,84 @@
+{
+  "version": "1.0",
+  "total_levels": 3,
+  "levels": [
+    {
+      "level_id": 1,
+      "name": "Christmas Tree",
+      "image_path": "res://assets/levels/level_01.png",
+      "thumbnail_path": "res://assets/levels/thumbnails/level_01_thumb.png",
+      "puzzle_type": "rectangle_jigsaw",
+      "difficulty_configs": {
+        "easy": {
+          "rows": 2,
+          "columns": 3,
+          "tile_count": 6
+        },
+        "normal": {
+          "rows": 3,
+          "columns": 4,
+          "tile_count": 12
+        },
+        "hard": {
+          "rows": 5,
+          "columns": 6,
+          "tile_count": 30
+        }
+      },
+      "hint_limit": 3,
+      "tags": ["tree", "festive", "outdoor"]
+    },
+    {
+      "level_id": 2,
+      "name": "Santa's Workshop",
+      "image_path": "res://assets/levels/level_02.png",
+      "thumbnail_path": "res://assets/levels/thumbnails/level_02_thumb.png",
+      "puzzle_type": "rectangle_jigsaw",
+      "difficulty_configs": {
+        "easy": {
+          "rows": 2,
+          "columns": 3,
+          "tile_count": 6
+        },
+        "normal": {
+          "rows": 3,
+          "columns": 4,
+          "tile_count": 12
+        },
+        "hard": {
+          "rows": 5,
+          "columns": 6,
+          "tile_count": 30
+        }
+      },
+      "hint_limit": 3,
+      "tags": ["santa", "workshop", "indoor"]
+    },
+    {
+      "level_id": 3,
+      "name": "Winter Wonderland",
+      "image_path": "res://assets/levels/level_03.png",
+      "thumbnail_path": "res://assets/levels/thumbnails/level_03_thumb.png",
+      "puzzle_type": "rectangle_jigsaw",
+      "difficulty_configs": {
+        "easy": {
+          "rows": 2,
+          "columns": 3,
+          "tile_count": 6
+        },
+        "normal": {
+          "rows": 3,
+          "columns": 4,
+          "tile_count": 12
+        },
+        "hard": {
+          "rows": 5,
+          "columns": 6,
+          "tile_count": 30
+        }
+      },
+      "hint_limit": 3,
+      "tags": ["snow", "winter", "outdoor"]
+    }
+  ]
+}
