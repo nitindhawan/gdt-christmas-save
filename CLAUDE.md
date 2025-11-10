@@ -358,11 +358,13 @@ ProgressManager.load_save_data()
 ## Reference Documentation
 
 See project root for detailed specs:
-- **ARCHITECTURE-MASTER.md**: Complete architecture documentation
-- **GAME-RULES.md**: Detailed gameplay mechanics and progression
-- **SCREEN-REQUIREMENTS.md**: Pixel-perfect UI specifications
-- **DATA-SCHEMA.md**: Complete data structure definitions
+- **ARCHITECTURE-MASTER.md**: System architecture overview (high-level)
+- **GAME-RULES.md**: Gameplay mechanics, progression rules, interactions
+- **SCREEN-REQUIREMENTS.md**: UI layouts and specifications (hybrid: critical exact, others ranges)
+- **DATA-SCHEMA.md**: Data structures, schemas, key implementation examples
 - **MILESTONES-AND-TASKS.md**: Implementation roadmap with task breakdown
+- **godot4_naming_conventions.md**: Godot 4 naming conventions
+- **godot4_verified_apis.md**: Supported/unsupported Godot 4.5.1 APIs
 - **BRIEF.md**: Original game design document
 
 ## Notes for AI Assistant (Claude)

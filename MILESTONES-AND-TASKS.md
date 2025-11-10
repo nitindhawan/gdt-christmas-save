@@ -1,5 +1,11 @@
 # Save the Christmas - Milestones and Tasks
 
+**Related Documentation**:
+- **ARCHITECTURE-MASTER.md** - System architecture, AutoLoad systems
+- **DATA-SCHEMA.md** - Data structures and schemas
+- **SCREEN-REQUIREMENTS.md** - UI specifications
+- **GAME-RULES.md** - Game mechanics
+
 ## Project Status
 **Current Phase**: Planning Complete
 **Godot Version**: 4.5.1
@@ -17,62 +23,30 @@
 
 #### 1.1 Project Initialization
 - [ ] Create new Godot 4.5.1 project named "save-the-christmas"
-- [ ] Configure project settings:
-  - [ ] Set resolution to 1080×1920 (portrait)
-  - [ ] Set stretch mode to canvas_items with aspect expand
+- [ ] Configure project settings (see **SCREEN-REQUIREMENTS.md** for detailed specs):
+  - [ ] Resolution: 1080×1920 (portrait), stretch mode: canvas_items with aspect expand
   - [ ] Lock orientation to portrait
-  - [ ] Configure mobile renderer (Forward+)
-- [ ] Create folder structure:
-  - [ ] `scenes/` for .tscn files
-  - [ ] `scripts/` for .gd files
-  - [ ] `assets/levels/` for level images
-  - [ ] `assets/levels/thumbnails/` for thumbnails
-  - [ ] `assets/ui/` for UI sprites
-  - [ ] `assets/audio/` for sound files
-  - [ ] `data/` for levels.json
+  - [ ] Configure mobile renderer (mobile)
+- [ ] Create folder structure (see **ARCHITECTURE-MASTER.md**):
+  - [ ] `scenes/`, `scripts/`, `assets/levels/`, `assets/levels/thumbnails/`, `assets/ui/`, `assets/audio/`, `data/`
 
 #### 1.2 Core AutoLoad Systems
-- [ ] Create `scripts/game_constants.gd` - Game constants and enums
-  - [ ] Define Difficulty enum (EASY, NORMAL, HARD)
-  - [ ] Define file paths constants
-  - [ ] Define grid configurations
-  - [ ] Validate with script check command
-- [ ] Create `scripts/game_manager.gd` - Game state manager
-  - [ ] Scene navigation functions
-  - [ ] Current level/difficulty tracking
-  - [ ] Scene transition logic
-  - [ ] Validate with script check command
-- [ ] Create `scripts/progress_manager.gd` - Save/load system
-  - [ ] Save data loading from ConfigFile
-  - [ ] Star tracking (get_star, set_star)
-  - [ ] Level unlock logic (is_level_unlocked, is_difficulty_unlocked)
-  - [ ] Save data persistence functions
-  - [ ] Validate with script check command
-- [ ] Create `scripts/level_manager.gd` - Level data management
-  - [ ] Load and parse levels.json
-  - [ ] Level data storage (array of LevelData)
-  - [ ] Level image loading and caching
-  - [ ] Validate with script check command
-- [ ] Create `scripts/audio_manager.gd` - Audio control
-  - [ ] Background music player
-  - [ ] Sound effect player
-  - [ ] Settings persistence (music/sound/vibrations)
-  - [ ] Validate with script check command
-- [ ] Configure AutoLoad in Project Settings for all 5 managers
+See **ARCHITECTURE-MASTER.md** for complete system descriptions. Create 5 AutoLoad singletons:
+- [ ] `game_constants.gd` - Constants, enums, file paths (see **DATA-SCHEMA.md** for structure)
+- [ ] `game_manager.gd` - Scene navigation, current level/difficulty tracking
+- [ ] `progress_manager.gd` - Save/load system, star tracking, unlock logic
+- [ ] `level_manager.gd` - Level data from levels.json, image caching
+- [ ] `audio_manager.gd` - Music player, SFX player, settings persistence
+- [ ] Configure all 5 in Project Settings → AutoLoad
+- [ ] Validate each script with: `"C:\dev\godot\Godot.exe" --headless --check-only --script <file>`
 
 #### 1.3 Data Classes
-- [ ] Create `scripts/level_data.gd` - Level definition class
-  - [ ] Properties: level_id, name, image_path, thumbnail_path, difficulty_configs
-  - [ ] Methods: get_difficulty_config(), get_tile_count(), get_grid_size()
-  - [ ] Validate with script check command
-- [ ] Create `scripts/puzzle_state.gd` - Puzzle state class
-  - [ ] Properties: level_id, difficulty, tiles, selected_tile_index, swap_count
-  - [ ] Methods: is_puzzle_solved(), get_tile_at_position()
-  - [ ] Validate with script check command
-- [ ] Create `scripts/tile.gd` - Tile data class
-  - [ ] Properties: tile_id, current_position, correct_position, texture_region
-  - [ ] Methods: is_correct(), swap_positions()
-  - [ ] Validate with script check command
+See **DATA-SCHEMA.md** section 3 for complete class definitions:
+- [ ] Create `scripts/level_data.gd` - Level definition (extends Resource)
+- [ ] Create `scripts/progress_data.gd` - Player progression state (extends Resource)
+- [ ] Create `scripts/puzzle_state.gd` - Puzzle gameplay state (extends Resource)
+- [ ] Create `scripts/tile.gd` - Individual tile data (extends Resource)
+- [ ] Validate all scripts with script check command
 
 #### 1.4 Test Data Setup
 - [ ] Create `data/levels.json` with 3 test levels
@@ -324,26 +298,11 @@
 ### Tasks
 
 #### 6.1 Audio Implementation
-- [ ] Add background music tracks (1-2 Christmas loops)
-- [ ] Add sound effects:
-  - [ ] tile_select.ogg (tile selected)
-  - [ ] tile_swap.ogg (tiles swapped)
-  - [ ] level_complete.ogg (puzzle solved jingle)
-  - [ ] button_click.ogg (UI button clicks)
-  - [ ] hint_used.ogg (hint activated)
-- [ ] Implement AudioManager playback functions:
-  - [ ] play_music(track_name, loop=true)
-  - [ ] play_sfx(sfx_name)
-  - [ ] stop_music()
-  - [ ] set_music_volume(volume)
-  - [ ] set_sfx_volume(volume)
-- [ ] Integrate audio triggers:
-  - [ ] Background music on LevelSelection and GameplayScreen
-  - [ ] Tile select sound on first tap
-  - [ ] Tile swap sound on second tap
-  - [ ] Level complete jingle on puzzle solve
-  - [ ] Button click sounds on all UI buttons
-  - [ ] Hint sound on hint activation
+See **DATA-SCHEMA.md** section 7 for audio file naming conventions and **GAME-RULES.md** for audio triggers.
+- [ ] Add background music tracks (1-2 Christmas loops, OGG format)
+- [ ] Add sound effects: tile_select, tile_swap, level_complete, button_click, hint_used
+- [ ] Implement AudioManager playback functions (play_music, play_sfx, stop_music, set volumes)
+- [ ] Integrate audio triggers per **GAME-RULES.md** specifications
 - [ ] Test audio settings (mute/unmute works correctly)
 
 #### 6.2 Haptic Feedback
