@@ -23,7 +23,7 @@ func generate_puzzle(level_id: int, difficulty: int) -> PuzzleState:
 	var tile_count = diff_config["tile_count"]
 
 	# Load level image
-	var texture = LevelManager.get_level_image(level_id)
+	var texture = LevelManager.get_level_texture(level_id)
 	if texture == null:
 		push_error("Failed to load level image for level %d" % level_id)
 		return null
@@ -31,7 +31,7 @@ func generate_puzzle(level_id: int, difficulty: int) -> PuzzleState:
 	# Create puzzle state
 	var puzzle_state = PuzzleState.new()
 	puzzle_state.level_id = level_id
-	puzzle_state.difficulty = difficulty
+	puzzle_state.difficulty = GameConstants.difficulty_to_string(difficulty)
 	puzzle_state.grid_size = Vector2i(rows, columns)
 	puzzle_state.tiles = create_tiles_from_image(texture, rows, columns)
 	puzzle_state.selected_tile_index = -1

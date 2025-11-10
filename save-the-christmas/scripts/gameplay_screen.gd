@@ -36,7 +36,7 @@ func _initialize_gameplay() -> void:
 	level_label.text = "Level %d - %s" % [current_level_id, difficulty_str.capitalize()]
 
 	# Load source texture
-	source_texture = LevelManager.get_level_image(current_level_id)
+	source_texture = LevelManager.get_level_texture(current_level_id)
 	if source_texture == null:
 		push_error("Failed to load level image for level %d" % current_level_id)
 		return
@@ -87,10 +87,14 @@ func _spawn_tiles() -> void:
 			var tile = puzzle_state.tiles[tile_index]
 			var tile_node = TILE_NODE_SCENE.instantiate()
 			tile_node.custom_minimum_size = tile_size
+
+			# Add to tree first so @onready variables are initialized
+			puzzle_grid.add_child(tile_node)
+
+			# Now setup the tile
 			tile_node.setup(tile, tile_index, source_texture)
 			tile_node.tile_clicked.connect(_on_tile_clicked)
 
-			puzzle_grid.add_child(tile_node)
 			tile_nodes.append(tile_node)
 
 	print("Spawned %d tiles" % tile_nodes.size())

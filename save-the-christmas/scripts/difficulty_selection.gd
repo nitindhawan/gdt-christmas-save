@@ -34,7 +34,7 @@ func _load_level_data() -> void:
 	level_label.text = "Level %d" % current_level_id
 
 	# Load preview image
-	var texture = LevelManager.get_level_image(current_level_id)
+	var texture = LevelManager.get_level_texture(current_level_id)
 	if texture:
 		preview_image.texture = texture
 	else:

@@ -1,0 +1,135 @@
+[gd_scene load_steps=2 format=3 uid="uid://clxf45n6w83ro"]
+
+[ext_resource type="Script" path="res://scripts/level_complete_screen.gd" id="1_1"]
+
+[node name="LevelCompleteScreen" type="Control"]
+layout_mode = 3
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+script = ExtResource("1_1")
+
+[node name="Background" type="ColorRect" parent="."]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+color = Color(0.137255, 0, 0, 1)
+
+[node name="MarginContainer" type="MarginContainer" parent="."]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+theme_override_constants/margin_left = 40
+theme_override_constants/margin_top = 80
+theme_override_constants/margin_right = 40
+theme_override_constants/margin_bottom = 80
+
+[node name="VBoxContainer" type="VBoxContainer" parent="MarginContainer"]
+layout_mode = 2
+theme_override_constants/separation = 30
+
+[node name="TitleSection" type="VBoxContainer" parent="MarginContainer/VBoxContainer"]
+custom_minimum_size = Vector2(0, 400)
+layout_mode = 2
+theme_override_constants/separation = 20
+alignment = 1
+
+[node name="TitleLabel" type="Label" parent="MarginContainer/VBoxContainer/TitleSection"]
+layout_mode = 2
+theme_override_colors/font_color = Color(1, 0.843137, 0, 1)
+theme_override_font_sizes/font_size = 72
+text = "Well Done!"
+horizontal_alignment = 1
+
+[node name="SubtitleLabel" type="Label" parent="MarginContainer/VBoxContainer/TitleSection"]
+layout_mode = 2
+theme_override_colors/font_color = Color(1, 1, 1, 1)
+theme_override_font_sizes/font_size = 36
+text = "You have solved Level 1"
+horizontal_alignment = 1
+
+[node name="StarsContainer" type="HBoxContainer" parent="MarginContainer/VBoxContainer/TitleSection"]
+layout_mode = 2
+theme_override_constants/separation = 20
+alignment = 1
+
+[node name="Star1" type="Label" parent="MarginContainer/VBoxContainer/TitleSection/StarsContainer"]
+layout_mode = 2
+theme_override_font_sizes/font_size = 80
+text = "⭐"
+
+[node name="Star2" type="Label" parent="MarginContainer/VBoxContainer/TitleSection/StarsContainer"]
+visible = false
+layout_mode = 2
+theme_override_font_sizes/font_size = 80
+text = "⭐"
+
+[node name="Star3" type="Label" parent="MarginContainer/VBoxContainer/TitleSection/StarsContainer"]
+visible = false
+layout_mode = 2
+theme_override_font_sizes/font_size = 80
+text = "⭐"
+
+[node name="ImageSection" type="CenterContainer" parent="MarginContainer/VBoxContainer"]
+layout_mode = 2
+size_flags_vertical = 3
+
+[node name="ImagePanel" type="Panel" parent="MarginContainer/VBoxContainer/ImageSection"]
+custom_minimum_size = Vector2(850, 850)
+layout_mode = 2
+
+[node name="MarginContainer" type="MarginContainer" parent="MarginContainer/VBoxContainer/ImageSection/ImagePanel"]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+theme_override_constants/margin_left = 6
+theme_override_constants/margin_top = 6
+theme_override_constants/margin_right = 6
+theme_override_constants/margin_bottom = 6
+
+[node name="CompletedImage" type="TextureRect" parent="MarginContainer/VBoxContainer/ImageSection/ImagePanel/MarginContainer"]
+layout_mode = 2
+expand_mode = 1
+stretch_mode = 5
+
+[node name="ButtonSection" type="VBoxContainer" parent="MarginContainer/VBoxContainer"]
+custom_minimum_size = Vector2(0, 400)
+layout_mode = 2
+theme_override_constants/separation = 20
+alignment = 1
+
+[node name="ShareButton" type="Button" parent="MarginContainer/VBoxContainer/ButtonSection"]
+custom_minimum_size = Vector2(750, 100)
+layout_mode = 2
+size_flags_horizontal = 4
+theme_override_font_sizes/font_size = 32
+text = "⤴ Share Photo"
+
+[node name="DownloadButton" type="Button" parent="MarginContainer/VBoxContainer/ButtonSection"]
+custom_minimum_size = Vector2(750, 100)
+layout_mode = 2
+size_flags_horizontal = 4
+theme_override_font_sizes/font_size = 32
+text = "💾 Download"
+
+[node name="ContinueButton" type="Button" parent="MarginContainer/VBoxContainer/ButtonSection"]
+custom_minimum_size = Vector2(750, 130)
+layout_mode = 2
+size_flags_horizontal = 4
+theme_override_font_sizes/font_size = 36
+text = "Continue"
+
+[connection signal="pressed" from="MarginContainer/VBoxContainer/ButtonSection/ShareButton" to="." method="_on_share_button_pressed"]
+[connection signal="pressed" from="MarginContainer/VBoxContainer/ButtonSection/DownloadButton" to="." method="_on_download_button_pressed"]
+[connection signal="pressed" from="MarginContainer/VBoxContainer/ButtonSection/ContinueButton" to="." method="_on_continue_button_pressed"]
