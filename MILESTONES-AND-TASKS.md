@@ -121,48 +121,48 @@ See **DATA-SCHEMA.md** section 3 for complete class definitions:
 ## Milestone 3: Difficulty Selection & Settings
 **Goal**: Implement difficulty selection and settings popup
 **Estimated Time**: 2-3 days
-**Status**: ⏳ Not Started
+**Status**: ✅ COMPLETED
 
 ### Tasks
 
 #### 3.1 Difficulty Selection Screen
-- [ ] Create `scenes/difficulty_selection.tscn`
-  - [ ] Add close button (X, top-left)
-  - [ ] Add share button (top-right)
-  - [ ] Add level number label
-  - [ ] Add preview image (900×900px)
-  - [ ] Add 3 difficulty buttons (Easy, Normal, Hard)
-  - [ ] Add star indicators on each button
-- [ ] Create `scripts/difficulty_selection.gd`
-  - [ ] Initialize with level_id parameter
-  - [ ] Load level preview from LevelManager
-  - [ ] Check difficulty unlock status from ProgressManager
-  - [ ] Enable/disable buttons based on unlock status
-  - [ ] Handle difficulty selection → navigate to GameplayScreen
-  - [ ] Handle close button → return to LevelSelection
-  - [ ] Handle share button → native share (placeholder)
-  - [ ] Validate with script check command
+- [x] Create `scenes/difficulty_selection.tscn`
+  - [x] Add close button (X, top-left)
+  - [x] Add share button (top-right)
+  - [x] Add level number label
+  - [x] Add preview image (900×900px)
+  - [x] Add 3 difficulty buttons (Easy, Normal, Hard)
+  - [x] Add star indicators on each button
+- [x] Create `scripts/difficulty_selection.gd`
+  - [x] Initialize with level_id parameter
+  - [x] Load level preview from LevelManager
+  - [x] Check difficulty unlock status from ProgressManager
+  - [x] Enable/disable buttons based on unlock status
+  - [x] Handle difficulty selection → navigate to GameplayScreen
+  - [x] Handle close button → return to LevelSelection
+  - [x] Handle share button → native share (placeholder)
+  - [x] Validate with script check command
 
 #### 3.2 Settings Popup
-- [ ] Create `scenes/settings_popup.tscn`
-  - [ ] Add semi-transparent overlay (full screen)
-  - [ ] Add modal panel (900×1200px, centered)
-  - [ ] Add close button (X)
-  - [ ] Add "Settings" title
-  - [ ] Add 3 toggle switches (Sound, Music, Vibrations)
-  - [ ] Add "Send Feedback" button
-  - [ ] Add "Remove Ads" button
-  - [ ] Add Privacy and Terms links
-- [ ] Create `scripts/settings_popup.gd`
-  - [ ] Load current settings from AudioManager
-  - [ ] Handle toggle changes (apply immediately)
-  - [ ] Save settings on close via AudioManager
-  - [ ] Handle close button and outside tap
-  - [ ] Handle "Send Feedback" button (email or web form)
-  - [ ] Handle "Remove Ads" button (IAP placeholder)
-  - [ ] Handle Privacy/Terms links (open browser)
-  - [ ] Validate with script check command
-- [ ] Integrate settings popup with LevelSelection and GameplayScreen
+- [x] Create `scenes/settings_popup.tscn`
+  - [x] Add semi-transparent overlay (full screen)
+  - [x] Add modal panel (900×1200px, centered)
+  - [x] Add close button (X)
+  - [x] Add "Settings" title
+  - [x] Add 3 toggle switches (Sound, Music, Vibrations)
+  - [x] Add "Send Feedback" button
+  - [x] Add "Remove Ads" button
+  - [x] Add Privacy and Terms links
+- [x] Create `scripts/settings_popup.gd`
+  - [x] Load current settings from AudioManager
+  - [x] Handle toggle changes (apply immediately)
+  - [x] Save settings on close via AudioManager
+  - [x] Handle close button and outside tap
+  - [x] Handle "Send Feedback" button (email or web form)
+  - [x] Handle "Remove Ads" button (IAP placeholder)
+  - [x] Handle Privacy/Terms links (open browser)
+  - [x] Validate with script check command
+- [x] Integrate settings popup with LevelSelection and GameplayScreen
 
 **Milestone 3 Acceptance Criteria**:
 - ✅ Difficulty Selection displays level preview correctly
@@ -474,12 +474,12 @@ See **DATA-SCHEMA.md** section 7 for audio file naming conventions and **GAME-RU
 - [x] **Milestone 0**: Planning and Documentation (COMPLETE)
 - [x] **Milestone 1**: Project Setup & Core Systems (COMPLETE)
 - [x] **Milestone 2**: Loading & Level Selection Screens (COMPLETE)
+- [x] **Milestone 3**: Difficulty Selection & Settings (COMPLETE)
 
 ### In Progress
-- [ ] **Milestone 3**: Difficulty Selection & Settings
+- [ ] **Milestone 4**: Puzzle System & Gameplay
 
 ### Not Started
-- [ ] **Milestone 4**: Puzzle System & Gameplay
 - [ ] **Milestone 5**: Level Complete & Progression
 - [ ] **Milestone 6**: Audio & Polish
 - [ ] **Milestone 7**: Content & Testing
