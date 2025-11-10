@@ -176,57 +176,57 @@ See **DATA-SCHEMA.md** section 3 for complete class definitions:
 ## Milestone 4: Puzzle System & Gameplay
 **Goal**: Implement core puzzle mechanics and gameplay screen
 **Estimated Time**: 5-6 days
-**Status**: ⏳ Not Started
+**Status**: ✅ COMPLETED
 
 ### Tasks
 
 #### 4.1 Puzzle Manager System
-- [ ] Create `scripts/puzzle_manager.gd` (if not done in Milestone 1)
-  - [ ] Function: generate_puzzle(level_data, difficulty) → PuzzleState
-  - [ ] Function: create_tiles_from_image(texture, grid_size) → Array[Tile]
-  - [ ] Function: scramble_tiles(puzzle_state) using Fisher-Yates
-  - [ ] Function: validate_solvability(puzzle_state) → bool
-  - [ ] Validate with script check command
-- [ ] Add PuzzleManager to AutoLoad if not already added
+- [x] Create `scripts/puzzle_manager.gd` (if not done in Milestone 1)
+  - [x] Function: generate_puzzle(level_data, difficulty) → PuzzleState
+  - [x] Function: create_tiles_from_image(texture, grid_size) → Array[Tile]
+  - [x] Function: scramble_tiles(puzzle_state) using Fisher-Yates
+  - [x] Function: validate_solvability(puzzle_state) → bool
+  - [x] Validate with script check command
+- [x] Add PuzzleManager to AutoLoad if not already added
 
 #### 4.2 Tile Node Component
-- [ ] Create `scenes/tile_node.tscn`
-  - [ ] TextureRect for tile image
-  - [ ] Selection border (hidden by default)
-  - [ ] Touch area (Control node for input)
-- [ ] Create `scripts/tile_node.gd`
-  - [ ] Setup function (set tile data, texture region)
-  - [ ] Selection visual feedback (border, scale)
-  - [ ] Click/touch handling
-  - [ ] Swap animation (tween position)
-  - [ ] Validate with script check command
+- [x] Create `scenes/tile_node.tscn`
+  - [x] TextureRect for tile image
+  - [x] Selection border (hidden by default)
+  - [x] Touch area (Control node for input)
+- [x] Create `scripts/tile_node.gd`
+  - [x] Setup function (set tile data, texture region)
+  - [x] Selection visual feedback (border, scale)
+  - [x] Click/touch handling
+  - [x] Swap animation (tween position)
+  - [x] Validate with script check command
 
 #### 4.3 Gameplay Screen
-- [ ] Create `scenes/gameplay_screen.tscn`
-  - [ ] Add top HUD (back, level label, share, settings)
-  - [ ] Add CenterContainer for puzzle grid
-  - [ ] Add GridContainer (dynamic size based on difficulty)
-  - [ ] Add hint button (bottom)
-- [ ] Create `scripts/gameplay_screen.gd`
-  - [ ] Initialize with level_id and difficulty parameters
-  - [ ] Load level data from LevelManager
-  - [ ] Generate puzzle via PuzzleManager
-  - [ ] Spawn tile nodes in grid
-  - [ ] Handle tile selection (first tap)
-  - [ ] Handle tile swap (second tap)
-  - [ ] Animate tile swaps with tweens
-  - [ ] Check puzzle solved after each swap
-  - [ ] Navigate to LevelCompleteScreen on solve
-  - [ ] Handle hint button (swap one tile to correct position)
-  - [ ] Handle back button (show confirmation dialog)
-  - [ ] Handle share button (screenshot + native share)
-  - [ ] Handle settings button (open SettingsPopup)
-  - [ ] Validate with script check command
+- [x] Create `scenes/gameplay_screen.tscn`
+  - [x] Add top HUD (back, level label, share, settings)
+  - [x] Add CenterContainer for puzzle grid
+  - [x] Add GridContainer (dynamic size based on difficulty)
+  - [x] Add hint button (bottom)
+- [x] Create `scripts/gameplay_screen.gd`
+  - [x] Initialize with level_id and difficulty parameters
+  - [x] Load level data from LevelManager
+  - [x] Generate puzzle via PuzzleManager
+  - [x] Spawn tile nodes in grid
+  - [x] Handle tile selection (first tap)
+  - [x] Handle tile swap (second tap)
+  - [x] Animate tile swaps with tweens
+  - [x] Check puzzle solved after each swap
+  - [x] Navigate to LevelCompleteScreen on solve
+  - [x] Handle hint button (swap one tile to correct position)
+  - [x] Handle back button (show confirmation dialog)
+  - [x] Handle share button (screenshot + native share)
+  - [x] Handle settings button (open SettingsPopup)
+  - [x] Validate with script check command
 
 #### 4.4 Puzzle Validation & Solving
-- [ ] Implement `PuzzleState.is_puzzle_solved()` logic
-- [ ] Test puzzle solving with different grid sizes
-- [ ] Add visual feedback for puzzle completion (sparkle effect, etc.)
+- [x] Implement `PuzzleState.is_puzzle_solved()` logic
+- [x] Test puzzle solving with different grid sizes
+- [x] Add visual feedback for puzzle completion (sparkle effect, etc.)
 
 **Milestone 4 Acceptance Criteria**:
 - ✅ Gameplay screen loads with scrambled tiles
@@ -475,12 +475,12 @@ See **DATA-SCHEMA.md** section 7 for audio file naming conventions and **GAME-RU
 - [x] **Milestone 1**: Project Setup & Core Systems (COMPLETE)
 - [x] **Milestone 2**: Loading & Level Selection Screens (COMPLETE)
 - [x] **Milestone 3**: Difficulty Selection & Settings (COMPLETE)
+- [x] **Milestone 4**: Puzzle System & Gameplay (COMPLETE)
 
 ### In Progress
-- [ ] **Milestone 4**: Puzzle System & Gameplay
+- [ ] **Milestone 5**: Level Complete & Progression
 
 ### Not Started
-- [ ] **Milestone 5**: Level Complete & Progression
 - [ ] **Milestone 6**: Audio & Polish
 - [ ] **Milestone 7**: Content & Testing
 - [ ] **Milestone 8**: Mobile Export & Release Preparation
