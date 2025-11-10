@@ -22,6 +22,7 @@ GameManager="*res://scripts/game_manager.gd"
 ProgressManager="*res://scripts/progress_manager.gd"
 LevelManager="*res://scripts/level_manager.gd"
 AudioManager="*res://scripts/audio_manager.gd"
+PuzzleManager="*res://scripts/puzzle_manager.gd"
 
 [display]
 

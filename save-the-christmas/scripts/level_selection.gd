@@ -4,6 +4,7 @@ extends Control
 ## Displays grid of level thumbnails with stars and handles navigation
 
 const LEVEL_CELL_SCENE = preload("res://scenes/level_cell.tscn")
+const SETTINGS_POPUP_SCENE = preload("res://scenes/settings_popup.tscn")
 
 @onready var grid_container: GridContainer = $MarginContainer/VBoxContainer/ScrollContainer/GridContainer
 
@@ -66,7 +67,18 @@ func _on_level_clicked(level_id: int) -> void:
 ## Handle settings button pressed
 func _on_settings_button_pressed() -> void:
 	print("Settings button pressed")
-	# TODO: Open settings popup
-	# For now, just play sound
+
+	# Play button click sound
 	if AudioManager:
 		AudioManager.play_sfx("button_click")
+
+	# Instantiate and show settings popup
+	var settings_popup = SETTINGS_POPUP_SCENE.instantiate()
+	add_child(settings_popup)
+
+	# Connect close signal to handle cleanup (optional)
+	settings_popup.settings_closed.connect(_on_settings_popup_closed)
+
+## Handle settings popup closed
+func _on_settings_popup_closed() -> void:
+	print("Settings popup closed")

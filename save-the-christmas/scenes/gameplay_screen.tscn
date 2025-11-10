@@ -1,0 +1,124 @@
+[gd_scene load_steps=2 format=3 uid="uid://brm3gj0dq3x5v"]
+
+[ext_resource type="Script" path="res://scripts/gameplay_screen.gd" id="1_1"]
+
+[node name="GameplayScreen" type="Control"]
+layout_mode = 3
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+script = ExtResource("1_1")
+
+[node name="Background" type="ColorRect" parent="."]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+color = Color(0.2, 0.05, 0.05, 1)
+
+[node name="MarginContainer" type="MarginContainer" parent="."]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+theme_override_constants/margin_left = 40
+theme_override_constants/margin_top = 40
+theme_override_constants/margin_right = 40
+theme_override_constants/margin_bottom = 40
+
+[node name="VBoxContainer" type="VBoxContainer" parent="MarginContainer"]
+layout_mode = 2
+theme_override_constants/separation = 20
+
+[node name="TopHUD" type="Panel" parent="MarginContainer/VBoxContainer"]
+custom_minimum_size = Vector2(0, 100)
+layout_mode = 2
+
+[node name="MarginContainer" type="MarginContainer" parent="MarginContainer/VBoxContainer/TopHUD"]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+theme_override_constants/margin_left = 10
+theme_override_constants/margin_top = 10
+theme_override_constants/margin_right = 10
+theme_override_constants/margin_bottom = 10
+
+[node name="HBoxContainer" type="HBoxContainer" parent="MarginContainer/VBoxContainer/TopHUD/MarginContainer"]
+layout_mode = 2
+
+[node name="BackButton" type="Button" parent="MarginContainer/VBoxContainer/TopHUD/MarginContainer/HBoxContainer"]
+custom_minimum_size = Vector2(80, 80)
+layout_mode = 2
+theme_override_font_sizes/font_size = 36
+text = "◀"
+
+[node name="LevelLabel" type="Label" parent="MarginContainer/VBoxContainer/TopHUD/MarginContainer/HBoxContainer"]
+layout_mode = 2
+size_flags_horizontal = 3
+theme_override_font_sizes/font_size = 32
+text = "Level 1 - Easy"
+horizontal_alignment = 1
+vertical_alignment = 1
+
+[node name="ShareButton" type="Button" parent="MarginContainer/VBoxContainer/TopHUD/MarginContainer/HBoxContainer"]
+custom_minimum_size = Vector2(80, 80)
+layout_mode = 2
+theme_override_font_sizes/font_size = 28
+text = "⤴"
+
+[node name="SettingsButton" type="Button" parent="MarginContainer/VBoxContainer/TopHUD/MarginContainer/HBoxContainer"]
+custom_minimum_size = Vector2(80, 80)
+layout_mode = 2
+theme_override_font_sizes/font_size = 32
+text = "⚙"
+
+[node name="PuzzleArea" type="CenterContainer" parent="MarginContainer/VBoxContainer"]
+layout_mode = 2
+size_flags_vertical = 3
+
+[node name="PuzzleGrid" type="GridContainer" parent="MarginContainer/VBoxContainer/PuzzleArea"]
+layout_mode = 2
+theme_override_constants/h_separation = 2
+theme_override_constants/v_separation = 2
+columns = 3
+
+[node name="BottomHUD" type="Panel" parent="MarginContainer/VBoxContainer"]
+custom_minimum_size = Vector2(0, 180)
+layout_mode = 2
+
+[node name="CenterContainer" type="CenterContainer" parent="MarginContainer/VBoxContainer/BottomHUD"]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+
+[node name="HintButton" type="Button" parent="MarginContainer/VBoxContainer/BottomHUD/CenterContainer"]
+custom_minimum_size = Vector2(600, 110)
+layout_mode = 2
+theme_override_font_sizes/font_size = 32
+text = "💡 Hint"
+
+[node name="ConfirmationDialog" type="ConfirmationDialog" parent="."]
+title = "Exit Level?"
+initial_position = 2
+size = Vector2i(700, 400)
+dialog_text = "Exit level? Progress will not be saved."
+ok_button_text = "Exit"
+cancel_button_text = "Stay"
+
+[connection signal="pressed" from="MarginContainer/VBoxContainer/TopHUD/MarginContainer/HBoxContainer/BackButton" to="." method="_on_back_button_pressed"]
+[connection signal="pressed" from="MarginContainer/VBoxContainer/TopHUD/MarginContainer/HBoxContainer/ShareButton" to="." method="_on_share_button_pressed"]
+[connection signal="pressed" from="MarginContainer/VBoxContainer/TopHUD/MarginContainer/HBoxContainer/SettingsButton" to="." method="_on_settings_button_pressed"]
+[connection signal="pressed" from="MarginContainer/VBoxContainer/BottomHUD/CenterContainer/HintButton" to="." method="_on_hint_button_pressed"]
+[connection signal="confirmed" from="ConfirmationDialog" to="." method="_on_confirmation_dialog_confirmed"]
