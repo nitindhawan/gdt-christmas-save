@@ -17,41 +17,41 @@
 ## Milestone 1: Project Setup & Core Systems
 **Goal**: Set up Godot project structure and implement core AutoLoad systems
 **Estimated Time**: 2-3 days
-**Status**: ⏳ Not Started
+**Status**: ✅ COMPLETED
 
 ### Tasks
 
 #### 1.1 Project Initialization
-- [ ] Create new Godot 4.5.1 project named "save-the-christmas"
-- [ ] Configure project settings (see **SCREEN-REQUIREMENTS.md** for detailed specs):
-  - [ ] Resolution: 1080×1920 (portrait), stretch mode: canvas_items with aspect expand
-  - [ ] Lock orientation to portrait
-  - [ ] Configure mobile renderer (mobile)
-- [ ] Create folder structure (see **ARCHITECTURE-MASTER.md**):
-  - [ ] `scenes/`, `scripts/`, `assets/levels/`, `assets/levels/thumbnails/`, `assets/ui/`, `assets/audio/`, `data/`
+- [x] Create new Godot 4.5.1 project named "save-the-christmas"
+- [x] Configure project settings (see **SCREEN-REQUIREMENTS.md** for detailed specs):
+  - [x] Resolution: 1080×1920 (portrait), stretch mode: canvas_items with aspect expand
+  - [x] Lock orientation to portrait
+  - [x] Configure mobile renderer (mobile)
+- [x] Create folder structure (see **ARCHITECTURE-MASTER.md**):
+  - [x] `scenes/`, `scripts/`, `assets/levels/`, `assets/levels/thumbnails/`, `assets/ui/`, `assets/audio/`, `data/`
 
 #### 1.2 Core AutoLoad Systems
 See **ARCHITECTURE-MASTER.md** for complete system descriptions. Create 5 AutoLoad singletons:
-- [ ] `game_constants.gd` - Constants, enums, file paths (see **DATA-SCHEMA.md** for structure)
-- [ ] `game_manager.gd` - Scene navigation, current level/difficulty tracking
-- [ ] `progress_manager.gd` - Save/load system, star tracking, unlock logic
-- [ ] `level_manager.gd` - Level data from levels.json, image caching
-- [ ] `audio_manager.gd` - Music player, SFX player, settings persistence
-- [ ] Configure all 5 in Project Settings → AutoLoad
-- [ ] Validate each script with: `"C:\dev\godot\Godot.exe" --headless --check-only --script <file>`
+- [x] `game_constants.gd` - Constants, enums, file paths (see **DATA-SCHEMA.md** for structure)
+- [x] `game_manager.gd` - Scene navigation, current level/difficulty tracking
+- [x] `progress_manager.gd` - Save/load system, star tracking, unlock logic
+- [x] `level_manager.gd` - Level data from levels.json, image caching
+- [x] `audio_manager.gd` - Music player, SFX player, settings persistence
+- [x] Configure all 5 in Project Settings → AutoLoad
+- [x] Validate each script with: `"C:\dev\godot\Godot.exe" --headless --check-only --script <file>`
 
 #### 1.3 Data Classes
 See **DATA-SCHEMA.md** section 3 for complete class definitions:
-- [ ] Create `scripts/level_data.gd` - Level definition (extends Resource)
-- [ ] Create `scripts/progress_data.gd` - Player progression state (extends Resource)
-- [ ] Create `scripts/puzzle_state.gd` - Puzzle gameplay state (extends Resource)
-- [ ] Create `scripts/tile.gd` - Individual tile data (extends Resource)
-- [ ] Validate all scripts with script check command
+- [x] Create `scripts/level_data.gd` - Level definition (extends Resource)
+- [x] Create `scripts/progress_data.gd` - Player progression state (extends Resource)
+- [x] Create `scripts/puzzle_state.gd` - Puzzle gameplay state (extends Resource)
+- [x] Create `scripts/tile.gd` - Individual tile data (extends Resource)
+- [x] Validate all scripts with script check command
 
 #### 1.4 Test Data Setup
-- [ ] Create `data/levels.json` with 3 test levels
-- [ ] Add placeholder images (3 test images at 2048×2048)
-- [ ] Add placeholder thumbnails (3 test thumbnails at 512×512)
+- [x] Create `data/levels.json` with 3 test levels
+- [x] Add placeholder images (3 test images at 2048×2718 portrait)
+- [x] Add placeholder thumbnails (3 test thumbnails at 512×679 portrait)
 
 **Milestone 1 Acceptance Criteria**:
 - ✅ Project opens in Godot 4.5.1 without errors
@@ -64,50 +64,50 @@ See **DATA-SCHEMA.md** section 3 for complete class definitions:
 ## Milestone 2: Loading & Level Selection Screens
 **Goal**: Implement first two screens (Loading, Level Selection)
 **Estimated Time**: 3-4 days
-**Status**: ⏳ Not Started
+**Status**: ✅ COMPLETED
 
 ### Tasks
 
 #### 2.1 Loading Screen
-- [ ] Create `scenes/loading_screen.tscn`
-  - [ ] Add background (ColorRect or TextureRect)
-  - [ ] Add game logo (centered, 300×300px)
-  - [ ] Add ProgressBar (600×40px, centered bottom)
-  - [ ] Add "Loading..." label
-- [ ] Create `scripts/loading_screen.gd`
-  - [ ] Load levels.json via LevelManager
-  - [ ] Load save data via ProgressManager
-  - [ ] Simulate loading progress (or real asset loading)
-  - [ ] Navigate to correct screen based on current_level
-  - [ ] Validate with script check command
-- [ ] Test loading screen flow
+- [x] Create `scenes/loading_screen.tscn`
+  - [x] Add background (ColorRect or TextureRect)
+  - [x] Add game logo (centered, 300×300px)
+  - [x] Add ProgressBar (600×40px, centered bottom)
+  - [x] Add "Loading..." label
+- [x] Create `scripts/loading_screen.gd`
+  - [x] Load levels.json via LevelManager
+  - [x] Load save data via ProgressManager
+  - [x] Simulate loading progress (or real asset loading)
+  - [x] Navigate to correct screen based on current_level
+  - [x] Validate with script check command
+- [x] Test loading screen flow
 
 #### 2.2 Level Selection Screen
-- [ ] Create `scenes/level_selection.tscn`
-  - [ ] Add title label "Save the Christmas"
-  - [ ] Add settings button (top-right, 80×80px)
-  - [ ] Add ScrollContainer for level grid
-  - [ ] Add GridContainer (2 columns)
-- [ ] Create `scripts/level_selection.gd`
-  - [ ] Populate grid with level cells dynamically
-  - [ ] Load thumbnails from LevelManager
-  - [ ] Display stars based on ProgressManager data
-  - [ ] Handle level cell clicks (beaten vs unbeaten vs locked)
-  - [ ] Navigate to DifficultySelection or GameplayScreen
-  - [ ] Validate with script check command
-- [ ] Create `scenes/level_cell.tscn` (reusable component)
-  - [ ] TextureRect for thumbnail
-  - [ ] Label for level number
-  - [ ] Star icons (3 stars: filled/unfilled)
-  - [ ] Play icon overlay (for unbeaten)
-  - [ ] Lock icon overlay (for locked)
-  - [ ] Border styling (green/gold/grey)
-- [ ] Create `scripts/level_cell.gd`
-  - [ ] Setup function (set level_id, thumbnail, stars, state)
-  - [ ] Visual state updates (locked, unlocked, beaten)
-  - [ ] Click handling with state validation
-  - [ ] Hover/touch feedback animation
-  - [ ] Validate with script check command
+- [x] Create `scenes/level_selection.tscn`
+  - [x] Add title label "Save the Christmas"
+  - [x] Add settings button (top-right, 80×80px)
+  - [x] Add ScrollContainer for level grid
+  - [x] Add GridContainer (2 columns)
+- [x] Create `scripts/level_selection.gd`
+  - [x] Populate grid with level cells dynamically
+  - [x] Load thumbnails from LevelManager
+  - [x] Display stars based on ProgressManager data
+  - [x] Handle level cell clicks (beaten vs unbeaten vs locked)
+  - [x] Navigate to DifficultySelection or GameplayScreen
+  - [x] Validate with script check command
+- [x] Create `scenes/level_cell.tscn` (reusable component)
+  - [x] TextureRect for thumbnail
+  - [x] Label for level number
+  - [x] Star icons (3 stars: filled/unfilled)
+  - [x] Play icon overlay (for unbeaten)
+  - [x] Lock icon overlay (for locked)
+  - [x] Border styling (green/gold/grey)
+- [x] Create `scripts/level_cell.gd`
+  - [x] Setup function (set level_id, thumbnail, stars, state)
+  - [x] Visual state updates (locked, unlocked, beaten)
+  - [x] Click handling with state validation
+  - [x] Hover/touch feedback animation
+  - [x] Validate with script check command
 
 **Milestone 2 Acceptance Criteria**:
 - ✅ Loading screen displays and navigates correctly
@@ -472,22 +472,19 @@ See **DATA-SCHEMA.md** section 7 for audio file naming conventions and **GAME-RU
 
 ### Completed Milestones
 - [x] **Milestone 0**: Planning and Documentation (COMPLETE)
+- [x] **Milestone 1**: Project Setup & Core Systems (COMPLETE)
+- [x] **Milestone 2**: Loading & Level Selection Screens (COMPLETE)
 
 ### In Progress
-- [ ] **Milestone 1**: Project Setup & Core Systems
+- [ ] **Milestone 3**: Difficulty Selection & Settings
 
 ### Not Started
-- [ ] **Milestone 2**: Loading & Level Selection Screens
-- [ ] **Milestone 3**: Difficulty Selection & Settings
 - [ ] **Milestone 4**: Puzzle System & Gameplay
 - [ ] **Milestone 5**: Level Complete & Progression
 - [ ] **Milestone 6**: Audio & Polish
 - [ ] **Milestone 7**: Content & Testing
 - [ ] **Milestone 8**: Mobile Export & Release Preparation
 - [ ] **Milestone 9**: Post-MVP Enhancements (Optional)
-
-### Overall Progress
-**0% Complete** (0/8 MVP milestones)
 
 ---
 
