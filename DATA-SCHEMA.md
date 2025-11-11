@@ -25,9 +25,23 @@ This document defines all data structures used in "Save the Christmas" including
   "levels": [
     {
       "level_id": 1,
-      "name": "Cozy Fireplace",
+      "name": "Christmas Tree",
       "image_path": "res://assets/levels/level_01.png",
       "thumbnail_path": "res://assets/levels/thumbnails/level_01_thumb.png",
+      "puzzle_type": "spiral_twist",
+      "difficulty_configs": {
+        "easy": { "ring_count": 3 },
+        "normal": { "ring_count": 5 },
+        "hard": { "ring_count": 7 }
+      },
+      "hint_limit": 3,
+      "tags": ["tree", "festive", "outdoor"]
+    },
+    {
+      "level_id": 2,
+      "name": "Cozy Fireplace",
+      "image_path": "res://assets/levels/level_02.png",
+      "thumbnail_path": "res://assets/levels/thumbnails/level_02_thumb.png",
       "puzzle_type": "rectangle_jigsaw",
       "difficulty_configs": {
         "easy": {
@@ -49,7 +63,7 @@ This document defines all data structures used in "Save the Christmas" including
       "hint_limit": 3,
       "tags": ["indoor", "warm", "festive"]
     }
-    // ... levels 2-20 follow same structure
+    // ... levels 3-20 follow same structure (odd=spiral, even=rectangle)
   ]
 }
 ```
@@ -63,20 +77,24 @@ This document defines all data structures used in "Save the Christmas" including
 
 #### Level Object Fields
 - **level_id** (int): Unique identifier (1-20), used for progression
-- **name** (string): Display name of the level (e.g., "Cozy Fireplace")
-- **image_path** (string): Path to full-resolution source image (2048×2048px PNG)
+- **name** (string): Display name of the level (e.g., "Christmas Tree")
+- **image_path** (string): Path to full-resolution source image (2048×2048px PNG, circular for spiral puzzles)
 - **thumbnail_path** (string): Path to thumbnail for level selection (512×512px PNG)
-- **puzzle_type** (string): Type of puzzle mechanics - MVP: "rectangle_jigsaw", Future: "spiral_twist"
-- **difficulty_configs** (object): Grid configuration for each difficulty (rows, columns, tile_count)
+- **puzzle_type** (string): Type of puzzle mechanics - "rectangle_jigsaw" or "spiral_twist"
+- **difficulty_configs** (object): Configuration for each difficulty
+  - Rectangle Jigsaw: {rows, columns, tile_count}
+  - Spiral Twist: {ring_count}
 - **hint_limit** (int, optional): Maximum hints allowed (default: 3)
 - **tags** (array, optional): Category tags for future filtering/searching
 
 ### Validation Rules
 - `level_id` must be sequential (1, 2, 3, ..., 20)
-- `tile_count` must equal `rows × columns`
+- Rectangle Jigsaw: `tile_count` must equal `rows × columns`
+- Spiral Twist: `ring_count` must be 3-7
 - `image_path` must point to existing asset
 - `difficulty_configs` must contain all three difficulties (easy, normal, hard)
 - All images must be square aspect ratio (1:1)
+- Odd-numbered levels typically use "spiral_twist", even use "rectangle_jigsaw"
 
 ---
 
@@ -245,7 +263,7 @@ func is_puzzle_solved() -> bool:
 func get_tile_at_position(position: Vector2i) -> Tile
 ```
 
-### Tile Class
+### Tile Class (Rectangle Jigsaw)
 ```gdscript
 class_name Tile
 extends Resource
@@ -258,6 +276,103 @@ var texture_region: Rect2  # Region of source image (x, y, width, height)
 
 func is_correct() -> bool
 func swap_positions(other_tile: Tile) -> void
+```
+
+### SpiralRing Class (Spiral Twist)
+```gdscript
+class_name SpiralRing
+extends Resource
+
+## Individual ring in spiral puzzle
+var ring_index: int  # Ring number from center (0=innermost)
+var current_angle: float  # Current rotation in degrees
+var correct_angle: float  # Target angle (always 0.0)
+var angular_velocity: float  # Rotation speed in degrees/second
+var inner_radius: float  # Inner circle radius in pixels
+var outer_radius: float  # Outer circle radius in pixels
+var is_merged: bool  # Whether ring is locked
+var merged_ring_ids: Array[int]  # Rings merged into this one
+
+## KEY METHODS
+func is_angle_correct(threshold: float = 1.0) -> bool:
+    """Check if within SPIRAL_ROTATION_SNAP_ANGLE"""
+    return abs(current_angle - correct_angle) <= threshold
+
+func can_merge_with(other_ring: SpiralRing) -> bool:
+    """Check merge conditions:
+    - Both not merged
+    - Adjacent (indices differ by 1)
+    - Angle difference ≤ 5.0°
+    - Velocity difference ≤ 10.0°/s
+    """
+
+func merge_with(other_ring: SpiralRing) -> void:
+    """Merge two rings:
+    - Average angles and velocities
+    - Mark both as merged
+    - Track merged ring IDs
+    - Merged ring continues rotating unless it's the outermost (static) ring
+    """
+
+func update_rotation(delta: float) -> void:
+    """Physics update per frame:
+    - Apply angular velocity to current angle
+    - Apply deceleration (200.0°/s²)
+    - Stop when below 1.0°/s
+    """
+
+func _normalize_angle(angle: float) -> float:
+    """Convert to [-180, 180] range"""
+```
+
+### SpiralPuzzleState Class
+```gdscript
+class_name SpiralPuzzleState
+extends Resource
+
+## Current spiral puzzle state
+var level_id: int
+var difficulty: String
+var ring_count: int  # Total rings (3-7)
+var rings: Array[SpiralRing]  # All ring objects
+var active_ring_count: int  # Number of unmerged rings
+var rotation_count: int  # Total rotations made
+var hints_used: int  # Hints consumed
+var is_solved: bool  # Completion flag
+var puzzle_radius: float  # Max radius (450.0 pixels)
+
+## KEY IMPLEMENTATION EXAMPLE: Spiral puzzle validation
+func is_puzzle_solved() -> bool:
+    """Puzzle solved when ≤1 active ring remains"""
+    return active_ring_count <= 1
+
+func update_physics(delta: float) -> void:
+    """Update all rings' rotations each frame"""
+    for ring in rings:
+        if not ring.is_merged:
+            ring.update_rotation(delta)
+
+func check_and_merge_rings() -> bool:
+    """Detect and perform ring merges
+    Returns true if any merge occurred"""
+    for i in range(rings.size() - 1):
+        if rings[i].can_merge_with(rings[i + 1]):
+            rings[i].merge_with(rings[i + 1])
+            active_ring_count -= 1
+            return true
+    return false
+
+func get_ring_at_position(touch_pos: Vector2, center: Vector2) -> SpiralRing:
+    """Hit detection for rings"""
+
+func set_ring_velocity(ring_index: int, velocity: float) -> void:
+    """Apply flick momentum"""
+
+func rotate_ring(ring_index: int, angle_delta: float) -> void:
+    """Direct drag rotation"""
+
+func use_hint() -> bool:
+    """Snap random incorrect ring to correct angle"""
 ```
 
 ---
@@ -280,10 +395,24 @@ const DEFAULT_HINT_LIMIT = 3
 ## Grid configurations defined in levels.json difficulty_configs
 # Easy: 2×3 (6 tiles), Normal: 3×4 (12 tiles), Hard: 5×6 (30 tiles)
 
-## Puzzle mechanics
+## Puzzle mechanics - Rectangle Jigsaw
 const TILE_SWAP_DURATION = 0.3  # seconds
 const TILE_SELECTION_SCALE = 1.05
 const HINT_ANIMATION_DURATION = 0.5
+
+## Puzzle mechanics - Spiral Twist
+const SPIRAL_RING_BORDER_WIDTH = 4  # pixels
+const SPIRAL_MERGE_ANGLE_THRESHOLD = 5.0  # degrees
+const SPIRAL_MERGE_VELOCITY_THRESHOLD = 10.0  # degrees per second
+const SPIRAL_ANGULAR_DECELERATION = 200.0  # degrees/s²
+const SPIRAL_MAX_ANGULAR_VELOCITY = 720.0  # degrees per second
+const SPIRAL_MIN_VELOCITY_THRESHOLD = 1.0  # Stop below this
+const SPIRAL_ROTATION_SNAP_ANGLE = 1.0  # Snap when within this angle
+
+## Spiral ring counts per difficulty
+const SPIRAL_RINGS_EASY = 3
+const SPIRAL_RINGS_NORMAL = 5
+const SPIRAL_RINGS_HARD = 7
 
 ## Audio settings
 const DEFAULT_MUSIC_VOLUME = 0.7

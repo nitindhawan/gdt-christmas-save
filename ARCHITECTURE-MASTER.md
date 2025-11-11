@@ -59,7 +59,9 @@ These 5 core systems must be configured in Project Settings → AutoLoad:
 ### Level Management
 - 20 levels total, each defined in `data/levels.json`
 - Each level contains: level_id, image_path, puzzle_type, difficulty_configs
+- Puzzle types alternate: Odd levels (1,3,5...) = Spiral Twist, Even (2,4,6...) = Rectangle Jigsaw
 - LevelManager loads and caches level data on game start
+- Auto-generates levels beyond defined JSON with alternating puzzle types
 - See **DATA-SCHEMA.md** for complete levels.json structure
 
 ### Progression System
@@ -70,12 +72,27 @@ These 5 core systems must be configured in Project Settings → AutoLoad:
 - Save system uses Godot ConfigFile (user://save_data.cfg)
 - See **GAME-RULES.md** for detailed progression rules and **DATA-SCHEMA.md** for save format
 
-### Puzzle System: Rectangle Jigsaw (MVP)
+### Puzzle Systems
+
+#### Puzzle Type 1: Spiral Twist (Odd Levels)
+- Circular image divided into concentric rings: Easy (3), Normal (5), Hard (7)
+- Outermost ring is static (reference frame), inner rings rotate
+- Rings scrambled with random rotations at level start
+- Player interaction: Drag to rotate, flick for momentum
+- Physics-based: Angular velocity, deceleration, friction
+- Ring merging: Adjacent rings merge when angles/velocities align
+- Merged rings continue rotating until they merge with the static outermost ring
+- Win condition: All rings merged into outermost ring (only 1 active ring remains)
+- Hint system: Snaps random incorrect ring to correct angle
+- See **GAME-RULES.md** for complete mechanics
+
+#### Puzzle Type 2: Rectangle Jigsaw (Even Levels)
 - Image divided into rectangular grid: Easy (2×3), Normal (3×4), Hard (5×6)
 - Tiles scrambled using Fisher-Yates shuffle at level start
 - Player interaction: Two-tap swap mechanic (tap tile 1, tap tile 2, swap)
 - Real-time validation after each swap
-- Hint system: Automatically places one incorrect tile correctly
+- Win condition: All tiles in correct positions
+- Hint system: Automatically swaps one incorrect tile to correct position
 - See **GAME-RULES.md** for complete mechanics
 
 ### Audio System
