@@ -21,9 +21,8 @@ var _touch_history_size: int = 5
 
 ## Called when node enters scene
 func _ready() -> void:
-	# All rings need STOP to receive _gui_input events
-	# We'll filter them manually in _gui_input based on ring bounds
-	mouse_filter = Control.MOUSE_FILTER_STOP
+	# Rings don't handle input individually - parent handles it
+	mouse_filter = Control.MOUSE_FILTER_IGNORE
 
 	# Debug print
 	if ring_data:
@@ -106,6 +105,47 @@ func _gui_input(event: InputEvent) -> void:
 	elif event is InputEventMouseMotion:
 		if _is_dragging:
 			_update_drag(event.position)
+
+## Public method for external drag start (called by gameplay_screen)
+func start_drag_external(touch_pos: Vector2) -> void:
+	_is_dragging = true
+	_start_drag(touch_pos)
+
+## Public method for external drag update (called by gameplay_screen)
+func update_drag_external(touch_pos: Vector2) -> float:
+	var current_angle = _get_touch_angle(touch_pos)
+	var angle_delta = current_angle - _drag_start_angle
+
+	# Normalize angle delta to [-180, 180]
+	while angle_delta > 180.0:
+		angle_delta -= 360.0
+	while angle_delta < -180.0:
+		angle_delta += 360.0
+
+	# Update for next frame
+	_drag_start_angle = current_angle
+
+	# Record touch history for flick detection
+	var current_time = Time.get_ticks_msec() / 1000.0
+	_last_touch_angles.append(current_angle)
+	_last_touch_times.append(current_time)
+
+	# Keep only recent history
+	if _last_touch_angles.size() > _touch_history_size:
+		_last_touch_angles.pop_front()
+		_last_touch_times.pop_front()
+
+	queue_redraw()
+	return angle_delta
+
+## Public method for external drag end (called by gameplay_screen)
+func end_drag_external() -> float:
+	_is_dragging = false
+	var angular_velocity = _calculate_flick_velocity()
+	if abs(angular_velocity) < 10.0:
+		angular_velocity = 0.0
+	queue_redraw()
+	return angular_velocity
 
 ## Start dragging interaction
 func _start_drag(touch_pos: Vector2) -> void:

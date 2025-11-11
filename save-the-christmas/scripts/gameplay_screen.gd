@@ -14,6 +14,7 @@ var current_difficulty: int = GameConstants.Difficulty.EASY
 var puzzle_state: Resource  # Can be PuzzleState or SpiralPuzzleState
 var tile_nodes: Array = []
 var ring_nodes: Array = []
+var rings_container: Control = null  # Container for spiral ring nodes
 var source_texture: Texture2D
 var is_spiral_puzzle: bool = false
 var puzzle_center: Vector2 = Vector2(540, 960)  # Center of 1080x1920 screen
@@ -367,13 +368,15 @@ func _spawn_spiral_rings() -> void:
 		puzzle_area.size = Vector2(900, 900)
 		print("Forced puzzle area size to: %v" % puzzle_area.size)
 
-	# Create a Control container for rings (CenterContainer's layout interferes)
-	var rings_container = Control.new()
+	# Create a Control container for rings that handles ALL input
+	rings_container = Control.new()
 	rings_container.name = "RingsContainer"
-	# CenterContainer uses child's minimum size, not anchors
 	rings_container.custom_minimum_size = puzzle_area.size
-	rings_container.mouse_filter = Control.MOUSE_FILTER_IGNORE  # Pass input through to children
+	rings_container.mouse_filter = Control.MOUSE_FILTER_STOP  # Capture all input here
 	puzzle_area.add_child(rings_container)
+
+	# Connect input handling to this container
+	rings_container.gui_input.connect(_on_rings_container_input)
 
 	await get_tree().process_frame
 	print("Rings container size: %v, position: %v" % [rings_container.size, rings_container.position])
@@ -403,10 +406,6 @@ func _spawn_spiral_rings() -> void:
 
 		print("Added ring %d to container" % i)
 
-		# Connect signals - pass the ring_node so we can get its ring_data
-		ring_node.ring_rotated.connect(_on_ring_rotated.bind(ring_node))
-		ring_node.ring_flicked.connect(_on_ring_flicked.bind(ring_node))
-
 		ring_nodes[i] = ring_node  # Store in correct position
 
 	print("Spawned %d spiral rings" % ring_nodes.size())
@@ -415,28 +414,66 @@ func _spawn_spiral_rings() -> void:
 	await get_tree().process_frame
 	print("Layout complete. Final puzzle area size: %v" % puzzle_area.size)
 
-## Handle ring rotation (drag)
-func _on_ring_rotated(angle_delta: float, ring_node: Control) -> void:
+## Centralized input handler for all rings
+var _dragging_ring_node: Control = null
+
+func _on_rings_container_input(event: InputEvent) -> void:
+	if not is_spiral_puzzle:
+		return
+
 	var spiral_state = puzzle_state as SpiralPuzzleState
-	var ring_data = ring_node.ring_data
+	var event_pos: Vector2
 
-	# Find the current index of this ring in the rings array
-	var ring_index = spiral_state.rings.find(ring_data)
-	if ring_index >= 0:
-		spiral_state.rotate_ring(ring_index, angle_delta)
+	if event is InputEventMouseButton:
+		event_pos = event.position
+	elif event is InputEventMouseMotion:
+		event_pos = event.position
+	else:
+		return
 
-## Handle ring flicked
-func _on_ring_flicked(angular_velocity: float, ring_node: Control) -> void:
-	var spiral_state = puzzle_state as SpiralPuzzleState
-	var ring_data = ring_node.ring_data
+	# Calculate distance from center
+	if rings_container == null:
+		return
+	var center = rings_container.size / 2.0
+	var offset = event_pos - center
+	var distance = offset.length()
 
-	# Find the current index of this ring in the rings array
-	var ring_index = spiral_state.rings.find(ring_data)
-	if ring_index >= 0:
-		spiral_state.set_ring_velocity(ring_index, angular_velocity)
+	# Handle mouse button press/release
+	if event is InputEventMouseButton:
+		var mouse_event = event as InputEventMouseButton
+		if mouse_event.button_index == MOUSE_BUTTON_LEFT:
+			if mouse_event.pressed:
+				# Find which ring was clicked (check from innermost to outermost)
+				for i in range(spiral_state.rings.size()):
+					var ring = spiral_state.rings[i]
+					if ring.is_locked:
+						continue
+					if distance >= ring.inner_radius and distance <= ring.outer_radius:
+						# Found the clicked ring
+						_dragging_ring_node = ring_nodes[i]
+						_dragging_ring_node.start_drag_external(event_pos)
+						print("Started dragging Ring %d at distance %.1f" % [i, distance])
+						break
+			else:
+				# Release
+				if _dragging_ring_node != null:
+					var angular_velocity = _dragging_ring_node.end_drag_external()
+					var ring_data = _dragging_ring_node.ring_data
+					var ring_index = spiral_state.rings.find(ring_data)
+					if ring_index >= 0:
+						spiral_state.set_ring_velocity(ring_index, angular_velocity)
+					if AudioManager:
+						AudioManager.play_sfx("tile_drop")
+					_dragging_ring_node = null
 
-	if AudioManager:
-		AudioManager.play_sfx("tile_drop")
+	# Handle mouse motion during drag
+	elif event is InputEventMouseMotion:
+		if _dragging_ring_node != null:
+			var angle_delta = _dragging_ring_node.update_drag_external(event_pos)
+			var ring_data = _dragging_ring_node.ring_data
+			var ring_index = spiral_state.rings.find(ring_data)
+			if ring_index >= 0:
+				spiral_state.rotate_ring(ring_index, angle_delta)
 
 ## Update ring visual rotations
 func _update_spiral_ring_visuals() -> void:
