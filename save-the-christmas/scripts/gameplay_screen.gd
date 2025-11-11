@@ -25,7 +25,27 @@ func _ready() -> void:
 	current_level_id = GameManager.get_current_level()
 	current_difficulty = GameManager.get_current_difficulty()
 
+	# Style confirmation dialog for mobile
+	_style_confirmation_dialog()
+
 	_initialize_gameplay()
+
+## Style confirmation dialog for mobile readability
+func _style_confirmation_dialog() -> void:
+	# Set larger font sizes for dialog text
+	confirmation_dialog.add_theme_font_size_override("font_size", 36)
+
+	# Style the buttons - access them from the dialog
+	var ok_button = confirmation_dialog.get_ok_button()
+	var cancel_button = confirmation_dialog.get_cancel_button()
+
+	# Set minimum sizes to meet mobile touch targets (88x88px minimum)
+	ok_button.custom_minimum_size = Vector2(200, 100)
+	cancel_button.custom_minimum_size = Vector2(200, 100)
+
+	# Set larger font sizes for buttons
+	ok_button.add_theme_font_size_override("font_size", 32)
+	cancel_button.add_theme_font_size_override("font_size", 32)
 
 ## Initialize gameplay with current level and difficulty
 func _initialize_gameplay() -> void:
