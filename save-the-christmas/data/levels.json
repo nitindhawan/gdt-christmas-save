@@ -1,28 +1,22 @@
 {
   "version": "1.0",
-  "total_levels": 3,
+  "total_levels": 100,
   "levels": [
     {
       "level_id": 1,
       "name": "Christmas Tree",
       "image_path": "res://assets/levels/level_01.png",
       "thumbnail_path": "res://assets/levels/thumbnails/level_01_thumb.png",
-      "puzzle_type": "rectangle_jigsaw",
+      "puzzle_type": "spiral_twist",
       "difficulty_configs": {
         "easy": {
-          "rows": 2,
-          "columns": 3,
-          "tile_count": 6
+          "ring_count": 3
         },
         "normal": {
-          "rows": 3,
-          "columns": 4,
-          "tile_count": 12
+          "ring_count": 5
         },
         "hard": {
-          "rows": 5,
-          "columns": 6,
-          "tile_count": 30
+          "ring_count": 7
         }
       },
       "hint_limit": 3,
@@ -59,22 +53,16 @@
       "name": "Winter Wonderland",
       "image_path": "res://assets/levels/level_03.png",
       "thumbnail_path": "res://assets/levels/thumbnails/level_03_thumb.png",
-      "puzzle_type": "rectangle_jigsaw",
+      "puzzle_type": "spiral_twist",
       "difficulty_configs": {
         "easy": {
-          "rows": 2,
-          "columns": 3,
-          "tile_count": 6
+          "ring_count": 3
         },
         "normal": {
-          "rows": 3,
-          "columns": 4,
-          "tile_count": 12
+          "ring_count": 5
         },
         "hard": {
-          "rows": 5,
-          "columns": 6,
-          "tile_count": 30
+          "ring_count": 7
         }
       },
       "hint_limit": 3,

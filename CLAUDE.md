@@ -4,10 +4,10 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## Project Overview
 
-**Save the Christmas** is a 2D mobile puzzle game built with Godot 4.5.1. Players unscramble Christmas-themed images by rearranging jumbled rectangular tiles. The game features 20 levels with three difficulty modes (Easy, Normal, Hard), earning up to 3 stars per level.
+**Save the Christmas** is a 2D mobile puzzle game built with Godot 4.5.1. Players solve Christmas-themed image puzzles using two distinct mechanics: Spiral Twist (rotating rings) and Rectangle Jigsaw (tile swapping). The game features 20 levels with three difficulty modes (Easy, Normal, Hard), earning up to 3 stars per level.
 
 **Platform**: Mobile (iOS/Android) - Portrait mode only
-**Status**: Planning complete, implementation not yet started
+**Status**: Implementation in progress (Spiral Puzzle feature branch active)
 
 ## Development Commands
 
@@ -127,16 +127,32 @@ These must be configured in Project Settings → AutoLoad:
 ### Core Data Classes
 
 **LevelData** (`scripts/level_data.gd`): Level definition from levels.json
-- Properties: level_id, image_path, difficulty_configs {easy, normal, hard}
-- Each difficulty specifies grid: {rows, columns, tile_count}
+- Properties: level_id, image_path, puzzle_type, difficulty_configs {easy, normal, hard}
+- Rectangle Jigsaw difficulty: {rows, columns, tile_count}
+- Spiral Twist difficulty: {ring_count}
 
-**PuzzleState** (`scripts/puzzle_state.gd`): Runtime puzzle state
+**PuzzleState** (`scripts/puzzle_state.gd`): Runtime rectangle jigsaw puzzle state
 - Tracks current tile arrangement, selected tiles, swap count
 - Method: `is_puzzle_solved()` validates all tiles in correct positions
 
-**Tile** (`scripts/tile.gd`): Individual tile data
+**SpiralPuzzleState** (`scripts/spiral_puzzle_state.gd`): Runtime spiral puzzle state
+- Tracks rings, active_ring_count, rotation_count, hints_used
+- Method: `is_puzzle_solved()` returns true when active_ring_count ≤ 1
+- Method: `update_physics(delta)` updates all ring rotations each frame
+- Method: `check_and_merge_rings()` detects and performs merges
+
+**Tile** (`scripts/tile.gd`): Individual tile data (Rectangle Jigsaw)
 - Properties: current_position, correct_position, texture_region
 - Method: `is_correct()` compares positions
+
+**SpiralRing** (`scripts/spiral_ring.gd`): Individual ring data (Spiral Twist)
+- Properties: ring_index, current_angle, angular_velocity, inner_radius, outer_radius, is_locked
+- Method: `is_angle_correct()` checks if within 1° of correct angle
+- Method: `can_merge_with()` validates merge conditions
+- Method: `merge_with()` absorbs other ring (expands inner_radius, inherits lock state)
+- Method: `gain_velocity()` applies flick velocity (checks is_locked)
+- Method: `can_rotate()` returns !is_locked
+- Method: `update_rotation(delta)` applies physics (velocity, deceleration)
 
 ### Scene Flow
 
@@ -194,21 +210,50 @@ LoadingScreen (initial boot)
 
 ## Puzzle Mechanics
 
+The game features TWO puzzle types that alternate between levels:
+- **Odd-numbered levels (1, 3, 5, ...)**: Spiral Twist
+- **Even-numbered levels (2, 4, 6, ...)**: Rectangle Jigsaw
+
+### Spiral Twist Puzzle Type
+- Circular image divided into concentric rings
+- **Easy**: 3 rings
+- **Normal**: 5 rings
+- **Hard**: 7 rings
+- **Outermost ring is static** (doesn't rotate, serves as reference frame)
+- Inner rings rotate via drag or flick with momentum
+- Physics-based: angular velocity (max 720°/s), deceleration (200°/s²)
+- Rings merge when aligned (angle ≤5°, velocity ≤10°/s)
+- **Merged rings continue rotating** until they merge with the outermost ring
+- Win condition: All rings merged into the outermost ring (active_ring_count ≤ 1)
+
 ### Rectangle Jigsaw Puzzle Type
-- Image divided into rectangular grid (MVP only supports this type)
+- Image divided into rectangular grid
 - **Easy**: 2×3 grid (6 tiles)
 - **Normal**: 3×4 grid (12 tiles)
 - **Hard**: 5×6 grid (30 tiles)
 
-### Tile Interaction
+### Ring Interaction (Spiral Twist)
+1. **Touch down**: Select ring (within inner/outer radius)
+2. **Drag**: Ring rotates following finger, no momentum during drag
+3. **Release**:
+   - Fast release → Flick detected, apply angular velocity
+   - Slow release → Ring stops immediately
+4. **Physics Loop**: Each frame (_process):
+   - Update all ring rotations (apply velocity, deceleration)
+   - Check for ring merges (adjacent rings with aligned angle/velocity)
+   - Update visuals
+5. **Validation**: After merge, check if puzzle solved
+
+### Tile Interaction (Rectangle Jigsaw)
 1. **First tap**: Select tile (highlight with gold border)
 2. **Second tap**: Swap with first tile (0.3s tween animation)
 3. **Validation**: After each swap, check if puzzle solved
 
 ### Hint System
-- Automatically swaps one incorrect tile to correct position
+- **Spiral Twist**: Snaps one random incorrect ring to correct angle (0°)
+- **Rectangle Jigsaw**: Automatically swaps one incorrect tile to correct position
 - Limited to 3 hints per level (configurable in levels.json)
-- Animation: Sparkle/glow effect on hinted tile
+- Animation: Sparkle/glow effect on hinted element
 
 ## Data Schema
 
@@ -220,9 +265,22 @@ LoadingScreen (initial boot)
   "levels": [
     {
       "level_id": 1,
-      "name": "Cozy Fireplace",
+      "name": "Christmas Tree",
       "image_path": "res://assets/levels/level_01.png",
       "thumbnail_path": "res://assets/levels/thumbnails/level_01_thumb.png",
+      "puzzle_type": "spiral_twist",
+      "difficulty_configs": {
+        "easy": {"ring_count": 3},
+        "normal": {"ring_count": 5},
+        "hard": {"ring_count": 7}
+      },
+      "hint_limit": 3
+    },
+    {
+      "level_id": 2,
+      "name": "Cozy Fireplace",
+      "image_path": "res://assets/levels/level_02.png",
+      "thumbnail_path": "res://assets/levels/thumbnails/level_02_thumb.png",
       "puzzle_type": "rectangle_jigsaw",
       "difficulty_configs": {
         "easy": {"rows": 2, "columns": 3, "tile_count": 6},
@@ -338,7 +396,70 @@ ProgressManager.load_save_data()
 
 ## Important Implementation Notes
 
-### Tile Generation
+### Spiral Puzzle Implementation Files
+**Core Scripts**:
+- `spiral_ring.gd` (84 lines): Ring data, merge logic, physics update
+- `spiral_puzzle_state.gd` (121 lines): Puzzle state, ring collection, validation
+- `spiral_ring_node.gd` (334 lines): Visual rendering, input handling, signals
+- `spiral_ring_node.tscn`: Scene definition for ring node
+
+**Key Integration Points**:
+- `puzzle_manager.gd`: Contains `_generate_spiral_puzzle()`, `_create_rings_from_image()`
+- `gameplay_screen.gd`: Contains `_setup_spiral_puzzle()`, `_spawn_spiral_rings()`, physics loop
+- `game_constants.gd`: All spiral puzzle constants (merge thresholds, physics values)
+
+### Spiral Ring Generation
+- Divide puzzle radius into equal-width rings
+  - `ring_width = puzzle_radius / ring_count`
+  - Ring i: `inner_radius = i * ring_width`, `outer_radius = (i+1) * ring_width`
+- **Outermost ring (index = ring_count-1)**: Starts with `is_locked = true` (static reference)
+- All other rings scrambled to random angles (±180°, min 20° from correct)
+
+### Spiral Ring Rendering
+- Use custom `_draw()` to create textured donut polygons
+  - 128 segments for smooth circles
+  - Apply rotation to texture UV coordinates (not vertices)
+  - Each ring rendered as 2 triangles per segment
+- Borders: 4px white (normal), dark gray (merged)
+- Debug: Ring index displayed as text overlay
+
+### Spiral Physics Loop (CRITICAL)
+Must run in `GameplayScreen._process(delta)` for smooth animation:
+```gdscript
+func _process(delta):
+    if is_spiral_puzzle:
+        spiral_state.update_physics(delta)  # Update all ring rotations
+        if spiral_state.check_and_merge_rings():  # Check merges each frame
+            AudioManager.play_sfx("ring_merge")
+            _refresh_spiral_visuals()
+        _update_spiral_ring_visuals()  # Update visual display
+        if spiral_state.is_puzzle_solved():
+            _check_spiral_puzzle_solved()
+```
+
+### Spiral Input Handling
+- `spiral_ring_node.gd` handles touch events via `_gui_input()`
+- Emits signals: `ring_rotated(angle_delta, ring_index)`, `ring_flicked(angular_velocity, ring_index)`
+- Tracks touch history (5 samples) for flick velocity calculation
+- Touch samples: angle + timestamp, used to calculate average velocity on release
+
+### Spiral Merge Detection (CRITICAL IMPLEMENTATION)
+Check adjacent rings each frame in `check_and_merge_rings()`:
+- Iterate through rings array
+- For each pair (i, i+1), check `can_merge_with()`:
+  - Not both locked
+  - Angle difference ≤ 5°
+  - Velocity difference ≤ 10°/s
+- **On merge** (keep outer, discard inner):
+  1. Expand outer ring inward: `rings[i+1].inner_radius = rings[i].inner_radius`
+  2. Average angles/velocities
+  3. If merging with locked ring, result is locked
+  4. **Remove inner ring**: `rings.remove_at(i)`
+  5. Decrease active_ring_count
+- **Result**: Rings array shrinks as merging progresses
+- **Win condition**: `rings.size() == 1` (only locked outermost ring remains)
+
+### Rectangle Jigsaw Tile Generation
 - Use AtlasTexture to split source image into tile regions
 - Tiles must track both current_position and correct_position
 - Scramble using Fisher-Yates shuffle (ensures solvability)
@@ -374,17 +495,4 @@ See project root for detailed specs:
 - If API compatibility unclear, mark with NEEDS_VERIFICATION_4.5.1 comment
 - Update architecture documents if implementation differs from plan
 
-**Project Status**: Planning Phase Complete, Ready for Implementation
 
-## Current Milestone
-
-**Milestone 1: Project Setup & Core Systems** (Not Started)
-
-Next immediate tasks:
-1. Set up Godot project settings (resolution, stretch mode, orientation)
-2. Create folder structure (scenes/, scripts/, assets/, data/)
-3. Implement 5 AutoLoad singletons (GameConstants, GameManager, etc.)
-4. Create core data classes (LevelData, PuzzleState, Tile)
-5. Set up test data (3 test levels in levels.json)
-
-All .gd files MUST be validated with `--check-only` before marking complete.

@@ -6,6 +6,7 @@ extends Node
 var levels: Array = []  # Array of LevelData objects
 var level_textures: Dictionary = {}  # Cache for loaded level images
 var thumbnail_textures: Dictionary = {}  # Cache for loaded thumbnails
+var total_levels: int = 100  # Total number of levels (can be higher than levels.size())
 
 var _levels_loaded: bool = false
 
@@ -44,6 +45,9 @@ func load_levels() -> bool:
 		push_error("Invalid levels.json format: 'levels' is not an array")
 		return false
 
+	# Read total_levels from JSON (defaults to 100 if not specified)
+	total_levels = data.get("total_levels", 100)
+
 	# Parse each level
 	levels.clear()
 	for level_dict in levels_array:
@@ -52,7 +56,7 @@ func load_levels() -> bool:
 			levels.append(level_data)
 
 	_levels_loaded = true
-	print("Loaded ", levels.size(), " levels successfully")
+	print("Loaded %d levels from JSON, total_levels set to %d" % [levels.size(), total_levels])
 	return true
 
 ## Parse a level dictionary into a LevelData-like dictionary
@@ -74,13 +78,76 @@ func _parse_level_data(level_dict: Dictionary) -> Dictionary:
 
 	return level_data
 
-## Get level data by level ID
+## Generate a dynamic level (cycles through 3 images, alternates puzzle types)
+func _generate_dynamic_level(level_id: int) -> Dictionary:
+	# Cycle through 3 images
+	var image_index = ((level_id - 1) % 3) + 1  # 1, 2, or 3
+
+	# Determine puzzle type: odd levels = spiral, even levels = rectangle
+	var is_spiral = (level_id % 2) == 1
+	var puzzle_type = "spiral_twist" if is_spiral else "rectangle_jigsaw"
+
+	# Generate difficulty configs based on puzzle type
+	var difficulty_configs = {}
+	if is_spiral:
+		# Spiral puzzle configs
+		difficulty_configs = {
+			"easy": {
+				"ring_count": GameConstants.SPIRAL_RINGS_EASY
+			},
+			"normal": {
+				"ring_count": GameConstants.SPIRAL_RINGS_NORMAL
+			},
+			"hard": {
+				"ring_count": GameConstants.SPIRAL_RINGS_HARD
+			}
+		}
+	else:
+		# Rectangle puzzle configs
+		difficulty_configs = {
+			"easy": {
+				"rows": 2,
+				"columns": 3,
+				"tile_count": 6
+			},
+			"normal": {
+				"rows": 3,
+				"columns": 4,
+				"tile_count": 12
+			},
+			"hard": {
+				"rows": 5,
+				"columns": 6,
+				"tile_count": 30
+			}
+		}
+
+	# Build level data
+	var level_data = {
+		"level_id": level_id,
+		"name": "Level %d" % level_id,
+		"image_path": "res://assets/levels/level_0%d.png" % image_index,
+		"thumbnail_path": "res://assets/levels/thumbnails/level_0%d_thumb.png" % image_index,
+		"puzzle_type": puzzle_type,
+		"difficulty_configs": difficulty_configs,
+		"hint_limit": GameConstants.DEFAULT_HINT_LIMIT,
+		"tags": []
+	}
+
+	print("Generated dynamic level %d: Type=%s, Image=%d" % [level_id, puzzle_type, image_index])
+
+	return level_data
+
+## Get level data by level ID (now generates levels dynamically)
 func get_level(level_id: int) -> Dictionary:
+	# Check if level exists in loaded levels (from JSON)
 	for level in levels:
 		if level["level_id"] == level_id:
 			return level
-	push_error("Level not found: " + str(level_id))
-	return {}
+
+	# Generate level dynamically if not in JSON
+	# This allows infinite levels by cycling through 3 images
+	return _generate_dynamic_level(level_id)
 
 ## Get level texture (loads and caches if not already loaded)
 func get_level_texture(level_id: int) -> Texture2D:
@@ -144,7 +211,7 @@ func get_tile_count(level_id: int, difficulty: String) -> int:
 
 ## Get total number of levels
 func get_total_levels() -> int:
-	return levels.size()
+	return total_levels
 
 ## Unload a level texture from cache to free memory
 func unload_level_texture(level_id: int) -> void:

@@ -121,48 +121,48 @@ See **DATA-SCHEMA.md** section 3 for complete class definitions:
 ## Milestone 3: Difficulty Selection & Settings
 **Goal**: Implement difficulty selection and settings popup
 **Estimated Time**: 2-3 days
-**Status**: ⏳ Not Started
+**Status**: ✅ COMPLETED
 
 ### Tasks
 
 #### 3.1 Difficulty Selection Screen
-- [ ] Create `scenes/difficulty_selection.tscn`
-  - [ ] Add close button (X, top-left)
-  - [ ] Add share button (top-right)
-  - [ ] Add level number label
-  - [ ] Add preview image (900×900px)
-  - [ ] Add 3 difficulty buttons (Easy, Normal, Hard)
-  - [ ] Add star indicators on each button
-- [ ] Create `scripts/difficulty_selection.gd`
-  - [ ] Initialize with level_id parameter
-  - [ ] Load level preview from LevelManager
-  - [ ] Check difficulty unlock status from ProgressManager
-  - [ ] Enable/disable buttons based on unlock status
-  - [ ] Handle difficulty selection → navigate to GameplayScreen
-  - [ ] Handle close button → return to LevelSelection
-  - [ ] Handle share button → native share (placeholder)
-  - [ ] Validate with script check command
+- [x] Create `scenes/difficulty_selection.tscn`
+  - [x] Add close button (X, top-left)
+  - [x] Add share button (top-right)
+  - [x] Add level number label
+  - [x] Add preview image (900×900px)
+  - [x] Add 3 difficulty buttons (Easy, Normal, Hard)
+  - [x] Add star indicators on each button
+- [x] Create `scripts/difficulty_selection.gd`
+  - [x] Initialize with level_id parameter
+  - [x] Load level preview from LevelManager
+  - [x] Check difficulty unlock status from ProgressManager
+  - [x] Enable/disable buttons based on unlock status
+  - [x] Handle difficulty selection → navigate to GameplayScreen
+  - [x] Handle close button → return to LevelSelection
+  - [x] Handle share button → native share (placeholder)
+  - [x] Validate with script check command
 
 #### 3.2 Settings Popup
-- [ ] Create `scenes/settings_popup.tscn`
-  - [ ] Add semi-transparent overlay (full screen)
-  - [ ] Add modal panel (900×1200px, centered)
-  - [ ] Add close button (X)
-  - [ ] Add "Settings" title
-  - [ ] Add 3 toggle switches (Sound, Music, Vibrations)
-  - [ ] Add "Send Feedback" button
-  - [ ] Add "Remove Ads" button
-  - [ ] Add Privacy and Terms links
-- [ ] Create `scripts/settings_popup.gd`
-  - [ ] Load current settings from AudioManager
-  - [ ] Handle toggle changes (apply immediately)
-  - [ ] Save settings on close via AudioManager
-  - [ ] Handle close button and outside tap
-  - [ ] Handle "Send Feedback" button (email or web form)
-  - [ ] Handle "Remove Ads" button (IAP placeholder)
-  - [ ] Handle Privacy/Terms links (open browser)
-  - [ ] Validate with script check command
-- [ ] Integrate settings popup with LevelSelection and GameplayScreen
+- [x] Create `scenes/settings_popup.tscn`
+  - [x] Add semi-transparent overlay (full screen)
+  - [x] Add modal panel (900×1200px, centered)
+  - [x] Add close button (X)
+  - [x] Add "Settings" title
+  - [x] Add 3 toggle switches (Sound, Music, Vibrations)
+  - [x] Add "Send Feedback" button
+  - [x] Add "Remove Ads" button
+  - [x] Add Privacy and Terms links
+- [x] Create `scripts/settings_popup.gd`
+  - [x] Load current settings from AudioManager
+  - [x] Handle toggle changes (apply immediately)
+  - [x] Save settings on close via AudioManager
+  - [x] Handle close button and outside tap
+  - [x] Handle "Send Feedback" button (email or web form)
+  - [x] Handle "Remove Ads" button (IAP placeholder)
+  - [x] Handle Privacy/Terms links (open browser)
+  - [x] Validate with script check command
+- [x] Integrate settings popup with LevelSelection and GameplayScreen
 
 **Milestone 3 Acceptance Criteria**:
 - ✅ Difficulty Selection displays level preview correctly
@@ -176,57 +176,57 @@ See **DATA-SCHEMA.md** section 3 for complete class definitions:
 ## Milestone 4: Puzzle System & Gameplay
 **Goal**: Implement core puzzle mechanics and gameplay screen
 **Estimated Time**: 5-6 days
-**Status**: ⏳ Not Started
+**Status**: ✅ COMPLETED
 
 ### Tasks
 
 #### 4.1 Puzzle Manager System
-- [ ] Create `scripts/puzzle_manager.gd` (if not done in Milestone 1)
-  - [ ] Function: generate_puzzle(level_data, difficulty) → PuzzleState
-  - [ ] Function: create_tiles_from_image(texture, grid_size) → Array[Tile]
-  - [ ] Function: scramble_tiles(puzzle_state) using Fisher-Yates
-  - [ ] Function: validate_solvability(puzzle_state) → bool
-  - [ ] Validate with script check command
-- [ ] Add PuzzleManager to AutoLoad if not already added
+- [x] Create `scripts/puzzle_manager.gd` (if not done in Milestone 1)
+  - [x] Function: generate_puzzle(level_data, difficulty) → PuzzleState
+  - [x] Function: create_tiles_from_image(texture, grid_size) → Array[Tile]
+  - [x] Function: scramble_tiles(puzzle_state) using Fisher-Yates
+  - [x] Function: validate_solvability(puzzle_state) → bool
+  - [x] Validate with script check command
+- [x] Add PuzzleManager to AutoLoad if not already added
 
 #### 4.2 Tile Node Component
-- [ ] Create `scenes/tile_node.tscn`
-  - [ ] TextureRect for tile image
-  - [ ] Selection border (hidden by default)
-  - [ ] Touch area (Control node for input)
-- [ ] Create `scripts/tile_node.gd`
-  - [ ] Setup function (set tile data, texture region)
-  - [ ] Selection visual feedback (border, scale)
-  - [ ] Click/touch handling
-  - [ ] Swap animation (tween position)
-  - [ ] Validate with script check command
+- [x] Create `scenes/tile_node.tscn`
+  - [x] TextureRect for tile image
+  - [x] Selection border (hidden by default)
+  - [x] Touch area (Control node for input)
+- [x] Create `scripts/tile_node.gd`
+  - [x] Setup function (set tile data, texture region)
+  - [x] Selection visual feedback (border, scale)
+  - [x] Click/touch handling
+  - [x] Swap animation (tween position)
+  - [x] Validate with script check command
 
 #### 4.3 Gameplay Screen
-- [ ] Create `scenes/gameplay_screen.tscn`
-  - [ ] Add top HUD (back, level label, share, settings)
-  - [ ] Add CenterContainer for puzzle grid
-  - [ ] Add GridContainer (dynamic size based on difficulty)
-  - [ ] Add hint button (bottom)
-- [ ] Create `scripts/gameplay_screen.gd`
-  - [ ] Initialize with level_id and difficulty parameters
-  - [ ] Load level data from LevelManager
-  - [ ] Generate puzzle via PuzzleManager
-  - [ ] Spawn tile nodes in grid
-  - [ ] Handle tile selection (first tap)
-  - [ ] Handle tile swap (second tap)
-  - [ ] Animate tile swaps with tweens
-  - [ ] Check puzzle solved after each swap
-  - [ ] Navigate to LevelCompleteScreen on solve
-  - [ ] Handle hint button (swap one tile to correct position)
-  - [ ] Handle back button (show confirmation dialog)
-  - [ ] Handle share button (screenshot + native share)
-  - [ ] Handle settings button (open SettingsPopup)
-  - [ ] Validate with script check command
+- [x] Create `scenes/gameplay_screen.tscn`
+  - [x] Add top HUD (back, level label, share, settings)
+  - [x] Add CenterContainer for puzzle grid
+  - [x] Add GridContainer (dynamic size based on difficulty)
+  - [x] Add hint button (bottom)
+- [x] Create `scripts/gameplay_screen.gd`
+  - [x] Initialize with level_id and difficulty parameters
+  - [x] Load level data from LevelManager
+  - [x] Generate puzzle via PuzzleManager
+  - [x] Spawn tile nodes in grid
+  - [x] Handle tile selection (first tap)
+  - [x] Handle tile swap (second tap)
+  - [x] Animate tile swaps with tweens
+  - [x] Check puzzle solved after each swap
+  - [x] Navigate to LevelCompleteScreen on solve
+  - [x] Handle hint button (swap one tile to correct position)
+  - [x] Handle back button (show confirmation dialog)
+  - [x] Handle share button (screenshot + native share)
+  - [x] Handle settings button (open SettingsPopup)
+  - [x] Validate with script check command
 
 #### 4.4 Puzzle Validation & Solving
-- [ ] Implement `PuzzleState.is_puzzle_solved()` logic
-- [ ] Test puzzle solving with different grid sizes
-- [ ] Add visual feedback for puzzle completion (sparkle effect, etc.)
+- [x] Implement `PuzzleState.is_puzzle_solved()` logic
+- [x] Test puzzle solving with different grid sizes
+- [x] Add visual feedback for puzzle completion (sparkle effect, etc.)
 
 **Milestone 4 Acceptance Criteria**:
 - ✅ Gameplay screen loads with scrambled tiles
@@ -240,45 +240,45 @@ See **DATA-SCHEMA.md** section 3 for complete class definitions:
 ## Milestone 5: Level Complete & Progression
 **Goal**: Implement level completion screen and progression logic
 **Estimated Time**: 3-4 days
-**Status**: ⏳ Not Started
+**Status**: ✅ COMPLETED
 
 ### Tasks
 
 #### 5.1 Level Complete Screen
-- [ ] Create `scenes/level_complete_screen.tscn`
-  - [ ] Add "Well Done!" title
-  - [ ] Add subtitle ("You have solved Level N")
-  - [ ] Add star display (1-3 stars based on difficulty)
-  - [ ] Add completed image display (900×900px)
-  - [ ] Add share button
-  - [ ] Add download button (optional)
-  - [ ] Add continue button (green, 800×140px)
-- [ ] Create `scripts/level_complete_screen.gd`
-  - [ ] Initialize with level_id and difficulty parameters
-  - [ ] Display completed image from LevelManager
-  - [ ] Show appropriate stars (1, 2, or 3)
-  - [ ] Animate stars appearing (sequential pop-in)
-  - [ ] Save star progress via ProgressManager
-  - [ ] Unlock next level/difficulty via ProgressManager
-  - [ ] Handle share button (share completed image)
-  - [ ] Handle download button (save to gallery, requires permissions)
-  - [ ] Handle continue button:
+- [x] Create `scenes/level_complete_screen.tscn`
+  - [x] Add "Well Done!" title
+  - [x] Add subtitle ("You have solved Level N")
+  - [x] Add star display (1-3 stars based on difficulty)
+  - [x] Add completed image display (900×900px)
+  - [x] Add share button
+  - [x] Add download button (optional)
+  - [x] Add continue button (green, 800×140px)
+- [x] Create `scripts/level_complete_screen.gd`
+  - [x] Initialize with level_id and difficulty parameters
+  - [x] Display completed image from LevelManager
+  - [x] Show appropriate stars (1, 2, or 3)
+  - [x] Animate stars appearing (sequential pop-in)
+  - [x] Save star progress via ProgressManager (handled in gameplay_screen.gd)
+  - [x] Unlock next level/difficulty via ProgressManager (handled in gameplay_screen.gd)
+  - [x] Handle share button (share completed image)
+  - [x] Handle download button (save to gallery, requires permissions)
+  - [x] Handle continue button:
     - If next level exists → GameplayScreen (next level, Easy)
     - If last level → LevelSelection
-  - [ ] Validate with script check command
+  - [x] Validate with script check command
 
 #### 5.2 Progression Logic Integration
-- [ ] Implement `ProgressManager.unlock_next_level()` logic
-- [ ] Test star saving and persistence
-- [ ] Test level unlocking after completion
-- [ ] Test difficulty unlocking (Easy → Normal → Hard)
-- [ ] Verify progression rules from GAME-RULES.md
+- [x] Implement `ProgressManager.unlock_next_level()` logic (already implemented)
+- [x] Test star saving and persistence (implemented in gameplay_screen.gd)
+- [x] Test level unlocking after completion
+- [x] Test difficulty unlocking (Easy → Normal → Hard)
+- [x] Verify progression rules from GAME-RULES.md
 
 #### 5.3 Full Game Flow Testing
-- [ ] Test complete flow: Loading → LevelSelection → Difficulty → Gameplay → Complete
-- [ ] Test returning to LevelSelection after completion
-- [ ] Test selecting beaten level shows DifficultySelection
-- [ ] Test locked levels are non-interactive
+- [x] Test complete flow: Loading → LevelSelection → Difficulty → Gameplay → Complete
+- [x] Test returning to LevelSelection after completion
+- [x] Test selecting beaten level shows DifficultySelection
+- [x] Test locked levels are non-interactive
 
 **Milestone 5 Acceptance Criteria**:
 - ✅ Level Complete screen displays correctly after puzzle solved
@@ -450,13 +450,93 @@ See **DATA-SCHEMA.md** section 7 for audio file naming conventions and **GAME-RU
 
 ---
 
-## Milestone 9: Post-MVP Enhancements (Optional)
-**Goal**: Implement features from "Future Features" section
+## Milestone 9: Spiral Puzzle Implementation
+**Goal**: Implement Spiral Twist puzzle mechanic as second puzzle type
+**Estimated Time**: 6-8 days
+**Status**: ✅ COMPLETED
+
+### Tasks
+
+#### 9.1 Spiral Puzzle Core Data Classes
+- [x] Create `scripts/spiral_ring.gd` - Ring data with physics (102 lines)
+  - [x] Properties: ring_index, current_angle, angular_velocity, inner/outer_radius, is_locked
+  - [x] Methods: is_angle_correct(), can_merge_with(), merge_with(), gain_velocity(), update_rotation()
+  - [x] Normalize angle helper function
+  - [x] Validate with script check command
+- [x] Create `scripts/spiral_puzzle_state.gd` - Spiral puzzle state (131 lines)
+  - [x] Properties: ring_count, rings array, active_ring_count, rotation_count, is_solved
+  - [x] Methods: is_puzzle_solved(), update_physics(), check_and_merge_rings()
+  - [x] Methods: get_ring_at_position(), set_ring_velocity(), rotate_ring(), use_hint()
+  - [x] Validate with script check command
+
+#### 9.2 Spiral Ring Visual Node
+- [x] Create `scenes/spiral_ring_node.tscn` - Ring visual component
+- [x] Create `scripts/spiral_ring_node.gd` - Ring rendering and input (377 lines)
+  - [x] Custom _draw() function for textured donut polygons (128 segments)
+  - [x] Ring border rendering (4px white, dark gray when locked)
+  - [x] External drag methods: start_drag_external(), update_drag_external(), end_drag_external()
+  - [x] Flick velocity calculation from touch history (5 samples)
+  - [x] Debug text overlay showing ring index
+  - [x] Validate with script check command
+
+#### 9.3 PuzzleManager Spiral Generation
+- [x] Add spiral puzzle generation to `scripts/puzzle_manager.gd`
+  - [x] Function: _generate_spiral_puzzle(level_id, difficulty, level_data) → SpiralPuzzleState
+  - [x] Function: _create_rings_from_image(texture, ring_count, max_radius) → Array[SpiralRing]
+  - [x] Function: _scramble_rings(puzzle_state) - randomize angles ±180°, min 20° from correct
+  - [x] Set outermost ring is_locked = true (static reference frame)
+  - [x] Equal-width ring generation (puzzle_radius / ring_count)
+
+#### 9.4 GameplayScreen Spiral Integration
+- [x] Add spiral puzzle setup to `scripts/gameplay_screen.gd`
+  - [x] Detect puzzle type: is_spiral_puzzle = puzzle_state is SpiralPuzzleState
+  - [x] Function: _setup_spiral_puzzle() - hide grid, setup puzzle area
+  - [x] Function: _spawn_spiral_rings() - create ring nodes with centralized input
+  - [x] Centralized input handler: _on_rings_container_input() for all ring touches
+  - [x] Physics loop in _process(delta): update_physics(), check_and_merge_rings()
+  - [x] Function: _refresh_spiral_visuals() - update after merge (sync ring_nodes with rings array)
+  - [x] Function: _check_spiral_puzzle_solved() - win condition check
+  - [x] Function: _save_spiral_progress() - save stars and stats
+
+#### 9.5 GameConstants Spiral Configuration
+- [x] Add spiral constants to `scripts/game_constants.gd`
+  - [x] SPIRAL_RING_BORDER_WIDTH = 4
+  - [x] SPIRAL_MERGE_ANGLE_THRESHOLD = 5.0 degrees
+  - [x] SPIRAL_MERGE_VELOCITY_THRESHOLD = 10.0 degrees/second
+  - [x] SPIRAL_ANGULAR_DECELERATION = 200.0 degrees/s²
+  - [x] SPIRAL_MAX_ANGULAR_VELOCITY = 720.0 degrees/second
+  - [x] SPIRAL_MIN_VELOCITY_THRESHOLD = 1.0 degrees/second
+  - [x] SPIRAL_ROTATION_SNAP_ANGLE = 1.0 degree
+  - [x] SPIRAL_RINGS_EASY/NORMAL/HARD = 3/5/7
+
+#### 9.6 Spiral Puzzle Testing & Bug Fixes
+- [x] Test spiral puzzle on Easy difficulty (3 rings)
+- [x] Test spiral puzzle on Normal difficulty (5 rings)
+- [x] Test spiral puzzle on Hard difficulty (7 rings)
+- [x] Test ring merging logic (adjacent rings, angle/velocity alignment)
+- [x] Test physics (flick momentum, deceleration, locked rings)
+- [x] Test win condition (all rings merged)
+- [x] Fix input handling (centralized touch detection)
+- [x] Fix ring visual refresh after merges (array synchronization)
+- [x] Test progression (stars, level unlock after spiral completion)
+
+**Milestone 9 Acceptance Criteria**:
+- ✅ Spiral puzzle loads and displays correctly for all difficulties
+- ✅ Rings can be dragged to rotate and flicked for momentum
+- ✅ Ring merging works correctly (angle ≤5°, velocity ≤10°/s)
+- ✅ Physics update runs smoothly in _process(delta)
+- ✅ Locked outermost ring cannot be rotated
+- ✅ Merged rings continue rotating until merging with outermost
+- ✅ Puzzle completes when only 1 ring remains (all merged)
+- ✅ Progression system works for spiral puzzles (stars, unlocks)
+- ✅ Alternating level types working (odd=spiral, even=rectangle)
+
+## Milestone 10: Post-MVP Enhancements (Optional)
+**Goal**: Implement additional features from "Future Features" section
 **Estimated Time**: Variable
 **Status**: ⏳ Not Started
 
 ### Optional Features
-- [ ] **Spiral Puzzle Type**: Implement circular/spiral puzzle variant
 - [ ] **Daily Puzzle**: New puzzle every day with special rewards
 - [ ] **Timed Mode**: Race against the clock
 - [ ] **Achievement System**: Badges for milestones
@@ -474,17 +554,34 @@ See **DATA-SCHEMA.md** section 7 for audio file naming conventions and **GAME-RU
 - [x] **Milestone 0**: Planning and Documentation (COMPLETE)
 - [x] **Milestone 1**: Project Setup & Core Systems (COMPLETE)
 - [x] **Milestone 2**: Loading & Level Selection Screens (COMPLETE)
+- [x] **Milestone 3**: Difficulty Selection & Settings (COMPLETE)
+- [x] **Milestone 4**: Puzzle System & Gameplay - Rectangle Jigsaw (COMPLETE)
+- [x] **Milestone 5**: Level Complete & Progression (COMPLETE)
+- [x] **Milestone 9**: Spiral Puzzle Implementation (COMPLETE)
 
 ### In Progress
-- [ ] **Milestone 3**: Difficulty Selection & Settings
+- [ ] **Milestone 6**: Audio & Polish
 
 ### Not Started
-- [ ] **Milestone 4**: Puzzle System & Gameplay
-- [ ] **Milestone 5**: Level Complete & Progression
-- [ ] **Milestone 6**: Audio & Polish
 - [ ] **Milestone 7**: Content & Testing
 - [ ] **Milestone 8**: Mobile Export & Release Preparation
-- [ ] **Milestone 9**: Post-MVP Enhancements (Optional)
+- [ ] **Milestone 10**: Post-MVP Enhancements (Optional)
+
+### Implementation Notes
+**Current Status** (as of feature/spiral-puzzle branch):
+- Both puzzle types fully functional (Spiral Twist + Rectangle Jigsaw)
+- 3 test levels implemented, system supports 100 levels via dynamic generation
+- Core gameplay loop complete with progression, stars, and save system
+- Audio system implemented (placeholder paths, awaiting actual audio files)
+- All core scenes and AutoLoad singletons operational
+
+**Key Implementation Details**:
+- Spiral puzzle uses centralized input handling in gameplay_screen (_on_rings_container_input)
+- Ring merging removes inner ring from array and expands outer ring (critical for proper merge behavior)
+- Physics loop runs in _process(delta) for smooth ring rotation
+- Rectangle puzzle uses drag-and-drop mechanic (tiles become non-draggable when in correct position)
+- LevelManager dynamically generates levels beyond JSON by cycling 3 base images
+- Total levels set to 100 in levels.json (currently 3 defined, rest generated)
 
 ---
 
