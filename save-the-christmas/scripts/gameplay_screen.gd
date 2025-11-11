@@ -389,7 +389,11 @@ func _spawn_spiral_rings() -> void:
 		# Setup ring node BEFORE adding to tree
 		ring_node.ring_data = ring
 		ring_node.source_texture = source_texture
-		ring_node.is_interactive = not ring.is_locked
+
+		# Debug: Print ring initialization
+		print("Ring %d: is_locked=%s, radii=%.1f-%.1f" % [
+			i, ring.is_locked, ring.inner_radius, ring.outer_radius
+		])
 
 		# Add to rings container
 		rings_container.add_child(ring_node)
@@ -449,7 +453,6 @@ func _refresh_spiral_visuals() -> void:
 			var ring = spiral_state.rings[i]
 			var ring_node = ring_nodes[i]
 			ring_node.ring_data = ring  # Update to current ring data (may have expanded)
-			ring_node.is_interactive = not ring.is_locked
 			ring_node.update_visual()
 
 ## Check if spiral puzzle is solved

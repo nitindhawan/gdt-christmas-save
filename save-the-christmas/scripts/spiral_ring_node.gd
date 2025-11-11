@@ -12,7 +12,6 @@ signal ring_tapped()
 @export var ring_data: SpiralRing = null
 @export var source_texture: Texture2D = null
 @export var puzzle_center: Vector2 = Vector2.ZERO
-@export var is_interactive: bool = true  # False for locked/static rings
 
 var _is_dragging: bool = false
 var _drag_start_angle: float = 0.0
@@ -28,19 +27,19 @@ func _ready() -> void:
 
 	# Debug print
 	if ring_data:
-		print("SpiralRingNode ready: Ring %d, Radius %.1f-%.1f, Angle %.1f, Interactive: %s" % [
+		print("SpiralRingNode ready: Ring %d, Radius %.1f-%.1f, Angle %.1f, Locked: %s" % [
 			ring_data.ring_index,
 			ring_data.inner_radius,
 			ring_data.outer_radius,
 			ring_data.current_angle,
-			str(is_interactive)
+			str(ring_data.is_locked)
 		])
 
 	# Wait a frame for layout to finish, then print actual size
 	await get_tree().process_frame
 	print("Ring %d: Actual size = %v, Center = %v, Position = %v" % [ring_data.ring_index, size, size / 2.0, global_position])
 	print("Ring %d: Anchors = L:%.2f T:%.2f R:%.2f B:%.2f" % [ring_data.ring_index, anchor_left, anchor_top, anchor_right, anchor_bottom])
-	print("Ring %d: Mouse filter = %d, Visible = %s" % [ring_data.ring_index, mouse_filter, str(visible)])
+	print("Ring %d: Mouse filter = %d, Visible = %s, is_locked = %s" % [ring_data.ring_index, mouse_filter, str(visible), str(ring_data.is_locked)])
 
 	# Set up custom drawing
 	queue_redraw()
@@ -82,10 +81,9 @@ func _gui_input(event: InputEvent) -> void:
 		return  # Let it pass through to the next ring
 
 	# Don't accept input for locked rings
-	if not is_interactive or ring_data.is_locked:
-		print("Ring %d: Input ignored (interactive=%s, locked=%s)" % [
+	if ring_data.is_locked:
+		print("Ring %d: Input ignored (locked=%s)" % [
 			ring_data.ring_index,
-			str(is_interactive),
 			str(ring_data.is_locked)
 		])
 		return
@@ -209,8 +207,15 @@ func _is_point_in_ring(point: Vector2) -> bool:
 	var local_center = size / 2.0
 	var offset = point - local_center
 	var distance = offset.length()
+	var in_bounds = distance >= ring_data.inner_radius and distance <= ring_data.outer_radius
 
-	return distance >= ring_data.inner_radius and distance <= ring_data.outer_radius
+	# Debug: Print click detection
+	if not in_bounds:
+		print("Ring %d: Point %.1f,%.1f NOT in bounds - distance=%.1f, bounds=[%.1f-%.1f]" % [
+			ring_data.ring_index, point.x, point.y, distance, ring_data.inner_radius, ring_data.outer_radius
+		])
+
+	return in_bounds
 
 ## Get angle of touch position relative to ring center
 func _get_touch_angle(touch_pos: Vector2) -> float:
