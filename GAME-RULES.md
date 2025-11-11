@@ -37,17 +37,30 @@ Rotate concentric rings of a circular Christmas image to align them correctly. R
 - Target: All rings at 0° rotation (correct alignment)
 - Rings start scrambled at random angles (±180°, minimum 20° from correct)
 
-### Gameplay Mechanics: Drag and Flick
+### Gameplay Mechanics: Drag and Flick (IMPLEMENTED)
+
+**Input Handling**: Centralized in rings_container (gameplay_screen.gd _on_rings_container_input)
+- All touch events captured by single container Control node
+- Hit detection finds which ring is at touch position (distance from center)
+- Innermost rings prioritized if multiple rings overlap at touch point
 
 #### Drag Rotation
 1. **Touch down** on a ring (between inner and outer radius)
+   - Container detects ring at touch position based on distance from center
+   - Calls ring_node.start_drag_external(touch_pos)
+   - Locked rings (is_locked=true) cannot be dragged
 2. **Drag** finger around the puzzle center
+   - Container tracks drag in _dragging_ring_node variable
+   - Calls ring_node.update_drag_external(touch_pos) on motion events
+   - Returns angle_delta which is applied via spiral_state.rotate_ring()
    - Ring rotates following finger position
    - Direct angle control (no momentum while dragging)
-   - Visual feedback shows rotation
+   - Visual feedback via ring_node.update_visual() (queue_redraw)
 3. **Release** to stop dragging
-   - If release has velocity → Flick detected
-   - If release is slow → Ring stops immediately
+   - Calls ring_node.end_drag_external()
+   - Calculates flick velocity from last 3 touch samples (angle history + timestamps)
+   - If release has velocity > 10°/s → Applies angular_velocity to ring
+   - If release is slow → Ring stops immediately (velocity = 0)
 
 #### Flick Momentum
 - **Flick detection**: Calculated from last 3 touch samples during drag
@@ -57,24 +70,39 @@ Rotate concentric rings of a circular Christmas image to align them correctly. R
 - **Stop threshold**: Ring stops when velocity < 1.0°/s
 - **Time to stop**: ~2-3 seconds from max velocity
 
-### Ring Merging System
+### Ring Merging System (IMPLEMENTED)
+
+**Physics Loop**: Runs in GameplayScreen._process(delta) every frame:
+```gdscript
+spiral_state.update_physics(delta)          # Update all ring rotations
+if spiral_state.check_and_merge_rings():    # Check merges each frame
+    AudioManager.play_sfx("ring_merge")
+    _refresh_spiral_visuals()               # Update display after merge
+    if spiral_state.is_puzzle_solved():
+        _check_spiral_puzzle_solved()
+```
 
 #### Merge Conditions (ALL must be met)
-1. Rings are adjacent (indices differ by exactly 1)
-2. **Angle alignment**: Both rings within 5° of each other
-3. **Velocity alignment**: Angular velocity difference ≤ 10°/s
-4. Neither ring already merged
+1. Rings are adjacent (indices differ by exactly 1 in rings array)
+2. **Angle alignment**: Angle difference ≤ 5° (SPIRAL_MERGE_ANGLE_THRESHOLD)
+3. **Velocity alignment**: Angular velocity difference ≤ 10°/s (SPIRAL_MERGE_VELOCITY_THRESHOLD)
+4. **Not both locked**: At least one ring must be unlocked (can_merge_with check)
 
-#### Merge Behavior
+#### Merge Behavior (spiral_puzzle_state.gd check_and_merge_rings)
 When two adjacent rings align (angle ≤5°, velocity ≤10°/s):
-1. **Keep the OUTER ring instance**, discard the inner ring
+1. **Keep the OUTER ring instance** (rings[i+1]), discard the inner ring (rings[i])
 2. **Expand outer ring inward**: `outer_ring.inner_radius = inner_ring.inner_radius`
-3. **Average angles and velocities** of both rings
-4. **Result**: ONE wider ring that encompasses both original rings
-5. **If merging with locked ring**: Result becomes locked (non-interactive)
-6. **Visual feedback**: Border changes to dark gray when locked
-7. **Audio**: "ring_merge" sound effect plays
-8. **Active ring count decreases by 1**
+3. Call `outer_ring.merge_with(inner_ring)`:
+   - Average angles: `(current_angle + other.current_angle) / 2`
+   - Average velocities: `(angular_velocity + other.angular_velocity) / 2`
+   - If merging with locked ring: Result inherits `is_locked = true`, velocity = 0
+   - Track merged ring IDs in `merged_ring_ids` array
+4. **Remove inner ring from rings array**: `rings.remove_at(i)`
+5. **Decrement active_ring_count by 1**
+6. **Result**: ONE wider ring that encompasses both original rings
+7. **Visual feedback**: Border changes to dark gray when locked, ring_node expanded
+8. **Audio**: "ring_merge" sound effect plays (in gameplay_screen)
+9. **Break and re-check next frame** (array indices shifted after removal)
 
 #### Locking System
 - **Outermost ring**: Starts `is_locked = true` (the static reference frame)
@@ -82,11 +110,16 @@ When two adjacent rings align (angle ≤5°, velocity ≤10°/s):
 - **When merging with locked ring**: Result inherits locked state
 - **Progressive locking**: Rings merge inward until all are part of the locked outermost ring
 
-#### Puzzle Solved Condition
-- **Win**: When only 1 ring remains (all merged into the outermost locked ring)
+#### Puzzle Solved Condition (IMPLEMENTED)
+- **Win condition check**: `spiral_state.is_puzzle_solved()` returns `active_ring_count <= 1`
+- **Actual implementation**: When `rings.size() == 1` (only locked outermost ring remains)
 - **Progression**: Inner rings merge with neighbors → eventually merge with outermost → become locked
-- All rings must be aligned within tolerance (±1° from correct) before merging
-- Victory triggers: Haptic feedback, "level_complete" sound, completion screen
+- Rings must be aligned (angle ≤5°) and have similar velocity (≤10°/s) to merge
+- Victory triggers (in _check_spiral_puzzle_solved):
+  - Play "level_complete" sound effect
+  - Haptic feedback (0.8 intensity)
+  - Save progress (stars, rotation_count, hints_used) via _save_spiral_progress()
+  - Navigate to LevelCompleteScreen after 1 second delay
 
 ### Hint System (Spiral)
 - **Action**: Snaps one random incorrect ring to 0° (correct angle)

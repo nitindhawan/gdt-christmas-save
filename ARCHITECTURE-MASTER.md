@@ -9,8 +9,9 @@
 ---
 
 ## Game Concept
-Save the Christmas is a 2D mobile puzzle game where players unscramble beautiful Christmas-themed images by rearranging jumbled rectangular tiles into their correct positions. Players progress through 20 levels, earning up to 3 stars per level based on difficulty (Easy, Normal, Hard). The game features a minimalistic premium design with a festive Christmas theme.
+Save the Christmas is a 2D mobile puzzle game featuring TWO distinct puzzle mechanics: Spiral Twist (rotating concentric rings) and Rectangle Jigsaw (tile swapping). Players progress through 100 levels, earning up to 3 stars per level based on difficulty (Easy, Normal, Hard). The game features a minimalistic premium design with a festive Christmas theme.
 
+**Puzzle Types**: Odd levels = Spiral Twist, Even levels = Rectangle Jigsaw
 **Platform**: Mobile (iOS/Android) - Portrait mode only
 **Target Resolution**: 1080×1920 (16:9 aspect ratio)
 **Godot Version**: 4.5.1
@@ -44,25 +45,27 @@ LoadingScreen
 ```
 
 ### AutoLoad Systems (Singletons)
-These 5 core systems must be configured in Project Settings → AutoLoad:
+These 6 core systems are configured in Project Settings → AutoLoad:
 
-- **GameConstants** - File paths, difficulty configs, enums, constants
-- **GameManager** - Scene navigation, current level/difficulty tracking
-- **ProgressManager** - Save/load system, star tracking, level unlocking logic
-- **LevelManager** - Level data loading from levels.json, image caching
-- **AudioManager** - Background music, sound effects, settings persistence
+- **GameConstants** (`scripts/game_constants.gd`) - File paths, difficulty configs, enums, constants for both puzzle types
+- **GameManager** (`scripts/game_manager.gd`) - Scene navigation, current level/difficulty tracking
+- **ProgressManager** (`scripts/progress_manager.gd`) - Save/load system (ConfigFile), star tracking, level unlocking logic
+- **LevelManager** (`scripts/level_manager.gd`) - Level data loading from levels.json, dynamic level generation, image caching
+- **AudioManager** (`scripts/audio_manager.gd`) - Background music, sound effects, settings persistence
+- **PuzzleManager** (`scripts/puzzle_manager.gd`) - Puzzle generation for both Rectangle Jigsaw and Spiral Twist, scrambling logic
 
 ---
 
 ## Core Game Systems
 
 ### Level Management
-- 20 levels total, each defined in `data/levels.json`
-- Each level contains: level_id, image_path, puzzle_type, difficulty_configs
+- **Total levels**: 100 (configured in levels.json, currently 3 defined)
+- **Dynamic generation**: LevelManager auto-generates levels beyond JSON using 3 base images cycled
+- Each level contains: level_id, name, image_path, thumbnail_path, puzzle_type, difficulty_configs
 - Puzzle types alternate: Odd levels (1,3,5...) = Spiral Twist, Even (2,4,6...) = Rectangle Jigsaw
-- LevelManager loads and caches level data on game start
-- Auto-generates levels beyond defined JSON with alternating puzzle types
+- LevelManager caches textures for performance (get_level_texture, get_thumbnail_texture)
 - See **DATA-SCHEMA.md** for complete levels.json structure
+- **Implementation**: `scripts/level_manager.gd` (227 lines)
 
 ### Progression System
 - Level 1 starts unlocked on Easy difficulty
@@ -74,43 +77,60 @@ These 5 core systems must be configured in Project Settings → AutoLoad:
 
 ### Puzzle Systems
 
-#### Puzzle Type 1: Spiral Twist (Odd Levels)
+#### Puzzle Type 1: Spiral Twist (Odd Levels) - FULLY IMPLEMENTED
 - Circular image divided into concentric rings: Easy (3), Normal (5), Hard (7)
-- Outermost ring is static (reference frame), inner rings rotate
-- Rings scrambled with random rotations at level start
-- Player interaction: Drag to rotate, flick for momentum
-- Physics-based: Angular velocity, deceleration, friction
-- Ring merging: Adjacent rings merge when angles/velocities align
-- Merged rings continue rotating until they merge with the static outermost ring
-- Win condition: All rings merged into outermost ring (only 1 active ring remains)
-- Hint system: Snaps random incorrect ring to correct angle
+- Outermost ring is static (locked=true reference frame), inner rings rotate
+- Rings scrambled with random rotations at level start (±180°, min 20° from correct)
+- Player interaction: Centralized input handler in gameplay_screen, drag to rotate, flick for momentum
+- Physics-based: Angular velocity (max 720°/s), deceleration (200°/s²), update_physics() called in _process(delta)
+- Ring merging: Adjacent rings merge when angle ≤5° and velocity ≤10°/s
+- **Merge behavior**: Keeps outer ring, expands inner_radius, removes inner ring from array
+- Merged rings continue rotating until they merge with the outermost locked ring
+- Win condition: rings.size() == 1 (only locked outermost ring remains)
+- Hint system: Snaps random incorrect ring to correct angle (0°)
 - See **GAME-RULES.md** for complete mechanics
+- **Implementation files**:
+  - Core data: `spiral_ring.gd` (102 lines), `spiral_puzzle_state.gd` (131 lines)
+  - Visual: `spiral_ring_node.gd` (377 lines), `spiral_ring_node.tscn`
+  - Generation: `puzzle_manager.gd` methods: _generate_spiral_puzzle(), _create_rings_from_image()
+  - Gameplay: `gameplay_screen.gd` methods: _setup_spiral_puzzle(), _spawn_spiral_rings(), _process() physics loop
 
-#### Puzzle Type 2: Rectangle Jigsaw (Even Levels)
+#### Puzzle Type 2: Rectangle Jigsaw (Even Levels) - FULLY IMPLEMENTED
 - Image divided into rectangular grid: Easy (2×3), Normal (3×4), Hard (5×6)
-- Tiles scrambled using Fisher-Yates shuffle at level start
-- Player interaction: Two-tap swap mechanic (tap tile 1, tap tile 2, swap)
-- Real-time validation after each swap
+- Tiles scrambled using Fisher-Yates shuffle at level start (ensures solvability)
+- Player interaction: Drag-and-drop mechanic (drag tile over another to swap)
+- Tiles in correct position become non-draggable (is_draggable = false)
+- Real-time validation after each swap via is_puzzle_solved()
 - Win condition: All tiles in correct positions
-- Hint system: Automatically swaps one incorrect tile to correct position
+- Hint system: Automatically swaps one incorrect tile to correct position (3 hints per level)
 - See **GAME-RULES.md** for complete mechanics
+- **Implementation files**:
+  - Core data: `tile.gd` (20 lines), `puzzle_state.gd` (63 lines)
+  - Visual: `tile_node.gd` (196 lines), `tile_node.tscn`
+  - Generation: `puzzle_manager.gd` methods: _generate_rectangle_puzzle(), create_tiles_from_image(), scramble_tiles()
+  - Gameplay: `gameplay_screen.gd` methods: _setup_puzzle_grid(), _spawn_tiles(), _on_tile_drag_ended()
 
-### Audio System
-- Background music: Looping Christmas ambient tracks (toggleable)
-- Sound effects: Tile select, tile swap, level complete, button clicks
-- Haptic feedback on tile interactions (toggleable)
-- All settings persist via AudioManager to ConfigFile
-- Audio files in OGG format, stored in assets/audio/
+### Audio System - IMPLEMENTED (placeholder audio paths)
+- Background music: Looping Christmas ambient tracks (toggleable via ProgressManager)
+- Sound effects: tile_pickup, tile_drop, tile_select, tile_swap, ring_merge, level_complete, button_click, hint_used
+- Haptic feedback on tile/ring interactions (toggleable, uses Input.vibrate_handheld on mobile)
+- All settings persist via ProgressManager to user://save_data.cfg
+- Audio files in OGG format, stored in assets/audio/ (paths defined in AudioManager.SFX_PATHS)
+- **Implementation**: `scripts/audio_manager.gd` (148 lines)
+- Note: Actual audio files not yet added (placeholder paths configured)
 
 ---
 
 ## Asset Requirements Overview
 
 ### Images
-- **Level Images**: 20 images (2048×2048 PNG), named level_01.png to level_20.png
-- **Thumbnails**: 20 thumbnails (512×512 PNG), in assets/levels/thumbnails/
-- **UI Assets**: Buttons, icons (lock, star, play), backgrounds, logo
+- **Level Images**: Currently 3 test images (level_01.png, level_02.png, level_03.png) at 2048×2048 PNG
+  - System supports 100 levels via dynamic generation cycling through base images
+  - Odd-numbered levels require circular images for Spiral Twist puzzles
+- **Thumbnails**: 3 test thumbnails (512×512 PNG) in assets/levels/thumbnails/
+- **UI Assets**: Generated placeholders (buttons, icons, backgrounds)
 - See **DATA-SCHEMA.md** for detailed naming conventions
+- **Current Status**: 3 levels fully functional, 100 levels supported via dynamic generation
 
 ### Audio
 - **Music**: 1-2 looping Christmas tracks (OGG)
@@ -161,8 +181,30 @@ See **MILESTONES-AND-TASKS.md** for detailed implementation tasks and timeline.
 ---
 
 ## Current Status
-**Phase**: PLANNING COMPLETE - Ready for Implementation
-**Next Milestone**: Milestone 1 - Project Setup & Core Systems
+**Phase**: CORE GAMEPLAY COMPLETE - Milestones 1-5 Implemented
+**Branch**: feature/spiral-puzzle (clean working tree)
+**Next Milestone**: Milestone 6 - Audio & Polish
+
+**Completed Implementation**:
+- All 6 AutoLoad singletons functional (GameConstants, GameManager, ProgressManager, LevelManager, AudioManager, PuzzleManager)
+- All core scenes implemented (LoadingScreen, LevelSelection, DifficultySelection, GameplayScreen, LevelCompleteScreen, SettingsPopup)
+- Both puzzle types fully functional (Spiral Twist and Rectangle Jigsaw)
+- Complete progression system with star tracking and level unlocking
+- Save/load system using ConfigFile (user://save_data.cfg)
+- Dynamic level generation supporting 100+ levels from 3 base images
+
+**Working Features**:
+- Spiral Twist: Physics-based ring rotation with flick momentum and merging
+- Rectangle Jigsaw: Drag-and-drop tile swapping with validation
+- Full scene navigation flow (Loading → LevelSelection → Difficulty/Gameplay → Complete)
+- Progress persistence (stars, unlocked levels, settings)
+- Settings popup (music, sound, vibrations toggles)
+
+**Remaining Work**:
+- Add actual audio assets (music and SFX files)
+- UI/UX polish (animations, transitions, effects)
+- Performance optimization and mobile testing
+- Full 20 unique level images (currently using 3 cycled)
 
 Refer to detailed documentation for implementation specifics:
 - Data structures → **DATA-SCHEMA.md**
