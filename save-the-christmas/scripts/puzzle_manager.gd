@@ -119,6 +119,8 @@ func _create_rings_from_image(texture: Texture2D, ring_count: int, max_radius: f
 	# Calculate ring width (equal bands)
 	var ring_width = max_radius / ring_count
 
+	print("Creating %d rings with max_radius=%.1f, ring_width=%.1f" % [ring_count, max_radius, ring_width])
+
 	for i in range(ring_count):
 		var ring = SpiralRing.new()
 		ring.ring_index = i
@@ -133,6 +135,10 @@ func _create_rings_from_image(texture: Texture2D, ring_count: int, max_radius: f
 			ring.is_locked = true
 			ring.current_angle = 0.0
 			ring.angular_velocity = 0.0
+
+		print("  Ring %d: inner_radius=%.1f, outer_radius=%.1f, is_locked=%s" % [
+			i, ring.inner_radius, ring.outer_radius, str(ring.is_locked)
+		])
 
 		rings.append(ring)
 

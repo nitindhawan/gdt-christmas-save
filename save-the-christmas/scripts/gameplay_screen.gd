@@ -403,9 +403,9 @@ func _spawn_spiral_rings() -> void:
 
 		print("Added ring %d to container" % i)
 
-		# Connect signals
-		ring_node.ring_rotated.connect(_on_ring_rotated.bind(i))
-		ring_node.ring_flicked.connect(_on_ring_flicked.bind(i))
+		# Connect signals - pass the ring_node so we can get its ring_data
+		ring_node.ring_rotated.connect(_on_ring_rotated.bind(ring_node))
+		ring_node.ring_flicked.connect(_on_ring_flicked.bind(ring_node))
 
 		ring_nodes[i] = ring_node  # Store in correct position
 
@@ -416,14 +416,24 @@ func _spawn_spiral_rings() -> void:
 	print("Layout complete. Final puzzle area size: %v" % puzzle_area.size)
 
 ## Handle ring rotation (drag)
-func _on_ring_rotated(angle_delta: float, ring_index: int) -> void:
+func _on_ring_rotated(angle_delta: float, ring_node: Control) -> void:
 	var spiral_state = puzzle_state as SpiralPuzzleState
-	spiral_state.rotate_ring(ring_index, angle_delta)
+	var ring_data = ring_node.ring_data
+
+	# Find the current index of this ring in the rings array
+	var ring_index = spiral_state.rings.find(ring_data)
+	if ring_index >= 0:
+		spiral_state.rotate_ring(ring_index, angle_delta)
 
 ## Handle ring flicked
-func _on_ring_flicked(angular_velocity: float, ring_index: int) -> void:
+func _on_ring_flicked(angular_velocity: float, ring_node: Control) -> void:
 	var spiral_state = puzzle_state as SpiralPuzzleState
-	spiral_state.set_ring_velocity(ring_index, angular_velocity)
+	var ring_data = ring_node.ring_data
+
+	# Find the current index of this ring in the rings array
+	var ring_index = spiral_state.rings.find(ring_data)
+	if ring_index >= 0:
+		spiral_state.set_ring_velocity(ring_index, angular_velocity)
 
 	if AudioManager:
 		AudioManager.play_sfx("tile_drop")

@@ -58,26 +58,29 @@ func _gui_input(event: InputEvent) -> void:
 	else:
 		return
 
+	# Check if within this ring's radial area first
+	var in_bounds = _is_point_in_ring(event_pos)
+
 	# Debug: Print all button press events
 	if event is InputEventMouseButton and event.pressed:
-		print("Ring %d: GOT MOUSE EVENT! Size=%v, Position=%v, Event pos=%v" % [
+		print("Ring %d: GOT MOUSE EVENT! Size=%v, Event pos=%v" % [
 			ring_data.ring_index,
 			size,
-			global_position,
 			event_pos
 		])
 		var local_center = size / 2.0
 		var offset = event_pos - local_center
 		var distance = offset.length()
-		print("Ring %d: Mouse click at distance %.1f (ring bounds: %.1f-%.1f)" % [
+		print("Ring %d: Click distance %.1f, bounds [%.1f-%.1f], in_bounds=%s" % [
 			ring_data.ring_index,
 			distance,
 			ring_data.inner_radius,
-			ring_data.outer_radius
+			ring_data.outer_radius,
+			str(in_bounds)
 		])
 
 	# If touch is not within this ring's radial area, don't accept the event
-	if not _is_point_in_ring(event_pos):
+	if not in_bounds:
 		return  # Let it pass through to the next ring
 
 	# Don't accept input for locked rings
@@ -208,12 +211,6 @@ func _is_point_in_ring(point: Vector2) -> bool:
 	var offset = point - local_center
 	var distance = offset.length()
 	var in_bounds = distance >= ring_data.inner_radius and distance <= ring_data.outer_radius
-
-	# Debug: Print click detection
-	if not in_bounds:
-		print("Ring %d: Point %.1f,%.1f NOT in bounds - distance=%.1f, bounds=[%.1f-%.1f]" % [
-			ring_data.ring_index, point.x, point.y, distance, ring_data.inner_radius, ring_data.outer_radius
-		])
 
 	return in_bounds
 
