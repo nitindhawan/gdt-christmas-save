@@ -22,25 +22,68 @@ var _touch_history_size: int = 5
 
 ## Called when node enters scene
 func _ready() -> void:
-	# Enable mouse input
+	# All rings need STOP to receive _gui_input events
+	# We'll filter them manually in _gui_input based on ring bounds
 	mouse_filter = Control.MOUSE_FILTER_STOP
+
+	# Debug print
+	if ring_data:
+		print("SpiralRingNode ready: Ring %d, Radius %.1f-%.1f, Angle %.1f, Interactive: %s" % [
+			ring_data.ring_index,
+			ring_data.inner_radius,
+			ring_data.outer_radius,
+			ring_data.current_angle,
+			str(is_interactive)
+		])
+
+	# Wait a frame for layout to finish, then print actual size
+	await get_tree().process_frame
+	print("Ring %d: Actual size = %v, Center = %v" % [ring_data.ring_index, size, size / 2.0])
 
 	# Set up custom drawing
 	queue_redraw()
 
-	# Debug print
-	if ring_data:
-		print("SpiralRingNode ready: Ring %d, Radius %.1f-%.1f, Angle %.1f" % [
-			ring_data.ring_index,
-			ring_data.inner_radius,
-			ring_data.outer_radius,
-			ring_data.current_angle
-		])
-
 ## Handle input events
 func _gui_input(event: InputEvent) -> void:
-	if not is_interactive or ring_data == null or ring_data.is_merged:
+	if ring_data == null:
 		return
+
+	# First check if the event is within this ring's bounds
+	var event_pos: Vector2
+	if event is InputEventMouseButton:
+		event_pos = event.position
+	elif event is InputEventMouseMotion:
+		event_pos = event.position
+	else:
+		return
+
+	# Debug: Print all button press events
+	if event is InputEventMouseButton and event.pressed:
+		var local_center = size / 2.0
+		var offset = event_pos - local_center
+		var distance = offset.length()
+		print("Ring %d: Mouse click at distance %.1f (ring bounds: %.1f-%.1f)" % [
+			ring_data.ring_index,
+			distance,
+			ring_data.inner_radius,
+			ring_data.outer_radius
+		])
+
+	# If touch is not within this ring's radial area, don't accept the event
+	if not _is_point_in_ring(event_pos):
+		return  # Let it pass through to the next ring
+
+	# Don't accept input for merged rings
+	if not is_interactive or ring_data.is_merged:
+		print("Ring %d: Input ignored (interactive=%s, merged=%s)" % [
+			ring_data.ring_index,
+			str(is_interactive),
+			str(ring_data.is_merged)
+		])
+		return
+
+	# Accept the event (prevent it from passing through)
+	accept_event()
 
 	if event is InputEventMouseButton:
 		var mouse_event = event as InputEventMouseButton
@@ -57,10 +100,8 @@ func _gui_input(event: InputEvent) -> void:
 
 ## Start dragging interaction
 func _start_drag(touch_pos: Vector2) -> void:
-	# Check if touch is within ring bounds
-	if not _is_point_in_ring(touch_pos):
-		return
-
+	# Bounds already checked in _gui_input
+	print("Ring %d: Started dragging at angle %.1f" % [ring_data.ring_index, _get_touch_angle(touch_pos)])
 	_is_dragging = true
 	_drag_start_angle = _get_touch_angle(touch_pos)
 
@@ -180,7 +221,7 @@ func _draw() -> void:
 	# Draw ring using texture and rotation
 	_draw_ring_segment(local_center)
 
-	# Draw border
+	# Draw border (always draw, even for merged rings)
 	_draw_ring_border(local_center)
 
 ## Draw the ring segment from source texture
@@ -245,7 +286,7 @@ func _draw_colored_ring(center: Vector2) -> void:
 
 ## Draw border around ring
 func _draw_ring_border(center: Vector2) -> void:
-	var border_color = Color.WHITE if not ring_data.is_merged else Color(0.5, 0.5, 0.5)
+	var border_color = Color.WHITE if not ring_data.is_merged else Color.DARK_GRAY
 	var border_width = GameConstants.SPIRAL_RING_BORDER_WIDTH
 
 	# Draw outer border
@@ -254,6 +295,11 @@ func _draw_ring_border(center: Vector2) -> void:
 	# Draw inner border
 	if ring_data.inner_radius > 0:
 		draw_arc(center, ring_data.inner_radius, 0, TAU, 64, border_color, border_width)
+
+	# Debug: Draw ring index at center of ring
+	var ring_center_radius = (ring_data.inner_radius + ring_data.outer_radius) / 2.0
+	var text_pos = center + Vector2(ring_center_radius, 0)
+	draw_string(ThemeDB.fallback_font, text_pos, str(ring_data.ring_index), HORIZONTAL_ALIGNMENT_CENTER, -1, 24, Color.YELLOW)
 
 ## Update visual rotation (called from parent)
 func update_visual() -> void:

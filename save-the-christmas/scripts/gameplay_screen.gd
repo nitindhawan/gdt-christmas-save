@@ -349,28 +349,39 @@ func _spawn_spiral_rings() -> void:
 	# Get puzzle area control
 	var puzzle_area = $MarginContainer/VBoxContainer/PuzzleArea
 
-	# Create ring nodes
-	for i in range(spiral_state.rings.size()):
+	print("Puzzle area size: %v" % puzzle_area.size)
+
+	# Pre-allocate array to correct size
+	ring_nodes.resize(spiral_state.rings.size())
+
+	# Create ring nodes (spawn from outermost to innermost so inner rings are on top)
+	for i in range(spiral_state.rings.size() - 1, -1, -1):
 		var ring = spiral_state.rings[i]
 		var ring_node = SPIRAL_RING_NODE_SCENE.instantiate()
+
+		# Add to scene first so it gets laid out
+		puzzle_area.add_child(ring_node)
 
 		# Setup ring node
 		ring_node.ring_data = ring
 		ring_node.source_texture = source_texture
 		ring_node.is_interactive = not ring.is_merged
 
-		# Make ring fill the puzzle area
-		ring_node.set_anchors_preset(Control.PRESET_FULL_RECT)
-		ring_node.grow_horizontal = Control.GROW_DIRECTION_BOTH
-		ring_node.grow_vertical = Control.GROW_DIRECTION_BOTH
+		# Make ring fill the puzzle area with anchors
+		ring_node.anchor_left = 0.0
+		ring_node.anchor_top = 0.0
+		ring_node.anchor_right = 1.0
+		ring_node.anchor_bottom = 1.0
+		ring_node.offset_left = 0.0
+		ring_node.offset_top = 0.0
+		ring_node.offset_right = 0.0
+		ring_node.offset_bottom = 0.0
 
 		# Connect signals
 		ring_node.ring_rotated.connect(_on_ring_rotated.bind(i))
 		ring_node.ring_flicked.connect(_on_ring_flicked.bind(i))
 
-		# Add to scene
-		puzzle_area.add_child(ring_node)
-		ring_nodes.append(ring_node)
+		ring_nodes[i] = ring_node  # Store in correct position
 
 	print("Spawned %d spiral rings" % ring_nodes.size())
 

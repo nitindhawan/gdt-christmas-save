@@ -89,7 +89,9 @@ func _generate_spiral_puzzle(level_id: int, difficulty: int, level_data: Diction
 
 	# Create rings from image
 	puzzle_state.rings = _create_rings_from_image(texture, ring_count, puzzle_state.puzzle_radius)
-	puzzle_state.active_ring_count = ring_count
+
+	# Count non-merged rings (outermost is pre-merged)
+	puzzle_state.active_ring_count = ring_count - 1
 
 	# Scramble rings (randomize rotations)
 	_scramble_rings(puzzle_state)
@@ -141,19 +143,34 @@ func _scramble_rings(puzzle_state: SpiralPuzzleState) -> void:
 	# Randomize rotation for all non-merged rings
 	for ring in puzzle_state.rings:
 		if not ring.is_merged:
-			# Random angle between -180 and 180 degrees
-			ring.current_angle = randf_range(-180.0, 180.0)
+			# Random angle between -180 and 180 degrees, but not too close to 0
+			var angle = randf_range(-180.0, 180.0)
+			# Ensure angle is at least 20 degrees away from correct position
+			while abs(angle) < 20.0:
+				angle = randf_range(-180.0, 180.0)
+			ring.current_angle = angle
 			ring.angular_velocity = 0.0
 
-	# Ensure puzzle is not already solved
+	# Verify at least one ring is significantly misaligned
+	var max_angle_diff = 0.0
+	for ring in puzzle_state.rings:
+		if not ring.is_merged:
+			max_angle_diff = max(max_angle_diff, abs(ring.current_angle))
+
+	# If all rings are too close to correct, re-scramble
 	var attempts = 0
-	while puzzle_state.is_puzzle_solved() and attempts < 10:
+	while max_angle_diff < 20.0 and attempts < 10:
 		for ring in puzzle_state.rings:
 			if not ring.is_merged:
 				ring.current_angle = randf_range(-180.0, 180.0)
+
+		max_angle_diff = 0.0
+		for ring in puzzle_state.rings:
+			if not ring.is_merged:
+				max_angle_diff = max(max_angle_diff, abs(ring.current_angle))
 		attempts += 1
 
-	print("Spiral puzzle scrambled (attempts: %d)" % (attempts + 1))
+	print("Spiral puzzle scrambled (attempts: %d, max angle: %.1f)" % [attempts + 1, max_angle_diff])
 
 ## Create tiles from an image divided into a grid
 func create_tiles_from_image(texture: Texture2D, rows: int, columns: int) -> Array[Tile]:
