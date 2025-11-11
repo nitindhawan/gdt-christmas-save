@@ -4,14 +4,19 @@ extends Control
 ## Main puzzle gameplay with tile swapping mechanics
 
 const TILE_NODE_SCENE = preload("res://scenes/tile_node.tscn")
+const SPIRAL_RING_NODE_SCENE = preload("res://scenes/spiral_ring_node.tscn")
 const SETTINGS_POPUP_SCENE = preload("res://scenes/settings_popup.tscn")
+const SpiralPuzzleState = preload("res://scripts/spiral_puzzle_state.gd")
 
 # Game state
 var current_level_id: int = 1
 var current_difficulty: int = GameConstants.Difficulty.EASY
-var puzzle_state: PuzzleState
+var puzzle_state: Resource  # Can be PuzzleState or SpiralPuzzleState
 var tile_nodes: Array = []
+var ring_nodes: Array = []
 var source_texture: Texture2D
+var is_spiral_puzzle: bool = false
+var puzzle_center: Vector2 = Vector2(540, 960)  # Center of 1080x1920 screen
 
 # UI references
 @onready var level_label = $MarginContainer/VBoxContainer/TopHUD/MarginContainer/HBoxContainer/LevelLabel
@@ -66,13 +71,19 @@ func _initialize_gameplay() -> void:
 		push_error("Failed to generate puzzle")
 		return
 
-	# Setup puzzle grid
-	_setup_puzzle_grid()
+	# Determine puzzle type
+	is_spiral_puzzle = puzzle_state is SpiralPuzzleState
 
-	# Spawn tiles
-	_spawn_tiles()
+	if is_spiral_puzzle:
+		# Setup spiral puzzle
+		_setup_spiral_puzzle()
+		_spawn_spiral_rings()
+	else:
+		# Setup rectangle puzzle
+		_setup_puzzle_grid()
+		_spawn_tiles()
 
-	print("Gameplay initialized successfully")
+	print("Gameplay initialized successfully (%s puzzle)" % ("Spiral" if is_spiral_puzzle else "Rectangle"))
 
 ## Setup puzzle grid layout based on difficulty
 func _setup_puzzle_grid() -> void:
@@ -292,3 +303,151 @@ func _on_settings_button_pressed() -> void:
 	# Instantiate and show settings popup
 	var settings_popup = SETTINGS_POPUP_SCENE.instantiate()
 	add_child(settings_popup)
+
+## ============================================================================
+## SPIRAL PUZZLE METHODS
+## ============================================================================
+
+## Physics update for spiral puzzles
+func _process(delta: float) -> void:
+	if not is_spiral_puzzle or puzzle_state == null:
+		return
+
+	var spiral_state = puzzle_state as SpiralPuzzleState
+
+	# Update ring physics
+	spiral_state.update_physics(delta)
+
+	# Check for merges
+	if spiral_state.check_and_merge_rings():
+		print("Rings merged! Active rings: %d" % spiral_state.active_ring_count)
+		_refresh_spiral_visuals()
+
+		# Check if puzzle solved
+		if spiral_state.is_puzzle_solved():
+			_check_spiral_puzzle_solved()
+
+	# Update visual display
+	_update_spiral_ring_visuals()
+
+## Setup spiral puzzle container
+func _setup_spiral_puzzle() -> void:
+	# Hide rectangle grid
+	puzzle_grid.visible = false
+
+	print("Spiral puzzle configured: %d rings" % puzzle_state.ring_count)
+
+## Spawn spiral ring nodes
+func _spawn_spiral_rings() -> void:
+	# Clear existing rings
+	for ring_node in ring_nodes:
+		ring_node.queue_free()
+	ring_nodes.clear()
+
+	var spiral_state = puzzle_state as SpiralPuzzleState
+
+	# Get puzzle area control
+	var puzzle_area = $MarginContainer/VBoxContainer/PuzzleArea
+
+	# Create ring nodes
+	for i in range(spiral_state.rings.size()):
+		var ring = spiral_state.rings[i]
+		var ring_node = SPIRAL_RING_NODE_SCENE.instantiate()
+
+		# Setup ring node
+		ring_node.ring_data = ring
+		ring_node.source_texture = source_texture
+		ring_node.is_interactive = not ring.is_merged
+
+		# Make ring fill the puzzle area
+		ring_node.set_anchors_preset(Control.PRESET_FULL_RECT)
+		ring_node.grow_horizontal = Control.GROW_DIRECTION_BOTH
+		ring_node.grow_vertical = Control.GROW_DIRECTION_BOTH
+
+		# Connect signals
+		ring_node.ring_rotated.connect(_on_ring_rotated.bind(i))
+		ring_node.ring_flicked.connect(_on_ring_flicked.bind(i))
+
+		# Add to scene
+		puzzle_area.add_child(ring_node)
+		ring_nodes.append(ring_node)
+
+	print("Spawned %d spiral rings" % ring_nodes.size())
+
+## Handle ring rotation (drag)
+func _on_ring_rotated(angle_delta: float, ring_index: int) -> void:
+	var spiral_state = puzzle_state as SpiralPuzzleState
+	spiral_state.rotate_ring(ring_index, angle_delta)
+
+## Handle ring flicked
+func _on_ring_flicked(angular_velocity: float, ring_index: int) -> void:
+	var spiral_state = puzzle_state as SpiralPuzzleState
+	spiral_state.set_ring_velocity(ring_index, angular_velocity)
+
+	if AudioManager:
+		AudioManager.play_sfx("tile_drop")
+
+## Update ring visual rotations
+func _update_spiral_ring_visuals() -> void:
+	for i in range(ring_nodes.size()):
+		if i < ring_nodes.size() and ring_nodes[i] != null:
+			ring_nodes[i].update_visual()
+
+## Refresh spiral visuals after merge
+func _refresh_spiral_visuals() -> void:
+	# Update interactivity for merged rings
+	var spiral_state = puzzle_state as SpiralPuzzleState
+
+	for i in range(ring_nodes.size()):
+		if i < spiral_state.rings.size():
+			var ring = spiral_state.rings[i]
+			var ring_node = ring_nodes[i]
+			ring_node.is_interactive = not ring.is_merged
+			ring_node.update_visual()
+
+## Check if spiral puzzle is solved
+func _check_spiral_puzzle_solved() -> void:
+	var spiral_state = puzzle_state as SpiralPuzzleState
+
+	if spiral_state.is_puzzle_solved():
+		print("Spiral puzzle solved!")
+		spiral_state.is_solved = true
+
+		# Play victory sound
+		if AudioManager:
+			AudioManager.play_sfx("level_complete")
+
+		# Trigger haptic feedback
+		if AudioManager:
+			AudioManager.trigger_haptic(0.8)
+
+		# Save progress
+		_save_spiral_progress()
+
+		# Navigate to level complete screen
+		await get_tree().create_timer(1.0).timeout
+		GameManager.navigate_to_level_complete()
+
+## Save progress for spiral puzzle
+func _save_spiral_progress() -> void:
+	var spiral_state = puzzle_state as SpiralPuzzleState
+	var difficulty_str = GameConstants.difficulty_to_string(current_difficulty)
+
+	# Set star for this level and difficulty
+	ProgressManager.set_star(current_level_id, difficulty_str, true)
+
+	# Unlock next level if completing Easy
+	if current_difficulty == GameConstants.Difficulty.EASY:
+		ProgressManager.unlock_next_level()
+
+	# Update current level
+	ProgressManager.current_level = current_level_id
+
+	# Update statistics
+	ProgressManager.total_swaps_made += spiral_state.rotation_count
+	ProgressManager.total_hints_used += spiral_state.hints_used
+
+	# Save to disk
+	ProgressManager.save_progress()
+
+	print("Spiral progress saved: Level %d, %s completed" % [current_level_id, difficulty_str])

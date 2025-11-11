@@ -3,13 +3,27 @@ extends Node
 ## Puzzle Manager AutoLoad Singleton
 ## Handles puzzle generation, tile creation, and scrambling
 
+const SpiralRing = preload("res://scripts/spiral_ring.gd")
+const SpiralPuzzleState = preload("res://scripts/spiral_puzzle_state.gd")
+
 ## Generate a puzzle state from level data and difficulty
-func generate_puzzle(level_id: int, difficulty: int) -> PuzzleState:
+func generate_puzzle(level_id: int, difficulty: int) -> Resource:
 	var level_data = LevelManager.get_level(level_id)
 	if level_data.is_empty():
 		push_error("Failed to get level data for level %d" % level_id)
 		return null
 
+	# Determine puzzle type
+	var puzzle_type = level_data.get("puzzle_type", "rectangle_jigsaw")
+
+	# Route to appropriate generation method
+	if puzzle_type == "spiral_twist":
+		return _generate_spiral_puzzle(level_id, difficulty, level_data)
+	else:
+		return _generate_rectangle_puzzle(level_id, difficulty, level_data)
+
+## Generate a rectangle jigsaw puzzle (original implementation)
+func _generate_rectangle_puzzle(level_id: int, difficulty: int, level_data: Dictionary) -> PuzzleState:
 	# Get difficulty configuration
 	var difficulty_str = GameConstants.difficulty_to_string(difficulty)
 	var diff_config = level_data["difficulty_configs"][difficulty_str]
@@ -42,9 +56,104 @@ func generate_puzzle(level_id: int, difficulty: int) -> PuzzleState:
 	# Scramble tiles
 	scramble_tiles(puzzle_state)
 
-	print("Generated puzzle: Level %d, %s, Grid %dx%d, Tiles: %d" % [level_id, difficulty_str, rows, columns, puzzle_state.tiles.size()])
+	print("Generated rectangle puzzle: Level %d, %s, Grid %dx%d, Tiles: %d" % [level_id, difficulty_str, rows, columns, puzzle_state.tiles.size()])
 
 	return puzzle_state
+
+## Generate a spiral twist puzzle
+func _generate_spiral_puzzle(level_id: int, difficulty: int, level_data: Dictionary) -> SpiralPuzzleState:
+	var difficulty_str = GameConstants.difficulty_to_string(difficulty)
+	var diff_config = level_data["difficulty_configs"][difficulty_str]
+
+	if diff_config == null:
+		push_error("No difficulty config found for %s" % difficulty_str)
+		return null
+
+	# Get ring count from difficulty config or use defaults
+	var ring_count = diff_config.get("ring_count", _get_default_ring_count(difficulty))
+
+	# Load level image
+	var texture = LevelManager.get_level_texture(level_id)
+	if texture == null:
+		push_error("Failed to load level image for level %d" % level_id)
+		return null
+
+	# Create spiral puzzle state
+	var puzzle_state = SpiralPuzzleState.new()
+	puzzle_state.level_id = level_id
+	puzzle_state.difficulty = difficulty_str
+	puzzle_state.ring_count = ring_count
+	puzzle_state.rotation_count = 0
+	puzzle_state.hints_used = 0
+	puzzle_state.is_solved = false
+
+	# Create rings from image
+	puzzle_state.rings = _create_rings_from_image(texture, ring_count, puzzle_state.puzzle_radius)
+	puzzle_state.active_ring_count = ring_count
+
+	# Scramble rings (randomize rotations)
+	_scramble_rings(puzzle_state)
+
+	print("Generated spiral puzzle: Level %d, %s, Rings: %d" % [level_id, difficulty_str, ring_count])
+
+	return puzzle_state
+
+## Get default ring count based on difficulty
+func _get_default_ring_count(difficulty: int) -> int:
+	match difficulty:
+		GameConstants.Difficulty.EASY:
+			return GameConstants.SPIRAL_RINGS_EASY
+		GameConstants.Difficulty.NORMAL:
+			return GameConstants.SPIRAL_RINGS_NORMAL
+		GameConstants.Difficulty.HARD:
+			return GameConstants.SPIRAL_RINGS_HARD
+		_:
+			return GameConstants.SPIRAL_RINGS_EASY
+
+## Create rings from circular image
+func _create_rings_from_image(texture: Texture2D, ring_count: int, max_radius: float) -> Array[SpiralRing]:
+	var rings: Array[SpiralRing] = []
+
+	# Calculate ring width (equal bands)
+	var ring_width = max_radius / ring_count
+
+	for i in range(ring_count):
+		var ring = SpiralRing.new()
+		ring.ring_index = i
+		ring.correct_angle = 0.0  # All rings start at 0 degrees when correct
+		ring.current_angle = 0.0  # Will be randomized in scramble
+		ring.angular_velocity = 0.0
+		ring.inner_radius = i * ring_width
+		ring.outer_radius = (i + 1) * ring_width
+
+		# Outermost ring is static (merged from start)
+		if i == ring_count - 1:
+			ring.is_merged = true
+			ring.current_angle = 0.0
+			ring.angular_velocity = 0.0
+
+		rings.append(ring)
+
+	return rings
+
+## Scramble rings by randomizing their rotations
+func _scramble_rings(puzzle_state: SpiralPuzzleState) -> void:
+	# Randomize rotation for all non-merged rings
+	for ring in puzzle_state.rings:
+		if not ring.is_merged:
+			# Random angle between -180 and 180 degrees
+			ring.current_angle = randf_range(-180.0, 180.0)
+			ring.angular_velocity = 0.0
+
+	# Ensure puzzle is not already solved
+	var attempts = 0
+	while puzzle_state.is_puzzle_solved() and attempts < 10:
+		for ring in puzzle_state.rings:
+			if not ring.is_merged:
+				ring.current_angle = randf_range(-180.0, 180.0)
+		attempts += 1
+
+	print("Spiral puzzle scrambled (attempts: %d)" % (attempts + 1))
 
 ## Create tiles from an image divided into a grid
 func create_tiles_from_image(texture: Texture2D, rows: int, columns: int) -> Array[Tile]:

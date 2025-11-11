@@ -8,14 +8,28 @@ const LEVELS_DATA_PATH = "res://data/levels.json"
 const SAVE_DATA_PATH = "user://save_data.cfg"
 
 # Game settings
-const TOTAL_LEVELS = 20
+const TOTAL_LEVELS = 100
 const MAX_STARS_PER_LEVEL = 3
 const DEFAULT_HINT_LIMIT = 3
 
-# Puzzle mechanics
+# Puzzle mechanics - Rectangle Jigsaw
 const TILE_SWAP_DURATION = 0.3  # seconds
 const TILE_SELECTION_SCALE = 1.05
 const HINT_ANIMATION_DURATION = 0.5
+
+# Puzzle mechanics - Spiral Twist
+const SPIRAL_RING_BORDER_WIDTH = 4  # pixels
+const SPIRAL_MERGE_ANGLE_THRESHOLD = 5.0  # degrees
+const SPIRAL_MERGE_VELOCITY_THRESHOLD = 10.0  # degrees per second
+const SPIRAL_ANGULAR_DECELERATION = 200.0  # degrees/s² (stops in 2-3 seconds)
+const SPIRAL_MAX_ANGULAR_VELOCITY = 720.0  # degrees per second
+const SPIRAL_MIN_VELOCITY_THRESHOLD = 1.0  # Stop completely below this
+const SPIRAL_ROTATION_SNAP_ANGLE = 1.0  # Snap to correct when within this angle
+
+# Spiral ring counts per difficulty
+const SPIRAL_RINGS_EASY = 3
+const SPIRAL_RINGS_NORMAL = 5
+const SPIRAL_RINGS_HARD = 7
 
 # Audio settings
 const DEFAULT_MUSIC_VOLUME = 0.7
@@ -34,7 +48,7 @@ enum Difficulty {
 
 enum PuzzleType {
 	RECTANGLE_JIGSAW = 0,
-	SPIRAL_TWIST = 1  # Future feature
+	SPIRAL_TWIST = 1
 }
 
 ## Helper function: Convert Difficulty enum to string
