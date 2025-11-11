@@ -11,7 +11,6 @@ var current_level_id: int = 1
 var current_difficulty: int = GameConstants.Difficulty.EASY
 var puzzle_state: PuzzleState
 var tile_nodes: Array = []
-var selected_tile_node = null
 var source_texture: Texture2D
 
 # UI references
@@ -113,7 +112,7 @@ func _spawn_tiles() -> void:
 
 			# Now setup the tile
 			tile_node.setup(tile, tile_index, source_texture)
-			tile_node.tile_clicked.connect(_on_tile_clicked)
+			tile_node.drag_ended.connect(_on_tile_drag_ended)
 
 			tile_nodes.append(tile_node)
 
@@ -152,40 +151,29 @@ func _calculate_tile_size() -> Vector2:
 
 	return Vector2(tile_width, tile_height)
 
-## Handle tile clicked
-func _on_tile_clicked(tile_node) -> void:
-	print("Tile clicked: %d" % tile_node.tile_index)
-
-	if selected_tile_node == null:
-		# First selection
-		selected_tile_node = tile_node
-		tile_node.set_selected(true)
-		print("Tile %d selected" % tile_node.tile_index)
-	elif selected_tile_node == tile_node:
-		# Clicked same tile - deselect
-		selected_tile_node.set_selected(false)
-		selected_tile_node = null
-		print("Tile deselected")
-	else:
-		# Second selection - swap tiles
-		var tile1_index = selected_tile_node.tile_index
-		var tile2_index = tile_node.tile_index
-
-		print("Swapping tiles %d and %d" % [tile1_index, tile2_index])
-
-		# Deselect first
-		selected_tile_node.set_selected(false)
-		selected_tile_node = null
-
-		# Swap in puzzle state
-		PuzzleManager.swap_tiles(puzzle_state, tile1_index, tile2_index)
-
-		# Refresh the entire grid to show new positions
+## Handle tile drag ended (swap if dropped on another tile)
+func _on_tile_drag_ended(dragged_tile_node, target_tile_node) -> void:
+	if target_tile_node == null:
+		# Dropped on empty space - snap back
+		print("Tile %d dropped on empty space" % dragged_tile_node.tile_index)
 		_refresh_tile_positions()
+		return
 
-		# Check if puzzle solved
-		await get_tree().create_timer(0.1).timeout
-		_check_puzzle_solved()
+	# Get the tile indices
+	var tile1_index = dragged_tile_node.tile_index
+	var tile2_index = target_tile_node.tile_index
+
+	print("Swapping tiles %d and %d" % [tile1_index, tile2_index])
+
+	# Swap in puzzle state
+	PuzzleManager.swap_tiles(puzzle_state, tile1_index, tile2_index)
+
+	# Refresh the entire grid to show new positions and update draggable status
+	_refresh_tile_positions()
+
+	# Check if puzzle solved
+	await get_tree().create_timer(0.1).timeout
+	_check_puzzle_solved()
 
 ## Check if puzzle is solved
 func _check_puzzle_solved() -> void:
