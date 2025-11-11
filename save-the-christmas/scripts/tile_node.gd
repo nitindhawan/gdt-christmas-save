@@ -54,14 +54,14 @@ func update_draggable_status() -> void:
 ## Update visual appearance based on draggable status
 func _update_border_visual() -> void:
 	if is_draggable:
-		# 2px dark grey border for draggable tiles
+		# 4px dark grey border for draggable tiles
 		border.visible = true
 		var stylebox = StyleBoxFlat.new()
 		stylebox.border_color = Color(0.3, 0.3, 0.3, 1.0)  # Dark grey
-		stylebox.border_width_left = 2
-		stylebox.border_width_top = 2
-		stylebox.border_width_right = 2
-		stylebox.border_width_bottom = 2
+		stylebox.border_width_left = 4
+		stylebox.border_width_top = 4
+		stylebox.border_width_right = 4
+		stylebox.border_width_bottom = 4
 		stylebox.bg_color = Color(0, 0, 0, 0)  # Transparent background
 		border.add_theme_stylebox_override("panel", stylebox)
 	else:
