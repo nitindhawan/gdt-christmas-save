@@ -288,9 +288,9 @@ var ring_index: int  # Ring number from center (0=innermost)
 var current_angle: float  # Current rotation in degrees
 var correct_angle: float  # Target angle (always 0.0)
 var angular_velocity: float  # Rotation speed in degrees/second
-var inner_radius: float  # Inner circle radius in pixels
+var inner_radius: float  # Inner circle radius in pixels (expands when merging)
 var outer_radius: float  # Outer circle radius in pixels
-var is_merged: bool  # Whether ring is locked
+var is_locked: bool  # Whether ring is locked (cannot rotate/be dragged)
 var merged_ring_ids: Array[int]  # Rings merged into this one
 
 ## KEY METHODS
@@ -300,22 +300,34 @@ func is_angle_correct(threshold: float = 1.0) -> bool:
 
 func can_merge_with(other_ring: SpiralRing) -> bool:
     """Check merge conditions:
-    - Both not merged
+    - Not both locked
     - Adjacent (indices differ by 1)
     - Angle difference ≤ 5.0°
     - Velocity difference ≤ 10.0°/s
     """
 
 func merge_with(other_ring: SpiralRing) -> void:
-    """Merge two rings:
+    """Merge this ring with another (this ring absorbs other):
+    - Expand inner_radius to encompass other ring
     - Average angles and velocities
-    - Mark both as merged
+    - Inherit locked state if merging with locked ring
     - Track merged ring IDs
-    - Merged ring continues rotating unless it's the outermost (static) ring
+    - Other ring should be discarded after this call
     """
+
+func gain_velocity(velocity: float) -> void:
+    """Apply velocity from flick gesture:
+    - Check if locked, return if true
+    - Clamp to max angular velocity
+    - Set angular_velocity
+    """
+
+func can_rotate() -> bool:
+    """Returns true if ring can be rotated (not locked)"""
 
 func update_rotation(delta: float) -> void:
     """Physics update per frame:
+    - Return early if locked
     - Apply angular velocity to current angle
     - Apply deceleration (200.0°/s²)
     - Stop when below 1.0°/s
@@ -354,13 +366,20 @@ func update_physics(delta: float) -> void:
 
 func check_and_merge_rings() -> bool:
     """Detect and perform ring merges
+    CRITICAL: Keeps outer ring, removes inner ring from array
     Returns true if any merge occurred"""
+    var any_merged = false
     for i in range(rings.size() - 1):
         if rings[i].can_merge_with(rings[i + 1]):
-            rings[i].merge_with(rings[i + 1])
+            # Keep outer ring (i+1), expand it inward
+            rings[i + 1].inner_radius = rings[i].inner_radius
+            rings[i + 1].merge_with(rings[i])
+            # Remove inner ring from array
+            rings.remove_at(i)
             active_ring_count -= 1
-            return true
-    return false
+            any_merged = true
+            break  # Re-check from start after array modification
+    return any_merged
 
 func get_ring_at_position(touch_pos: Vector2, center: Vector2) -> SpiralRing:
     """Hit detection for rings"""

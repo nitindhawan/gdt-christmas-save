@@ -389,7 +389,7 @@ func _spawn_spiral_rings() -> void:
 		# Setup ring node BEFORE adding to tree
 		ring_node.ring_data = ring
 		ring_node.source_texture = source_texture
-		ring_node.is_interactive = not ring.is_merged
+		ring_node.is_interactive = not ring.is_locked
 
 		# Add to rings container
 		rings_container.add_child(ring_node)
@@ -432,14 +432,24 @@ func _update_spiral_ring_visuals() -> void:
 
 ## Refresh spiral visuals after merge
 func _refresh_spiral_visuals() -> void:
-	# Update interactivity for merged rings
 	var spiral_state = puzzle_state as SpiralPuzzleState
 
+	# Handle ring removal: rings array has shrunk, need to sync ring_nodes
+	# If a ring was removed, hide/remove the corresponding node
+	while ring_nodes.size() > spiral_state.rings.size():
+		var removed_index = ring_nodes.size() - 1
+		var removed_node = ring_nodes[removed_index]
+		if removed_node != null:
+			removed_node.queue_free()
+		ring_nodes.remove_at(removed_index)
+
+	# Update remaining ring nodes to match current ring data
 	for i in range(ring_nodes.size()):
 		if i < spiral_state.rings.size():
 			var ring = spiral_state.rings[i]
 			var ring_node = ring_nodes[i]
-			ring_node.is_interactive = not ring.is_merged
+			ring_node.ring_data = ring  # Update to current ring data (may have expanded)
+			ring_node.is_interactive = not ring.is_locked
 			ring_node.update_visual()
 
 ## Check if spiral puzzle is solved

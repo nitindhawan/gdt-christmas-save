@@ -128,9 +128,9 @@ func _create_rings_from_image(texture: Texture2D, ring_count: int, max_radius: f
 		ring.inner_radius = i * ring_width
 		ring.outer_radius = (i + 1) * ring_width
 
-		# Outermost ring is static (merged from start)
+		# Outermost ring is static (locked from start)
 		if i == ring_count - 1:
-			ring.is_merged = true
+			ring.is_locked = true
 			ring.current_angle = 0.0
 			ring.angular_velocity = 0.0
 
@@ -140,9 +140,9 @@ func _create_rings_from_image(texture: Texture2D, ring_count: int, max_radius: f
 
 ## Scramble rings by randomizing their rotations
 func _scramble_rings(puzzle_state: SpiralPuzzleState) -> void:
-	# Randomize rotation for all non-merged rings
+	# Randomize rotation for all non-locked rings
 	for ring in puzzle_state.rings:
-		if not ring.is_merged:
+		if not ring.is_locked:
 			# Random angle between -180 and 180 degrees, but not too close to 0
 			var angle = randf_range(-180.0, 180.0)
 			# Ensure angle is at least 20 degrees away from correct position
@@ -154,19 +154,19 @@ func _scramble_rings(puzzle_state: SpiralPuzzleState) -> void:
 	# Verify at least one ring is significantly misaligned
 	var max_angle_diff = 0.0
 	for ring in puzzle_state.rings:
-		if not ring.is_merged:
+		if not ring.is_locked:
 			max_angle_diff = max(max_angle_diff, abs(ring.current_angle))
 
 	# If all rings are too close to correct, re-scramble
 	var attempts = 0
 	while max_angle_diff < 20.0 and attempts < 10:
 		for ring in puzzle_state.rings:
-			if not ring.is_merged:
+			if not ring.is_locked:
 				ring.current_angle = randf_range(-180.0, 180.0)
 
 		max_angle_diff = 0.0
 		for ring in puzzle_state.rings:
-			if not ring.is_merged:
+			if not ring.is_locked:
 				max_angle_diff = max(max_angle_diff, abs(ring.current_angle))
 		attempts += 1
 

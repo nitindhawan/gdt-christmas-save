@@ -146,9 +146,12 @@ These must be configured in Project Settings → AutoLoad:
 - Method: `is_correct()` compares positions
 
 **SpiralRing** (`scripts/spiral_ring.gd`): Individual ring data (Spiral Twist)
-- Properties: ring_index, current_angle, angular_velocity, inner_radius, outer_radius, is_merged
+- Properties: ring_index, current_angle, angular_velocity, inner_radius, outer_radius, is_locked
 - Method: `is_angle_correct()` checks if within 1° of correct angle
 - Method: `can_merge_with()` validates merge conditions
+- Method: `merge_with()` absorbs other ring (expands inner_radius, inherits lock state)
+- Method: `gain_velocity()` applies flick velocity (checks is_locked)
+- Method: `can_rotate()` returns !is_locked
 - Method: `update_rotation(delta)` applies physics (velocity, deceleration)
 
 ### Scene Flow
@@ -409,7 +412,7 @@ ProgressManager.load_save_data()
 - Divide puzzle radius into equal-width rings
   - `ring_width = puzzle_radius / ring_count`
   - Ring i: `inner_radius = i * ring_width`, `outer_radius = (i+1) * ring_width`
-- Outermost ring (index = ring_count-1) starts pre-merged
+- **Outermost ring (index = ring_count-1)**: Starts with `is_locked = true` (static reference)
 - All other rings scrambled to random angles (±180°, min 20° from correct)
 
 ### Spiral Ring Rendering
@@ -440,16 +443,21 @@ func _process(delta):
 - Tracks touch history (5 samples) for flick velocity calculation
 - Touch samples: angle + timestamp, used to calculate average velocity on release
 
-### Spiral Merge Detection
+### Spiral Merge Detection (CRITICAL IMPLEMENTATION)
 Check adjacent rings each frame in `check_and_merge_rings()`:
-- Iterate through rings 0 to ring_count-2
+- Iterate through rings array
 - For each pair (i, i+1), check `can_merge_with()`:
-  - Both not already merged
+  - Not both locked
   - Angle difference ≤ 5°
   - Velocity difference ≤ 10°/s
-- On merge: Average angles/velocities, mark both as merged, decrease active_ring_count
-- **CRITICAL**: Merged rings continue rotating unless merging with outermost ring (static reference)
-- Ring only becomes non-interactive when it merges with the outermost ring
+- **On merge** (keep outer, discard inner):
+  1. Expand outer ring inward: `rings[i+1].inner_radius = rings[i].inner_radius`
+  2. Average angles/velocities
+  3. If merging with locked ring, result is locked
+  4. **Remove inner ring**: `rings.remove_at(i)`
+  5. Decrease active_ring_count
+- **Result**: Rings array shrinks as merging progresses
+- **Win condition**: `rings.size() == 1` (only locked outermost ring remains)
 
 ### Rectangle Jigsaw Tile Generation
 - Use AtlasTexture to split source image into tile regions

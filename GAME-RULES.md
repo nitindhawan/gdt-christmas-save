@@ -66,18 +66,26 @@ Rotate concentric rings of a circular Christmas image to align them correctly. R
 4. Neither ring already merged
 
 #### Merge Behavior
-- Both rings **merge into single ring**
-- New ring averages angles and velocities
-- **Merged ring continues rotating** (unless it's the outermost ring)
-- **Only becomes non-interactive when merged with outermost ring** (the static reference)
-- Visual feedback: Border changes to dark gray when locked to outermost
-- Audio: "ring_merge" sound effect plays
-- **Active ring count decreases by 1**
+When two adjacent rings align (angle ≤5°, velocity ≤10°/s):
+1. **Keep the OUTER ring instance**, discard the inner ring
+2. **Expand outer ring inward**: `outer_ring.inner_radius = inner_ring.inner_radius`
+3. **Average angles and velocities** of both rings
+4. **Result**: ONE wider ring that encompasses both original rings
+5. **If merging with locked ring**: Result becomes locked (non-interactive)
+6. **Visual feedback**: Border changes to dark gray when locked
+7. **Audio**: "ring_merge" sound effect plays
+8. **Active ring count decreases by 1**
+
+#### Locking System
+- **Outermost ring**: Starts `is_locked = true` (the static reference frame)
+- **Locked rings**: Cannot rotate, cannot be dragged, cannot gain velocity
+- **When merging with locked ring**: Result inherits locked state
+- **Progressive locking**: Rings merge inward until all are part of the locked outermost ring
 
 #### Puzzle Solved Condition
-- **Win**: When only 1 active ring remains (all others merged into outermost)
-- Outermost ring is static - inner rings merge progressively until all join the outermost
-- All rings must be aligned within tolerance (±1° from correct)
+- **Win**: When only 1 ring remains (all merged into the outermost locked ring)
+- **Progression**: Inner rings merge with neighbors → eventually merge with outermost → become locked
+- All rings must be aligned within tolerance (±1° from correct) before merging
 - Victory triggers: Haptic feedback, "level_complete" sound, completion screen
 
 ### Hint System (Spiral)

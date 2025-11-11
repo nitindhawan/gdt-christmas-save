@@ -12,7 +12,7 @@ signal ring_tapped()
 @export var ring_data: SpiralRing = null
 @export var source_texture: Texture2D = null
 @export var puzzle_center: Vector2 = Vector2.ZERO
-@export var is_interactive: bool = true  # False for merged/static rings
+@export var is_interactive: bool = true  # False for locked/static rings
 
 var _is_dragging: bool = false
 var _drag_start_angle: float = 0.0
@@ -81,12 +81,12 @@ func _gui_input(event: InputEvent) -> void:
 	if not _is_point_in_ring(event_pos):
 		return  # Let it pass through to the next ring
 
-	# Don't accept input for merged rings
-	if not is_interactive or ring_data.is_merged:
-		print("Ring %d: Input ignored (interactive=%s, merged=%s)" % [
+	# Don't accept input for locked rings
+	if not is_interactive or ring_data.is_locked:
+		print("Ring %d: Input ignored (interactive=%s, locked=%s)" % [
 			ring_data.ring_index,
 			str(is_interactive),
-			str(ring_data.is_merged)
+			str(ring_data.is_locked)
 		])
 		return
 
@@ -314,7 +314,7 @@ func _draw_ring_segment(center: Vector2) -> void:
 
 ## Draw border around ring
 func _draw_ring_border(center: Vector2) -> void:
-	var border_color = Color.WHITE if not ring_data.is_merged else Color.DARK_GRAY
+	var border_color = Color.WHITE if not ring_data.is_locked else Color.DARK_GRAY
 	var border_width = GameConstants.SPIRAL_RING_BORDER_WIDTH
 
 	# Draw outer border
