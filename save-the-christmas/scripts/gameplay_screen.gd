@@ -77,7 +77,7 @@ func _initialize_gameplay() -> void:
 	if is_spiral_puzzle:
 		# Setup spiral puzzle
 		_setup_spiral_puzzle()
-		_spawn_spiral_rings()
+		await _spawn_spiral_rings()
 	else:
 		# Setup rectangle puzzle
 		_setup_puzzle_grid()
@@ -335,6 +335,13 @@ func _setup_spiral_puzzle() -> void:
 	# Hide rectangle grid
 	puzzle_grid.visible = false
 
+	# Get puzzle area control
+	var puzzle_area = $MarginContainer/VBoxContainer/PuzzleArea
+
+	# Set minimum size for puzzle area to ensure it has dimensions
+	puzzle_area.custom_minimum_size = Vector2(900, 900)
+	puzzle_area.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+
 	print("Spiral puzzle configured: %d rings" % puzzle_state.ring_count)
 
 ## Spawn spiral ring nodes
@@ -349,7 +356,27 @@ func _spawn_spiral_rings() -> void:
 	# Get puzzle area control
 	var puzzle_area = $MarginContainer/VBoxContainer/PuzzleArea
 
-	print("Puzzle area size: %v" % puzzle_area.size)
+	# Force update layout
+	puzzle_area.reset_size()
+	await get_tree().process_frame
+
+	print("Puzzle area size after layout: %v" % puzzle_area.size)
+
+	# If still no size, set it manually
+	if puzzle_area.size.x == 0 or puzzle_area.size.y == 0:
+		puzzle_area.size = Vector2(900, 900)
+		print("Forced puzzle area size to: %v" % puzzle_area.size)
+
+	# Create a Control container for rings (CenterContainer's layout interferes)
+	var rings_container = Control.new()
+	rings_container.name = "RingsContainer"
+	# CenterContainer uses child's minimum size, not anchors
+	rings_container.custom_minimum_size = puzzle_area.size
+	rings_container.mouse_filter = Control.MOUSE_FILTER_IGNORE  # Pass input through to children
+	puzzle_area.add_child(rings_container)
+
+	await get_tree().process_frame
+	print("Rings container size: %v, position: %v" % [rings_container.size, rings_container.position])
 
 	# Pre-allocate array to correct size
 	ring_nodes.resize(spiral_state.rings.size())
@@ -359,23 +386,18 @@ func _spawn_spiral_rings() -> void:
 		var ring = spiral_state.rings[i]
 		var ring_node = SPIRAL_RING_NODE_SCENE.instantiate()
 
-		# Add to scene first so it gets laid out
-		puzzle_area.add_child(ring_node)
-
-		# Setup ring node
+		# Setup ring node BEFORE adding to tree
 		ring_node.ring_data = ring
 		ring_node.source_texture = source_texture
 		ring_node.is_interactive = not ring.is_merged
 
-		# Make ring fill the puzzle area with anchors
-		ring_node.anchor_left = 0.0
-		ring_node.anchor_top = 0.0
-		ring_node.anchor_right = 1.0
-		ring_node.anchor_bottom = 1.0
-		ring_node.offset_left = 0.0
-		ring_node.offset_top = 0.0
-		ring_node.offset_right = 0.0
-		ring_node.offset_bottom = 0.0
+		# Add to rings container
+		rings_container.add_child(ring_node)
+
+		# Set anchors to fill the container
+		ring_node.set_anchors_preset(Control.PRESET_FULL_RECT)
+
+		print("Added ring %d to container" % i)
 
 		# Connect signals
 		ring_node.ring_rotated.connect(_on_ring_rotated.bind(i))
@@ -384,6 +406,10 @@ func _spawn_spiral_rings() -> void:
 		ring_nodes[i] = ring_node  # Store in correct position
 
 	print("Spawned %d spiral rings" % ring_nodes.size())
+
+	# Wait for layout to complete
+	await get_tree().process_frame
+	print("Layout complete. Final puzzle area size: %v" % puzzle_area.size)
 
 ## Handle ring rotation (drag)
 func _on_ring_rotated(angle_delta: float, ring_index: int) -> void:

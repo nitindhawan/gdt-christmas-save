@@ -38,7 +38,9 @@ func _ready() -> void:
 
 	# Wait a frame for layout to finish, then print actual size
 	await get_tree().process_frame
-	print("Ring %d: Actual size = %v, Center = %v" % [ring_data.ring_index, size, size / 2.0])
+	print("Ring %d: Actual size = %v, Center = %v, Position = %v" % [ring_data.ring_index, size, size / 2.0, global_position])
+	print("Ring %d: Anchors = L:%.2f T:%.2f R:%.2f B:%.2f" % [ring_data.ring_index, anchor_left, anchor_top, anchor_right, anchor_bottom])
+	print("Ring %d: Mouse filter = %d, Visible = %s" % [ring_data.ring_index, mouse_filter, str(visible)])
 
 	# Set up custom drawing
 	queue_redraw()
@@ -59,6 +61,12 @@ func _gui_input(event: InputEvent) -> void:
 
 	# Debug: Print all button press events
 	if event is InputEventMouseButton and event.pressed:
+		print("Ring %d: GOT MOUSE EVENT! Size=%v, Position=%v, Event pos=%v" % [
+			ring_data.ring_index,
+			size,
+			global_position,
+			event_pos
+		])
 		var local_center = size / 2.0
 		var offset = event_pos - local_center
 		var distance = offset.length()
