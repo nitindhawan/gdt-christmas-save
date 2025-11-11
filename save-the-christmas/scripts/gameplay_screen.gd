@@ -4,14 +4,20 @@ extends Control
 ## Main puzzle gameplay with tile swapping mechanics
 
 const TILE_NODE_SCENE = preload("res://scenes/tile_node.tscn")
+const SPIRAL_RING_NODE_SCENE = preload("res://scenes/spiral_ring_node.tscn")
 const SETTINGS_POPUP_SCENE = preload("res://scenes/settings_popup.tscn")
+const SpiralPuzzleState = preload("res://scripts/spiral_puzzle_state.gd")
 
 # Game state
 var current_level_id: int = 1
 var current_difficulty: int = GameConstants.Difficulty.EASY
-var puzzle_state: PuzzleState
+var puzzle_state: Resource  # Can be PuzzleState or SpiralPuzzleState
 var tile_nodes: Array = []
+var ring_nodes: Array = []
+var rings_container: Control = null  # Container for spiral ring nodes
 var source_texture: Texture2D
+var is_spiral_puzzle: bool = false
+var puzzle_center: Vector2 = Vector2(540, 960)  # Center of 1080x1920 screen
 
 # UI references
 @onready var level_label = $MarginContainer/VBoxContainer/TopHUD/MarginContainer/HBoxContainer/LevelLabel
@@ -66,13 +72,19 @@ func _initialize_gameplay() -> void:
 		push_error("Failed to generate puzzle")
 		return
 
-	# Setup puzzle grid
-	_setup_puzzle_grid()
+	# Determine puzzle type
+	is_spiral_puzzle = puzzle_state is SpiralPuzzleState
 
-	# Spawn tiles
-	_spawn_tiles()
+	if is_spiral_puzzle:
+		# Setup spiral puzzle
+		_setup_spiral_puzzle()
+		await _spawn_spiral_rings()
+	else:
+		# Setup rectangle puzzle
+		_setup_puzzle_grid()
+		_spawn_tiles()
 
-	print("Gameplay initialized successfully")
+	print("Gameplay initialized successfully (%s puzzle)" % ("Spiral" if is_spiral_puzzle else "Rectangle"))
 
 ## Setup puzzle grid layout based on difficulty
 func _setup_puzzle_grid() -> void:
@@ -292,3 +304,247 @@ func _on_settings_button_pressed() -> void:
 	# Instantiate and show settings popup
 	var settings_popup = SETTINGS_POPUP_SCENE.instantiate()
 	add_child(settings_popup)
+
+## ============================================================================
+## SPIRAL PUZZLE METHODS
+## ============================================================================
+
+## Physics update for spiral puzzles
+func _process(delta: float) -> void:
+	if not is_spiral_puzzle or puzzle_state == null:
+		return
+
+	var spiral_state = puzzle_state as SpiralPuzzleState
+
+	# Update ring physics
+	spiral_state.update_physics(delta)
+
+	# Check for merges
+	if spiral_state.check_and_merge_rings():
+		print("Rings merged! Active rings: %d" % spiral_state.active_ring_count)
+		_refresh_spiral_visuals()
+
+		# Check if puzzle solved
+		if spiral_state.is_puzzle_solved():
+			_check_spiral_puzzle_solved()
+
+	# Update visual display
+	_update_spiral_ring_visuals()
+
+## Setup spiral puzzle container
+func _setup_spiral_puzzle() -> void:
+	# Hide rectangle grid
+	puzzle_grid.visible = false
+
+	# Get puzzle area control
+	var puzzle_area = $MarginContainer/VBoxContainer/PuzzleArea
+
+	# Set minimum size for puzzle area to ensure it has dimensions
+	puzzle_area.custom_minimum_size = Vector2(900, 900)
+	puzzle_area.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+
+	print("Spiral puzzle configured: %d rings" % puzzle_state.ring_count)
+
+## Spawn spiral ring nodes
+func _spawn_spiral_rings() -> void:
+	# Clear existing rings
+	for ring_node in ring_nodes:
+		ring_node.queue_free()
+	ring_nodes.clear()
+
+	var spiral_state = puzzle_state as SpiralPuzzleState
+
+	# Get puzzle area control
+	var puzzle_area = $MarginContainer/VBoxContainer/PuzzleArea
+
+	# Force update layout
+	puzzle_area.reset_size()
+	await get_tree().process_frame
+
+	print("Puzzle area size after layout: %v" % puzzle_area.size)
+
+	# If still no size, set it manually
+	if puzzle_area.size.x == 0 or puzzle_area.size.y == 0:
+		puzzle_area.size = Vector2(900, 900)
+		print("Forced puzzle area size to: %v" % puzzle_area.size)
+
+	# Create a Control container for rings that handles ALL input
+	rings_container = Control.new()
+	rings_container.name = "RingsContainer"
+	rings_container.custom_minimum_size = puzzle_area.size
+	rings_container.mouse_filter = Control.MOUSE_FILTER_STOP  # Capture all input here
+	puzzle_area.add_child(rings_container)
+
+	# Connect input handling to this container
+	rings_container.gui_input.connect(_on_rings_container_input)
+
+	await get_tree().process_frame
+	print("Rings container size: %v, position: %v" % [rings_container.size, rings_container.position])
+
+	# Pre-allocate array to correct size
+	ring_nodes.resize(spiral_state.rings.size())
+
+	# Create ring nodes (spawn from outermost to innermost so inner rings are on top)
+	for i in range(spiral_state.rings.size() - 1, -1, -1):
+		var ring = spiral_state.rings[i]
+		var ring_node = SPIRAL_RING_NODE_SCENE.instantiate()
+
+		# Setup ring node BEFORE adding to tree
+		ring_node.ring_data = ring
+		ring_node.source_texture = source_texture
+
+		# Debug: Print ring initialization
+		print("Ring %d: is_locked=%s, radii=%.1f-%.1f" % [
+			i, ring.is_locked, ring.inner_radius, ring.outer_radius
+		])
+
+		# Add to rings container
+		rings_container.add_child(ring_node)
+
+		# Set anchors to fill the container
+		ring_node.set_anchors_preset(Control.PRESET_FULL_RECT)
+
+		print("Added ring %d to container" % i)
+
+		ring_nodes[i] = ring_node  # Store in correct position
+
+	print("Spawned %d spiral rings" % ring_nodes.size())
+
+	# Wait for layout to complete
+	await get_tree().process_frame
+	print("Layout complete. Final puzzle area size: %v" % puzzle_area.size)
+
+## Centralized input handler for all rings
+var _dragging_ring_node: Control = null
+
+func _on_rings_container_input(event: InputEvent) -> void:
+	if not is_spiral_puzzle:
+		return
+
+	var spiral_state = puzzle_state as SpiralPuzzleState
+	var event_pos: Vector2
+
+	if event is InputEventMouseButton:
+		event_pos = event.position
+	elif event is InputEventMouseMotion:
+		event_pos = event.position
+	else:
+		return
+
+	# Calculate distance from center
+	if rings_container == null:
+		return
+	var center = rings_container.size / 2.0
+	var offset = event_pos - center
+	var distance = offset.length()
+
+	# Handle mouse button press/release
+	if event is InputEventMouseButton:
+		var mouse_event = event as InputEventMouseButton
+		if mouse_event.button_index == MOUSE_BUTTON_LEFT:
+			if mouse_event.pressed:
+				# Find which ring was clicked (check from innermost to outermost)
+				for i in range(spiral_state.rings.size()):
+					var ring = spiral_state.rings[i]
+					if ring.is_locked:
+						continue
+					if distance >= ring.inner_radius and distance <= ring.outer_radius:
+						# Found the clicked ring
+						_dragging_ring_node = ring_nodes[i]
+						_dragging_ring_node.start_drag_external(event_pos)
+						print("Started dragging Ring %d at distance %.1f" % [i, distance])
+						break
+			else:
+				# Release
+				if _dragging_ring_node != null:
+					var angular_velocity = _dragging_ring_node.end_drag_external()
+					var ring_data = _dragging_ring_node.ring_data
+					var ring_index = spiral_state.rings.find(ring_data)
+					if ring_index >= 0:
+						spiral_state.set_ring_velocity(ring_index, angular_velocity)
+					if AudioManager:
+						AudioManager.play_sfx("tile_drop")
+					_dragging_ring_node = null
+
+	# Handle mouse motion during drag
+	elif event is InputEventMouseMotion:
+		if _dragging_ring_node != null:
+			var angle_delta = _dragging_ring_node.update_drag_external(event_pos)
+			var ring_data = _dragging_ring_node.ring_data
+			var ring_index = spiral_state.rings.find(ring_data)
+			if ring_index >= 0:
+				spiral_state.rotate_ring(ring_index, angle_delta)
+
+## Update ring visual rotations
+func _update_spiral_ring_visuals() -> void:
+	for i in range(ring_nodes.size()):
+		if i < ring_nodes.size() and ring_nodes[i] != null:
+			ring_nodes[i].update_visual()
+
+## Refresh spiral visuals after merge
+func _refresh_spiral_visuals() -> void:
+	var spiral_state = puzzle_state as SpiralPuzzleState
+
+	# Handle ring removal: rings array has shrunk, need to sync ring_nodes
+	# If a ring was removed, hide/remove the corresponding node
+	while ring_nodes.size() > spiral_state.rings.size():
+		var removed_index = ring_nodes.size() - 1
+		var removed_node = ring_nodes[removed_index]
+		if removed_node != null:
+			removed_node.queue_free()
+		ring_nodes.remove_at(removed_index)
+
+	# Update remaining ring nodes to match current ring data
+	for i in range(ring_nodes.size()):
+		if i < spiral_state.rings.size():
+			var ring = spiral_state.rings[i]
+			var ring_node = ring_nodes[i]
+			ring_node.ring_data = ring  # Update to current ring data (may have expanded)
+			ring_node.update_visual()
+
+## Check if spiral puzzle is solved
+func _check_spiral_puzzle_solved() -> void:
+	var spiral_state = puzzle_state as SpiralPuzzleState
+
+	if spiral_state.is_puzzle_solved():
+		print("Spiral puzzle solved!")
+		spiral_state.is_solved = true
+
+		# Play victory sound
+		if AudioManager:
+			AudioManager.play_sfx("level_complete")
+
+		# Trigger haptic feedback
+		if AudioManager:
+			AudioManager.trigger_haptic(0.8)
+
+		# Save progress
+		_save_spiral_progress()
+
+		# Navigate to level complete screen
+		await get_tree().create_timer(1.0).timeout
+		GameManager.navigate_to_level_complete()
+
+## Save progress for spiral puzzle
+func _save_spiral_progress() -> void:
+	var spiral_state = puzzle_state as SpiralPuzzleState
+	var difficulty_str = GameConstants.difficulty_to_string(current_difficulty)
+
+	# Set star for this level and difficulty
+	ProgressManager.set_star(current_level_id, difficulty_str, true)
+
+	# Unlock next level if completing Easy
+	if current_difficulty == GameConstants.Difficulty.EASY:
+		ProgressManager.unlock_next_level()
+
+	# Update current level
+	ProgressManager.current_level = current_level_id
+
+	# Update statistics
+	ProgressManager.total_swaps_made += spiral_state.rotation_count
+	ProgressManager.total_hints_used += spiral_state.hints_used
+
+	# Save to disk
+	ProgressManager.save_progress()
+
+	print("Spiral progress saved: Level %d, %s completed" % [current_level_id, difficulty_str])

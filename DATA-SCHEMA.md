@@ -25,9 +25,23 @@ This document defines all data structures used in "Save the Christmas" including
   "levels": [
     {
       "level_id": 1,
-      "name": "Cozy Fireplace",
+      "name": "Christmas Tree",
       "image_path": "res://assets/levels/level_01.png",
       "thumbnail_path": "res://assets/levels/thumbnails/level_01_thumb.png",
+      "puzzle_type": "spiral_twist",
+      "difficulty_configs": {
+        "easy": { "ring_count": 3 },
+        "normal": { "ring_count": 5 },
+        "hard": { "ring_count": 7 }
+      },
+      "hint_limit": 3,
+      "tags": ["tree", "festive", "outdoor"]
+    },
+    {
+      "level_id": 2,
+      "name": "Cozy Fireplace",
+      "image_path": "res://assets/levels/level_02.png",
+      "thumbnail_path": "res://assets/levels/thumbnails/level_02_thumb.png",
       "puzzle_type": "rectangle_jigsaw",
       "difficulty_configs": {
         "easy": {
@@ -49,7 +63,7 @@ This document defines all data structures used in "Save the Christmas" including
       "hint_limit": 3,
       "tags": ["indoor", "warm", "festive"]
     }
-    // ... levels 2-20 follow same structure
+    // ... levels 3-20 follow same structure (odd=spiral, even=rectangle)
   ]
 }
 ```
@@ -63,20 +77,24 @@ This document defines all data structures used in "Save the Christmas" including
 
 #### Level Object Fields
 - **level_id** (int): Unique identifier (1-20), used for progression
-- **name** (string): Display name of the level (e.g., "Cozy Fireplace")
-- **image_path** (string): Path to full-resolution source image (2048×2048px PNG)
+- **name** (string): Display name of the level (e.g., "Christmas Tree")
+- **image_path** (string): Path to full-resolution source image (2048×2048px PNG, circular for spiral puzzles)
 - **thumbnail_path** (string): Path to thumbnail for level selection (512×512px PNG)
-- **puzzle_type** (string): Type of puzzle mechanics - MVP: "rectangle_jigsaw", Future: "spiral_twist"
-- **difficulty_configs** (object): Grid configuration for each difficulty (rows, columns, tile_count)
+- **puzzle_type** (string): Type of puzzle mechanics - "rectangle_jigsaw" or "spiral_twist"
+- **difficulty_configs** (object): Configuration for each difficulty
+  - Rectangle Jigsaw: {rows, columns, tile_count}
+  - Spiral Twist: {ring_count}
 - **hint_limit** (int, optional): Maximum hints allowed (default: 3)
 - **tags** (array, optional): Category tags for future filtering/searching
 
 ### Validation Rules
 - `level_id` must be sequential (1, 2, 3, ..., 20)
-- `tile_count` must equal `rows × columns`
+- Rectangle Jigsaw: `tile_count` must equal `rows × columns`
+- Spiral Twist: `ring_count` must be 3-7
 - `image_path` must point to existing asset
 - `difficulty_configs` must contain all three difficulties (easy, normal, hard)
 - All images must be square aspect ratio (1:1)
+- Odd-numbered levels typically use "spiral_twist", even use "rectangle_jigsaw"
 
 ---
 
@@ -160,49 +178,66 @@ total_stars_earned = 7
 
 ## 3. In-Memory Data Structures
 
-### LevelData Class
+### LevelData Class (scripts/level_data.gd - 34 lines)
 ```gdscript
 class_name LevelData
 extends Resource
 
 ## Level definition loaded from levels.json
-@export var level_id: int
-@export var name: String
-@export var image_path: String
-@export var thumbnail_path: String
-@export var puzzle_type: String
-@export var difficulty_configs: Dictionary  # {easy: {}, normal: {}, hard: {}}
+@export var level_id: int = 0
+@export var name: String = ""
+@export var image_path: String = ""
+@export var thumbnail_path: String = ""
+@export var puzzle_type: String = "rectangle_jigsaw"
+@export var difficulty_configs: Dictionary = {}  # {easy: {}, normal: {}, hard: {}}
 @export var hint_limit: int = 3
 @export var tags: Array[String] = []
 
 ## Runtime computed properties
-var image_texture: Texture2D  # Loaded dynamically
-var thumbnail_texture: Texture2D  # Loaded dynamically
+var image_texture: Texture2D = null  # Loaded dynamically
+var thumbnail_texture: Texture2D = null  # Loaded dynamically
 
 func get_difficulty_config(difficulty: String) -> Dictionary
 func get_tile_count(difficulty: String) -> int
-func get_grid_size(difficulty: String) -> Vector2i
+func get_grid_size(difficulty: String) -> Vector2i  # Returns Vector2i(columns, rows)
 ```
 
-### ProgressData Class
+**Note**: LevelManager actually returns Dictionary (not LevelData Resource) from get_level() for compatibility with dynamic generation.
+
+### ProgressManager AutoLoad (scripts/progress_manager.gd - 197 lines)
+**Note**: Progress data stored directly in ProgressManager singleton, not separate ProgressData class.
+
 ```gdscript
-class_name ProgressData
-extends Resource
+extends Node  # AutoLoad singleton
 
 ## Player progression state
 var current_level: int = 1
 var highest_level_unlocked: int = 1
 var stars: Dictionary = {}  # {level_id: {easy: bool, normal: bool, hard: bool}}
 
+## Settings
+var sound_enabled: bool = true
+var music_enabled: bool = true
+var vibrations_enabled: bool = true
+var music_volume: float = 0.7
+var sound_volume: float = 0.8
+
+## Statistics
+var total_playtime_seconds: int = 0
+var total_swaps_made: int = 0
+var total_hints_used: int = 0
+
+func load_save_data() -> void  # Loads from user://save_data.cfg
+func save_progress() -> void   # Saves to ConfigFile
 func is_level_unlocked(level_id: int) -> bool
 
-## KEY IMPLEMENTATION EXAMPLE: Difficulty unlock logic
+## KEY IMPLEMENTATION: Difficulty unlock logic
 func is_difficulty_unlocked(level_id: int, difficulty: String) -> bool:
     """Check if specific difficulty is unlocked for level"""
     if not is_level_unlocked(level_id):
         return false
 
-    match difficulty:
+    match difficulty.to_lower():
         "easy":
             return true  # Easy always unlocked if level unlocked
         "normal":
@@ -214,50 +249,293 @@ func is_difficulty_unlocked(level_id: int, difficulty: String) -> bool:
 
 func get_star(level_id: int, difficulty: String) -> bool
 func set_star(level_id: int, difficulty: String, earned: bool) -> void
-func get_star_count(level_id: int) -> int
+func get_star_count(level_id: int) -> int  # Returns 0-3
 func get_total_stars() -> int
 func unlock_next_level() -> void
+func reset_progress() -> void
 ```
 
-### PuzzleState Class
+### PuzzleState Class (scripts/puzzle_state.gd - 63 lines)
 ```gdscript
 class_name PuzzleState
 extends Resource
 
-## Current puzzle gameplay state
-var level_id: int
-var difficulty: String
-var grid_size: Vector2i  # (rows, columns)
-var tiles: Array[Tile] = []  # Current tile arrangement
+## Current puzzle gameplay state (Rectangle Jigsaw)
+var level_id: int = 0
+var difficulty: String = "easy"
+var grid_size: Vector2i = Vector2i(3, 2)  # (columns, rows)
+var tiles: Array = []  # Array of Tile objects (not typed for compatibility)
 var selected_tile_index: int = -1  # Currently selected tile (-1 if none)
 var swap_count: int = 0  # Number of swaps made
 var hints_used: int = 0  # Hints used this session
 var is_solved: bool = false
 
-## KEY IMPLEMENTATION EXAMPLE: Puzzle validation
+## KEY IMPLEMENTATION: Puzzle validation
 func is_puzzle_solved() -> bool:
     """Check if all tiles are in correct positions"""
     for tile in tiles:
-        if not tile.is_correct():
-            return false
+        if tile != null and tile.has_method("is_correct"):
+            if not tile.is_correct():
+                return false
     return true
 
-func get_tile_at_position(position: Vector2i) -> Tile
+func get_tile_at_position(position: Vector2i) -> Resource
+func get_tile_by_index(index: int) -> Resource
+func swap_tiles(index1: int, index2: int) -> void
+func clear_selection() -> void
 ```
 
-### Tile Class
+### Tile Class (scripts/tile.gd - 20 lines)
 ```gdscript
 class_name Tile
 extends Resource
 
-## Individual puzzle tile
-var tile_id: int  # Unique identifier (0 to tile_count-1)
-var current_position: Vector2i  # Current grid position (row, col)
-var correct_position: Vector2i  # Solution position
-var texture_region: Rect2  # Region of source image (x, y, width, height)
+## Individual puzzle tile (Rectangle Jigsaw)
+var tile_id: int = 0  # Unique identifier (0 to tile_count-1)
+var current_position: Vector2i = Vector2i(0, 0)  # Current grid position (column, row)
+var correct_position: Vector2i = Vector2i(0, 0)  # Solution position (column, row)
+var texture_region: Rect2 = Rect2()  # Region of source image (x, y, width, height)
 
-func is_correct() -> bool
-func swap_positions(other_tile: Tile) -> void
+func is_correct() -> bool:
+    return current_position == correct_position
+
+func swap_positions(other_tile: Tile) -> void:
+    var temp_pos = current_position
+    current_position = other_tile.current_position
+    other_tile.current_position = temp_pos
+```
+
+### SpiralRing Class (scripts/spiral_ring.gd - 102 lines)
+```gdscript
+class_name SpiralRing
+extends Resource
+
+## Individual ring in spiral puzzle
+var ring_index: int = 0  # Ring number from center (0=innermost)
+var current_angle: float = 0.0  # Current rotation in degrees
+var correct_angle: float = 0.0  # Target angle (always 0.0)
+var angular_velocity: float = 0.0  # Rotation speed in degrees/second
+var inner_radius: float = 0.0  # Inner circle radius in pixels (expands when merging)
+var outer_radius: float = 0.0  # Outer circle radius in pixels
+var is_locked: bool = false  # Whether ring is locked (cannot rotate/be dragged)
+var merged_ring_ids: Array[int] = []  # Rings merged into this one
+
+## KEY IMPLEMENTATION METHODS
+
+func is_angle_correct(threshold: float = GameConstants.SPIRAL_ROTATION_SNAP_ANGLE) -> bool:
+    """Check if within 1° of correct angle"""
+    var angle_diff = abs(_normalize_angle(current_angle - correct_angle))
+    return angle_diff <= threshold
+
+func can_merge_with(other_ring: SpiralRing) -> bool:
+    """Check merge conditions:
+    - Not both locked
+    - Adjacent (indices differ by 1)
+    - Angle difference ≤ 5.0° (SPIRAL_MERGE_ANGLE_THRESHOLD)
+    - Velocity difference ≤ 10.0°/s (SPIRAL_MERGE_VELOCITY_THRESHOLD)
+    """
+    if is_locked and other_ring.is_locked:
+        return false
+    if abs(ring_index - other_ring.ring_index) != 1:
+        return false
+    var angle_diff = abs(_normalize_angle(current_angle - other_ring.current_angle))
+    if angle_diff > GameConstants.SPIRAL_MERGE_ANGLE_THRESHOLD:
+        return false
+    var velocity_diff = abs(angular_velocity - other_ring.angular_velocity)
+    if velocity_diff > GameConstants.SPIRAL_MERGE_VELOCITY_THRESHOLD:
+        return false
+    return true
+
+func merge_with(other_ring: SpiralRing) -> void:
+    """Merge this ring with another (this ring absorbs other):
+    - Average angles and velocities
+    - Expand inner_radius to min of both (encompass other ring)
+    - Inherit locked state if merging with locked ring
+    - Track merged ring IDs
+    """
+    current_angle = (_normalize_angle(current_angle) + _normalize_angle(other_ring.current_angle)) / 2.0
+    angular_velocity = (angular_velocity + other_ring.angular_velocity) / 2.0
+    inner_radius = min(inner_radius, other_ring.inner_radius)
+    if other_ring.is_locked:
+        is_locked = true
+        angular_velocity = 0.0
+    merged_ring_ids.append(other_ring.ring_index)
+    for id in other_ring.merged_ring_ids:
+        if id not in merged_ring_ids:
+            merged_ring_ids.append(id)
+
+func gain_velocity(velocity: float) -> void:
+    """Apply velocity from flick gesture (clamped to max)"""
+    if is_locked:
+        return
+    angular_velocity = clamp(velocity,
+        -GameConstants.SPIRAL_MAX_ANGULAR_VELOCITY,
+        GameConstants.SPIRAL_MAX_ANGULAR_VELOCITY)
+
+func can_rotate() -> bool:
+    """Returns true if ring can be rotated (not locked)"""
+    return not is_locked
+
+func update_rotation(delta: float) -> void:
+    """Physics update per frame:
+    - Apply angular velocity to current_angle
+    - Apply deceleration (200.0°/s²)
+    - Stop when below 1.0°/s
+    - Normalize angle to [-180, 180]
+    """
+    if is_locked:
+        return
+    current_angle += angular_velocity * delta
+    current_angle = _normalize_angle(current_angle)
+    if abs(angular_velocity) > GameConstants.SPIRAL_MIN_VELOCITY_THRESHOLD:
+        var deceleration = GameConstants.SPIRAL_ANGULAR_DECELERATION * delta
+        if angular_velocity > 0:
+            angular_velocity = max(0.0, angular_velocity - deceleration)
+        else:
+            angular_velocity = min(0.0, angular_velocity + deceleration)
+    else:
+        angular_velocity = 0.0
+
+func _normalize_angle(angle: float) -> float:
+    """Convert to [-180, 180] range"""
+    while angle > 180.0:
+        angle -= 360.0
+    while angle < -180.0:
+        angle += 360.0
+    return angle
+```
+
+### SpiralPuzzleState Class (scripts/spiral_puzzle_state.gd - 131 lines)
+```gdscript
+class_name SpiralPuzzleState
+extends Resource
+
+const SpiralRing = preload("res://scripts/spiral_ring.gd")
+
+## Current spiral puzzle state
+var level_id: int = 0
+var difficulty: String = "easy"
+var ring_count: int = 3  # Total rings (3-7)
+var rings: Array[SpiralRing] = []  # All ring objects
+var active_ring_count: int = 0  # Number of unmerged rings
+var rotation_count: int = 0  # Total rotations made
+var hints_used: int = 0  # Hints consumed
+var is_solved: bool = false
+var puzzle_radius: float = 450.0  # Max radius (450.0 pixels)
+
+## KEY IMPLEMENTATION: Spiral puzzle validation
+func is_puzzle_solved() -> bool:
+    """Puzzle solved when ≤1 active ring remains (only locked outermost)"""
+    return active_ring_count <= 1
+
+func update_physics(delta: float) -> void:
+    """Update all rings' rotations each frame"""
+    for ring in rings:
+        if ring != null and not ring.is_locked:
+            ring.update_rotation(delta)
+
+func check_and_merge_rings() -> bool:
+    """Detect and perform ring merges
+    CRITICAL: Keeps outer ring, removes inner ring from array
+    Returns true if any merge occurred"""
+    var any_merged = false
+
+    # Check adjacent rings for merge conditions
+    for i in range(rings.size() - 1):
+        var inner_ring = rings[i]
+        var outer_ring = rings[i + 1]
+
+        if inner_ring == null or outer_ring == null:
+            continue
+
+        if inner_ring.can_merge_with(outer_ring):
+            # Keep outer ring (i+1), expand it inward to encompass inner ring
+            outer_ring.inner_radius = inner_ring.inner_radius
+
+            # Merge: average angles/velocities, inherit lock state
+            outer_ring.merge_with(inner_ring)
+
+            # Remove inner ring from array
+            rings.remove_at(i)
+            active_ring_count -= 1
+            any_merged = true
+
+            # Play merge sound (handled in gameplay_screen)
+            if AudioManager:
+                AudioManager.play_sfx("ring_merge")
+
+            # Break and let next frame check again (indices shifted)
+            break
+
+    return any_merged
+
+func get_ring_at_position(touch_pos: Vector2, center: Vector2) -> int:
+    """Hit detection for rings - returns ring index or -1"""
+    var offset = touch_pos - center
+    var distance = offset.length()
+
+    # Find ring based on radial distance (prioritize innermost)
+    for i in range(rings.size()):
+        var ring = rings[i]
+        if ring != null and not ring.is_locked:
+            if distance >= ring.inner_radius and distance <= ring.outer_radius:
+                return i
+    return -1
+
+func set_ring_velocity(ring_index: int, velocity: float) -> void:
+    """Apply flick momentum to ring"""
+    var ring = get_ring_by_index(ring_index)
+    if ring != null:
+        ring.gain_velocity(velocity)
+        if not ring.is_locked:
+            rotation_count += 1
+
+func rotate_ring(ring_index: int, angle_delta: float) -> void:
+    """Direct drag rotation"""
+    var ring = get_ring_by_index(ring_index)
+    if ring != null and ring.can_rotate():
+        ring.current_angle += angle_delta
+        ring.current_angle = ring._normalize_angle(ring.current_angle)
+        rotation_count += 1
+
+func use_hint() -> int:
+    """Snap random incorrect ring to correct angle (0°)
+    Returns ring index or -1 if no rings need hint"""
+    var incorrect_rings = []
+
+    # Find all rings that are not locked and not at correct angle
+    for i in range(rings.size()):
+        var ring = rings[i]
+        if ring != null and not ring.is_locked and not ring.is_angle_correct():
+            incorrect_rings.append(i)
+
+    if incorrect_rings.is_empty():
+        return -1
+
+    # Pick random incorrect ring
+    var ring_index = incorrect_rings[randi() % incorrect_rings.size()]
+    var ring = rings[ring_index]
+
+    # Snap to correct angle
+    ring.current_angle = ring.correct_angle
+    ring.angular_velocity = 0.0
+    hints_used += 1
+
+    return ring_index
+
+func get_ring_by_index(index: int) -> SpiralRing:
+    """Get ring at specific index"""
+    if index >= 0 and index < rings.size():
+        return rings[index]
+    return null
+
+func get_correct_ring_count() -> int:
+    """Count rings at correct angles"""
+    var count = 0
+    for ring in rings:
+        if ring != null and ring.is_angle_correct():
+            count += 1
+    return count
 ```
 
 ---
@@ -280,10 +558,24 @@ const DEFAULT_HINT_LIMIT = 3
 ## Grid configurations defined in levels.json difficulty_configs
 # Easy: 2×3 (6 tiles), Normal: 3×4 (12 tiles), Hard: 5×6 (30 tiles)
 
-## Puzzle mechanics
+## Puzzle mechanics - Rectangle Jigsaw
 const TILE_SWAP_DURATION = 0.3  # seconds
 const TILE_SELECTION_SCALE = 1.05
 const HINT_ANIMATION_DURATION = 0.5
+
+## Puzzle mechanics - Spiral Twist
+const SPIRAL_RING_BORDER_WIDTH = 4  # pixels
+const SPIRAL_MERGE_ANGLE_THRESHOLD = 5.0  # degrees
+const SPIRAL_MERGE_VELOCITY_THRESHOLD = 10.0  # degrees per second
+const SPIRAL_ANGULAR_DECELERATION = 200.0  # degrees/s²
+const SPIRAL_MAX_ANGULAR_VELOCITY = 720.0  # degrees per second
+const SPIRAL_MIN_VELOCITY_THRESHOLD = 1.0  # Stop below this
+const SPIRAL_ROTATION_SNAP_ANGLE = 1.0  # Snap when within this angle
+
+## Spiral ring counts per difficulty
+const SPIRAL_RINGS_EASY = 3
+const SPIRAL_RINGS_NORMAL = 5
+const SPIRAL_RINGS_HARD = 7
 
 ## Audio settings
 const DEFAULT_MUSIC_VOLUME = 0.7

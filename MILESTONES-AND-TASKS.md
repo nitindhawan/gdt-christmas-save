@@ -450,13 +450,93 @@ See **DATA-SCHEMA.md** section 7 for audio file naming conventions and **GAME-RU
 
 ---
 
-## Milestone 9: Post-MVP Enhancements (Optional)
-**Goal**: Implement features from "Future Features" section
+## Milestone 9: Spiral Puzzle Implementation
+**Goal**: Implement Spiral Twist puzzle mechanic as second puzzle type
+**Estimated Time**: 6-8 days
+**Status**: ✅ COMPLETED
+
+### Tasks
+
+#### 9.1 Spiral Puzzle Core Data Classes
+- [x] Create `scripts/spiral_ring.gd` - Ring data with physics (102 lines)
+  - [x] Properties: ring_index, current_angle, angular_velocity, inner/outer_radius, is_locked
+  - [x] Methods: is_angle_correct(), can_merge_with(), merge_with(), gain_velocity(), update_rotation()
+  - [x] Normalize angle helper function
+  - [x] Validate with script check command
+- [x] Create `scripts/spiral_puzzle_state.gd` - Spiral puzzle state (131 lines)
+  - [x] Properties: ring_count, rings array, active_ring_count, rotation_count, is_solved
+  - [x] Methods: is_puzzle_solved(), update_physics(), check_and_merge_rings()
+  - [x] Methods: get_ring_at_position(), set_ring_velocity(), rotate_ring(), use_hint()
+  - [x] Validate with script check command
+
+#### 9.2 Spiral Ring Visual Node
+- [x] Create `scenes/spiral_ring_node.tscn` - Ring visual component
+- [x] Create `scripts/spiral_ring_node.gd` - Ring rendering and input (377 lines)
+  - [x] Custom _draw() function for textured donut polygons (128 segments)
+  - [x] Ring border rendering (4px white, dark gray when locked)
+  - [x] External drag methods: start_drag_external(), update_drag_external(), end_drag_external()
+  - [x] Flick velocity calculation from touch history (5 samples)
+  - [x] Debug text overlay showing ring index
+  - [x] Validate with script check command
+
+#### 9.3 PuzzleManager Spiral Generation
+- [x] Add spiral puzzle generation to `scripts/puzzle_manager.gd`
+  - [x] Function: _generate_spiral_puzzle(level_id, difficulty, level_data) → SpiralPuzzleState
+  - [x] Function: _create_rings_from_image(texture, ring_count, max_radius) → Array[SpiralRing]
+  - [x] Function: _scramble_rings(puzzle_state) - randomize angles ±180°, min 20° from correct
+  - [x] Set outermost ring is_locked = true (static reference frame)
+  - [x] Equal-width ring generation (puzzle_radius / ring_count)
+
+#### 9.4 GameplayScreen Spiral Integration
+- [x] Add spiral puzzle setup to `scripts/gameplay_screen.gd`
+  - [x] Detect puzzle type: is_spiral_puzzle = puzzle_state is SpiralPuzzleState
+  - [x] Function: _setup_spiral_puzzle() - hide grid, setup puzzle area
+  - [x] Function: _spawn_spiral_rings() - create ring nodes with centralized input
+  - [x] Centralized input handler: _on_rings_container_input() for all ring touches
+  - [x] Physics loop in _process(delta): update_physics(), check_and_merge_rings()
+  - [x] Function: _refresh_spiral_visuals() - update after merge (sync ring_nodes with rings array)
+  - [x] Function: _check_spiral_puzzle_solved() - win condition check
+  - [x] Function: _save_spiral_progress() - save stars and stats
+
+#### 9.5 GameConstants Spiral Configuration
+- [x] Add spiral constants to `scripts/game_constants.gd`
+  - [x] SPIRAL_RING_BORDER_WIDTH = 4
+  - [x] SPIRAL_MERGE_ANGLE_THRESHOLD = 5.0 degrees
+  - [x] SPIRAL_MERGE_VELOCITY_THRESHOLD = 10.0 degrees/second
+  - [x] SPIRAL_ANGULAR_DECELERATION = 200.0 degrees/s²
+  - [x] SPIRAL_MAX_ANGULAR_VELOCITY = 720.0 degrees/second
+  - [x] SPIRAL_MIN_VELOCITY_THRESHOLD = 1.0 degrees/second
+  - [x] SPIRAL_ROTATION_SNAP_ANGLE = 1.0 degree
+  - [x] SPIRAL_RINGS_EASY/NORMAL/HARD = 3/5/7
+
+#### 9.6 Spiral Puzzle Testing & Bug Fixes
+- [x] Test spiral puzzle on Easy difficulty (3 rings)
+- [x] Test spiral puzzle on Normal difficulty (5 rings)
+- [x] Test spiral puzzle on Hard difficulty (7 rings)
+- [x] Test ring merging logic (adjacent rings, angle/velocity alignment)
+- [x] Test physics (flick momentum, deceleration, locked rings)
+- [x] Test win condition (all rings merged)
+- [x] Fix input handling (centralized touch detection)
+- [x] Fix ring visual refresh after merges (array synchronization)
+- [x] Test progression (stars, level unlock after spiral completion)
+
+**Milestone 9 Acceptance Criteria**:
+- ✅ Spiral puzzle loads and displays correctly for all difficulties
+- ✅ Rings can be dragged to rotate and flicked for momentum
+- ✅ Ring merging works correctly (angle ≤5°, velocity ≤10°/s)
+- ✅ Physics update runs smoothly in _process(delta)
+- ✅ Locked outermost ring cannot be rotated
+- ✅ Merged rings continue rotating until merging with outermost
+- ✅ Puzzle completes when only 1 ring remains (all merged)
+- ✅ Progression system works for spiral puzzles (stars, unlocks)
+- ✅ Alternating level types working (odd=spiral, even=rectangle)
+
+## Milestone 10: Post-MVP Enhancements (Optional)
+**Goal**: Implement additional features from "Future Features" section
 **Estimated Time**: Variable
 **Status**: ⏳ Not Started
 
 ### Optional Features
-- [ ] **Spiral Puzzle Type**: Implement circular/spiral puzzle variant
 - [ ] **Daily Puzzle**: New puzzle every day with special rewards
 - [ ] **Timed Mode**: Race against the clock
 - [ ] **Achievement System**: Badges for milestones
@@ -475,8 +555,9 @@ See **DATA-SCHEMA.md** section 7 for audio file naming conventions and **GAME-RU
 - [x] **Milestone 1**: Project Setup & Core Systems (COMPLETE)
 - [x] **Milestone 2**: Loading & Level Selection Screens (COMPLETE)
 - [x] **Milestone 3**: Difficulty Selection & Settings (COMPLETE)
-- [x] **Milestone 4**: Puzzle System & Gameplay (COMPLETE)
+- [x] **Milestone 4**: Puzzle System & Gameplay - Rectangle Jigsaw (COMPLETE)
 - [x] **Milestone 5**: Level Complete & Progression (COMPLETE)
+- [x] **Milestone 9**: Spiral Puzzle Implementation (COMPLETE)
 
 ### In Progress
 - [ ] **Milestone 6**: Audio & Polish
@@ -484,7 +565,23 @@ See **DATA-SCHEMA.md** section 7 for audio file naming conventions and **GAME-RU
 ### Not Started
 - [ ] **Milestone 7**: Content & Testing
 - [ ] **Milestone 8**: Mobile Export & Release Preparation
-- [ ] **Milestone 9**: Post-MVP Enhancements (Optional)
+- [ ] **Milestone 10**: Post-MVP Enhancements (Optional)
+
+### Implementation Notes
+**Current Status** (as of feature/spiral-puzzle branch):
+- Both puzzle types fully functional (Spiral Twist + Rectangle Jigsaw)
+- 3 test levels implemented, system supports 100 levels via dynamic generation
+- Core gameplay loop complete with progression, stars, and save system
+- Audio system implemented (placeholder paths, awaiting actual audio files)
+- All core scenes and AutoLoad singletons operational
+
+**Key Implementation Details**:
+- Spiral puzzle uses centralized input handling in gameplay_screen (_on_rings_container_input)
+- Ring merging removes inner ring from array and expands outer ring (critical for proper merge behavior)
+- Physics loop runs in _process(delta) for smooth ring rotation
+- Rectangle puzzle uses drag-and-drop mechanic (tiles become non-draggable when in correct position)
+- LevelManager dynamically generates levels beyond JSON by cycling 3 base images
+- Total levels set to 100 in levels.json (currently 3 defined, rest generated)
 
 ---
 
