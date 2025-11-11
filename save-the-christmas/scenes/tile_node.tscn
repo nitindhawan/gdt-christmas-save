@@ -17,7 +17,7 @@ grow_vertical = 2
 expand_mode = 1
 stretch_mode = 5
 
-[node name="SelectionBorder" type="Panel" parent="."]
+[node name="Border" type="Panel" parent="."]
 visible = false
 layout_mode = 1
 anchors_preset = 15

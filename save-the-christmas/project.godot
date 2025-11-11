@@ -28,7 +28,9 @@ PuzzleManager="*res://scripts/puzzle_manager.gd"
 
 window/size/viewport_width=1080
 window/size/viewport_height=1920
-window/size/mode=2
+window/size/window_width_override=540
+window/size/window_height_override=960
+window/size/mode=0
 window/stretch/mode="canvas_items"
 window/stretch/aspect="expand"
 window/handheld/orientation=1
@@ -36,3 +38,4 @@ window/handheld/orientation=1
 [rendering]
 
 renderer/rendering_method="mobile"
+textures/vram_compression/import_etc2_astc=true

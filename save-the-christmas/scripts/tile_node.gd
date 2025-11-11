@@ -1,18 +1,28 @@
 extends Control
 
 ## TileNode - Visual representation of a puzzle tile
-## Handles display, selection, and interaction
+## Handles display, drag-and-drop interaction
 
-signal tile_clicked(tile_node)
+signal drag_started(tile_node)
+signal drag_ended(tile_node, target_tile_node)
+signal hover_changed(tile_node, is_hovering, target_tile_node)
 
 # Tile data
 var tile_data: Tile
 var tile_index: int = -1
-var is_selected: bool = false
+var is_draggable: bool = true
+var is_being_dragged: bool = false
+var is_hovered: bool = false
+
+# Drag state
+var drag_offset: Vector2 = Vector2.ZERO
+var original_position: Vector2 = Vector2.ZERO
+var original_z_index: int = 0
+var hover_target: Control = null
 
 # Node references
 @onready var tile_texture: TextureRect = $TileTexture
-@onready var selection_border: Panel = $SelectionBorder
+@onready var border: Panel = $Border
 @onready var touch_area: Control = $TouchArea
 
 # Animation
@@ -30,45 +40,41 @@ func setup(tile: Tile, index: int, source_texture: Texture2D) -> void:
 
 	tile_texture.texture = atlas_texture
 
-	# Configure selection visual
-	_update_selection_visual()
+	# Check if tile is in correct position
+	is_draggable = !tile.is_correct()
 
-## Set selection state
-func set_selected(selected: bool) -> void:
-	is_selected = selected
-	_update_selection_visual()
+	# Configure visual appearance
+	_update_border_visual()
 
-	if selected:
-		# Scale up slightly when selected
-		_animate_scale(GameConstants.TILE_SELECTION_SCALE)
-	else:
-		# Return to normal scale
-		_animate_scale(1.0)
+## Update draggable status (call when tile position changes)
+func update_draggable_status() -> void:
+	is_draggable = !tile_data.is_correct()
+	_update_border_visual()
 
-## Update visual appearance based on selection
-func _update_selection_visual() -> void:
-	selection_border.visible = is_selected
-
-	if is_selected:
-		# Gold border for selected tile
+## Update visual appearance based on draggable status
+func _update_border_visual() -> void:
+	if is_draggable:
+		# 4px dark grey border for draggable tiles
+		border.visible = true
 		var stylebox = StyleBoxFlat.new()
-		stylebox.border_color = Color(1.0, 0.843, 0.0, 1.0)  # Gold
-		stylebox.border_width_left = 8
-		stylebox.border_width_top = 8
-		stylebox.border_width_right = 8
-		stylebox.border_width_bottom = 8
+		stylebox.border_color = Color(0.3, 0.3, 0.3, 1.0)  # Dark grey
+		stylebox.border_width_left = 4
+		stylebox.border_width_top = 4
+		stylebox.border_width_right = 4
+		stylebox.border_width_bottom = 4
 		stylebox.bg_color = Color(0, 0, 0, 0)  # Transparent background
-		selection_border.add_theme_stylebox_override("panel", stylebox)
+		border.add_theme_stylebox_override("panel", stylebox)
+	else:
+		# No border for correct tiles
+		border.visible = false
 
-## Animate tile to a new grid position
-func animate_to_position(target_position: Vector2, duration: float = GameConstants.TILE_SWAP_DURATION) -> void:
-	if tween:
-		tween.kill()
-
-	tween = create_tween()
-	tween.set_ease(Tween.EASE_IN_OUT)
-	tween.set_trans(Tween.TRANS_CUBIC)
-	tween.tween_property(self, "position", target_position, duration)
+## Set hover state (shrink when another tile hovers over this)
+func set_hover_target(is_target: bool) -> void:
+	is_hovered = is_target
+	if is_target:
+		_animate_scale(0.95)  # Shrink slightly
+	else:
+		_animate_scale(1.0)  # Return to normal
 
 ## Animate scale change
 func _animate_scale(target_scale: float) -> void:
@@ -80,21 +86,110 @@ func _animate_scale(target_scale: float) -> void:
 	tween.set_trans(Tween.TRANS_CUBIC)
 	tween.tween_property(self, "scale", Vector2(target_scale, target_scale), 0.1)
 
-## Handle touch/click input
+## Handle input for drag-and-drop
 func _on_touch_area_gui_input(event: InputEvent) -> void:
+	if !is_draggable:
+		return  # Non-draggable tiles don't respond to input
+
 	if event is InputEventMouseButton:
-		if event.button_index == MOUSE_BUTTON_LEFT and event.pressed:
-			_on_tile_tapped()
+		if event.button_index == MOUSE_BUTTON_LEFT:
+			if event.pressed:
+				_start_drag(event.position)
+			else:
+				_end_drag()
+	elif event is InputEventMouseMotion:
+		if is_being_dragged:
+			_update_drag(event.position)
 
-## Handle tile tap
-func _on_tile_tapped() -> void:
-	# Play click sound
+## Start dragging this tile
+func _start_drag(click_position: Vector2) -> void:
+	is_being_dragged = true
+	drag_offset = click_position
+	original_position = global_position
+	original_z_index = z_index
+
+	# Bring to front
+	z_index = 100
+
+	# Scale up slightly
+	_animate_scale(1.1)
+
+	# Play sound
 	if AudioManager:
-		AudioManager.play_sfx("button_click")
+		AudioManager.play_sfx("tile_pickup")
 
-	# Trigger haptic feedback
+	# Trigger haptic
 	if AudioManager:
 		AudioManager.trigger_haptic(0.3)
 
-	# Emit signal for gameplay screen to handle
-	tile_clicked.emit(self)
+	drag_started.emit(self)
+
+## Update drag position
+func _update_drag(mouse_position: Vector2) -> void:
+	if !is_being_dragged:
+		return
+
+	# Move tile to follow mouse/touch
+	global_position = get_global_mouse_position() - drag_offset
+
+	# Check if hovering over another tile
+	_check_hover_target()
+
+## Check which tile we're hovering over
+func _check_hover_target() -> void:
+	var new_target = null
+	var mouse_pos = get_global_mouse_position()
+
+	# Get parent (should be PuzzleGrid)
+	var grid = get_parent()
+	if grid:
+		for child in grid.get_children():
+			if child != self and child is Control:
+				# Only consider tiles that are draggable (not in correct position)
+				if "is_draggable" in child and !child.is_draggable:
+					continue
+
+				var rect = Rect2(child.global_position, child.size)
+				if rect.has_point(mouse_pos):
+					new_target = child
+					break
+
+	# Update hover state if changed
+	if new_target != hover_target:
+		# Remove hover from old target
+		if hover_target and hover_target.has_method("set_hover_target"):
+			hover_target.set_hover_target(false)
+			hover_changed.emit(self, false, hover_target)
+
+		# Add hover to new target
+		hover_target = new_target
+		if hover_target and hover_target.has_method("set_hover_target"):
+			hover_target.set_hover_target(true)
+			hover_changed.emit(self, true, hover_target)
+
+## End dragging
+func _end_drag() -> void:
+	if !is_being_dragged:
+		return
+
+	is_being_dragged = false
+
+	# Reset z-index
+	z_index = original_z_index
+
+	# Reset scale
+	_animate_scale(1.0)
+
+	# Clear hover from target
+	if hover_target and hover_target.has_method("set_hover_target"):
+		hover_target.set_hover_target(false)
+
+	# Play sound
+	if AudioManager:
+		AudioManager.play_sfx("tile_drop")
+
+	# Emit end signal with target
+	drag_ended.emit(self, hover_target)
+
+	# Reset drag state
+	hover_target = null
