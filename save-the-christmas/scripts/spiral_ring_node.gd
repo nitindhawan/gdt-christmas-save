@@ -226,63 +226,83 @@ func _draw() -> void:
 
 ## Draw the ring segment from source texture
 func _draw_ring_segment(center: Vector2) -> void:
+	if not source_texture:
+		return
+
 	var rotation_rad = deg_to_rad(ring_data.current_angle)
 
 	# Draw ring as a donut shape using textured polygon
-	if source_texture:
-		_draw_textured_ring(center, rotation_rad)
-	else:
-		# Fallback: draw colored ring for debugging
-		_draw_colored_ring(center)
-
-## Draw a textured ring using the source image
-func _draw_textured_ring(center: Vector2, rotation: float) -> void:
-	var segments = 64
-	var points = PackedVector2Array()
-	var uvs = PackedVector2Array()
+	var segments = 128  # More segments for smoother rings
+	var outer_points = PackedVector2Array()
+	var inner_points = PackedVector2Array()
+	var outer_uvs = PackedVector2Array()
 
 	var texture_size = source_texture.get_size()
 	var tex_center = texture_size / 2.0
 
-	# Build ring polygon with outer and inner vertices
+	# Build ring polygon with both outer and inner vertices to create donut shape
 	for i in range(segments + 1):
-		var angle = (i / float(segments)) * TAU + rotation
-		var cos_a = cos(angle)
-		var sin_a = sin(angle)
+		# Geometry angle (fixed positions forming a circle)
+		var geom_angle = (i / float(segments)) * TAU
+		var cos_geom = cos(geom_angle)
+		var sin_geom = sin(geom_angle)
 
-		# Outer vertex
-		var outer_point = center + Vector2(cos_a, sin_a) * ring_data.outer_radius
-		points.append(outer_point)
+		# Outer vertex (fixed position)
+		var outer_point = center + Vector2(cos_geom, sin_geom) * ring_data.outer_radius
+		outer_points.append(outer_point)
 
-		# UV mapping from center of texture
-		var uv_outer = (Vector2(cos_a, sin_a) * ring_data.outer_radius + tex_center) / texture_size
-		uvs.append(uv_outer)
+		# UV angle (rotated to show different part of texture)
+		var uv_angle = geom_angle + rotation_rad
+		var cos_uv = cos(uv_angle)
+		var sin_uv = sin(uv_angle)
 
-	# Draw as textured polygon (simplified - just outer circle for now)
-	if points.size() > 2:
-		draw_colored_polygon(points, Color.WHITE, uvs, source_texture)
+		# UV mapping for outer vertex (rotated texture coordinates)
+		var uv_outer = (Vector2(cos_uv, sin_uv) * ring_data.outer_radius + tex_center) / texture_size
+		outer_uvs.append(uv_outer)
 
-## Draw a solid colored ring for debugging
-func _draw_colored_ring(center: Vector2) -> void:
-	# Use different colors for each ring for visibility
-	var ring_colors = [
-		Color(1, 0.3, 0.3, 0.7),  # Red
-		Color(0.3, 1, 0.3, 0.7),  # Green
-		Color(0.3, 0.3, 1, 0.7),  # Blue
-		Color(1, 1, 0.3, 0.7),    # Yellow
-		Color(1, 0.3, 1, 0.7),    # Magenta
-		Color(0.3, 1, 1, 0.7),    # Cyan
-		Color(1, 0.6, 0.3, 0.7),  # Orange
-	]
+		# Inner vertex (fixed position)
+		var inner_point = center + Vector2(cos_geom, sin_geom) * ring_data.inner_radius
+		inner_points.append(inner_point)
 
-	var color = ring_colors[ring_data.ring_index % ring_colors.size()]
+	# Draw ring as individual triangles to form the donut shape
+	for i in range(segments):
+		# Geometry angles (fixed)
+		var geom_angle_current = (i / float(segments)) * TAU
+		var geom_angle_next = ((i + 1) / float(segments)) * TAU
 
-	# Draw outer circle
-	draw_circle(center, ring_data.outer_radius, color)
+		# UV angles (rotated)
+		var uv_angle_current = geom_angle_current + rotation_rad
+		var uv_angle_next = geom_angle_next + rotation_rad
 
-	# Draw inner circle as black to create ring effect
-	if ring_data.inner_radius > 0:
-		draw_circle(center, ring_data.inner_radius, Color(0.1, 0.05, 0.05, 1))
+		# Calculate UV coordinates for inner vertices (rotated)
+		var uv_inner_current = (Vector2(cos(uv_angle_current), sin(uv_angle_current)) * ring_data.inner_radius + tex_center) / texture_size
+		var uv_inner_next = (Vector2(cos(uv_angle_next), sin(uv_angle_next)) * ring_data.inner_radius + tex_center) / texture_size
+
+		# Triangle 1: outer[i], inner[i], outer[i+1]
+		var tri1_points = PackedVector2Array([
+			outer_points[i],
+			inner_points[i],
+			outer_points[i + 1]
+		])
+		var tri1_uvs = PackedVector2Array([
+			outer_uvs[i],
+			uv_inner_current,
+			outer_uvs[i + 1]
+		])
+		draw_colored_polygon(tri1_points, Color.WHITE, tri1_uvs, source_texture)
+
+		# Triangle 2: inner[i], inner[i+1], outer[i+1]
+		var tri2_points = PackedVector2Array([
+			inner_points[i],
+			inner_points[i + 1],
+			outer_points[i + 1]
+		])
+		var tri2_uvs = PackedVector2Array([
+			uv_inner_current,
+			uv_inner_next,
+			outer_uvs[i + 1]
+		])
+		draw_colored_polygon(tri2_points, Color.WHITE, tri2_uvs, source_texture)
 
 ## Draw border around ring
 func _draw_ring_border(center: Vector2) -> void:
