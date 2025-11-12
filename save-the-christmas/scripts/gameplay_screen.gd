@@ -6,6 +6,7 @@ extends Control
 const TILE_NODE_SCENE = preload("res://scenes/tile_node.tscn")
 const SPIRAL_RING_NODE_SCENE = preload("res://scenes/spiral_ring_node.tscn")
 const SETTINGS_POPUP_SCENE = preload("res://scenes/settings_popup.tscn")
+const EXIT_DIALOG_SCENE = preload("res://scenes/exit_confirmation_dialog.tscn")
 const SpiralPuzzleState = preload("res://scripts/spiral_puzzle_state.gd")
 
 # Game state
@@ -23,34 +24,13 @@ var puzzle_center: Vector2 = Vector2(540, 960)  # Center of 1080x1920 screen
 @onready var level_label = $MarginContainer/VBoxContainer/TopHUD/MarginContainer/HBoxContainer/LevelLabel
 @onready var puzzle_grid = $MarginContainer/VBoxContainer/PuzzleArea/PuzzleGrid
 @onready var hint_button = $MarginContainer/VBoxContainer/BottomHUD/CenterContainer/HintButton
-@onready var confirmation_dialog = $ConfirmationDialog
 
 func _ready() -> void:
 	# Get level and difficulty from GameManager
 	current_level_id = GameManager.get_current_level()
 	current_difficulty = GameManager.get_current_difficulty()
 
-	# Style confirmation dialog for mobile
-	_style_confirmation_dialog()
-
 	_initialize_gameplay()
-
-## Style confirmation dialog for mobile readability
-func _style_confirmation_dialog() -> void:
-	# Set larger font sizes for dialog text
-	confirmation_dialog.add_theme_font_size_override("font_size", 36)
-
-	# Style the buttons - access them from the dialog
-	var ok_button = confirmation_dialog.get_ok_button()
-	var cancel_button = confirmation_dialog.get_cancel_button()
-
-	# Set minimum sizes to meet mobile touch targets (88x88px minimum)
-	ok_button.custom_minimum_size = Vector2(200, 100)
-	cancel_button.custom_minimum_size = Vector2(200, 100)
-
-	# Set larger font sizes for buttons
-	ok_button.add_theme_font_size_override("font_size", 32)
-	cancel_button.add_theme_font_size_override("font_size", 32)
 
 ## Initialize gameplay with current level and difficulty
 func _initialize_gameplay() -> void:
@@ -280,11 +260,13 @@ func _on_back_button_pressed() -> void:
 	if AudioManager:
 		AudioManager.play_sfx("button_click")
 
-	# Show confirmation dialog
-	confirmation_dialog.popup_centered()
+	# Show custom exit confirmation dialog
+	var dialog = EXIT_DIALOG_SCENE.instantiate()
+	dialog.exit_confirmed.connect(_on_exit_confirmed)
+	add_child(dialog)
 
-## Handle confirmation dialog confirmed (exit level)
-func _on_confirmation_dialog_confirmed() -> void:
+## Handle exit confirmed from dialog
+func _on_exit_confirmed() -> void:
 	GameManager.navigate_to_level_selection()
 
 ## Handle share button
