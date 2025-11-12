@@ -107,23 +107,24 @@
 
 ### Layout
 - **Top Bar** (~100px):
-  - Close button (✕): Top-left corner, ~80×80px, white X icon
-  - Share button (⤴): Top-right corner, ~80×80px, white share icon
+  - Close button (✕): Top-left corner, ~80×80px, 72px font **[Updated]**, white X icon
+  - Share button (⤴): Top-right corner, ~80×80px, 56px font **[Updated]**, white share icon
 
 - **Level Preview Section** (center ~900×900px area):
-  - Level Number: Centered above image, 32-36px font
+  - Level Number: Centered above image, 64px font **[Updated: increased from 36px]**
   - Preview Image: 850-900px square **[CRITICAL]**, centered
   - Border: 4px gold rounded rectangle
 
 - **Difficulty Buttons Section** (lower ~700px):
-  - Container: VBoxContainer with 20-30px spacing
-  - Button Size: 850-900px width, 140-160px height each
+  - Container: VBoxContainer with 30px spacing **[Updated]**
+  - Button Size: 850px width, 150px height each **[Updated]**
+  - Button Font: 56px **[Updated: increased from 32px]**
 
 **Button States**:
 - **Play Easy**: Green (#165B33) if unlocked, Grey (#757575) if locked
-  - Text: "Play Easy" + 1 star icon (40-50px, gold)
-- **Play Normal**: Same color logic + 2 star icons
-- **Play Hard**: Same color logic + 3 star icons
+  - Text: "Play Easy ⭐" (56px font) **[Updated]**
+- **Play Normal**: Same color logic + "Play Normal ⭐⭐" (56px font) **[Updated]**
+- **Play Hard**: Same color logic + "Play Hard ⭐⭐⭐" (56px font) **[Updated]**
 - **Locked state**: 50% opacity, lock icon (left side)
 
 ### Interaction
@@ -207,27 +208,28 @@
 - **Title Section** (top ~400px):
   - "Well Done!" text:
     - Position: Centered, upper area
-    - Font: Title font, 60-72px, Gold color
+    - Font: Title font, 72px **[Updated]**, Gold color
     - Animation: Fade in + scale up (0.4-0.6s) **[Target]**
-  - Subtitle: "You have solved Level N" (centered, 32-36px, White)
+  - Subtitle: "You have solved Level N" (centered, 56px **[Updated: increased from 36px]**, White)
   - Stars Display:
     - Position: Centered below subtitle
-    - Size: 3 stars, each 70-80px, spacing 15-20px
+    - Size: 3 stars, each 80px **[Updated]**, spacing 20px **[Updated]**
     - Animation: Pop in sequentially with 0.1-0.2s delay **[Target]**
 
 - **Completed Image Section** (center ~900×900px area):
-  - Image: 850-900px square, centered
-  - Border: 6-8px gold rounded rectangle
+  - Image: 850px square **[Updated]**, centered
+  - Border: 6px gold rounded rectangle **[Updated]**
   - Corner badge: Small "✓" icon (50-60px) top-right
 
 - **Button Section** (lower ~400px):
-  - **Share Button**: 700-800px width, 80-100px height
+  - **Share Button**: 750px width, 100px height **[Updated]**
     - Background: Transparent with white border
-    - Icon + Text: "Share Photo"
-  - **Download Button** (optional): Same sizing as Share
-  - **Continue Button**: 700-800px width, 120-140px height
+    - Icon + Text: "⤴ Share Photo" (56px font) **[Updated: increased from 32px]**
+  - **Download Button**: 750px width, 100px height **[Updated]**
+    - Icon + Text: "💾 Download" (56px font) **[Updated: increased from 32px]**
+  - **Continue Button**: 750px width, 130px height **[Updated]**
     - Background: Green (#165B33)
-    - Text: "Continue", 32-36px font, White
+    - Text: "Continue", 60px font **[Updated: increased from 36px]**, White
     - Border radius: 15-20px
 
 ### Interaction
