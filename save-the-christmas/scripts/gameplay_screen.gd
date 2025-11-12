@@ -12,13 +12,13 @@ const SpiralPuzzleState = preload("res://scripts/spiral_puzzle_state.gd")
 # Game state
 var current_level_id: int = 1
 var current_difficulty: int = GameConstants.Difficulty.EASY
-var puzzle_state: Resource  # Can be PuzzleState or SpiralPuzzleState
+var puzzle_state: Resource # Can be PuzzleState or SpiralPuzzleState
 var tile_nodes: Array = []
 var ring_nodes: Array = []
-var rings_container: Control = null  # Container for spiral ring nodes
+var rings_container: Control = null # Container for spiral ring nodes
 var source_texture: Texture2D
 var is_spiral_puzzle: bool = false
-var puzzle_center: Vector2 = Vector2(540, 960)  # Center of 1080x1920 screen
+var puzzle_center: Vector2 = Vector2(540, 960) # Center of 1080x1920 screen
 
 # UI references
 @onready var level_label = $MarginContainer/VBoxContainer/TopHUD/MarginContainer/HBoxContainer/LevelLabel
@@ -69,7 +69,7 @@ func _initialize_gameplay() -> void:
 ## Setup puzzle grid layout based on difficulty
 func _setup_puzzle_grid() -> void:
 	var grid_size = puzzle_state.grid_size
-	puzzle_grid.columns = grid_size.y  # columns
+	puzzle_grid.columns = grid_size.y # columns
 
 	print("Grid configured: %d rows x %d columns" % [grid_size.x, grid_size.y])
 
@@ -170,23 +170,30 @@ func _on_tile_drag_ended(dragged_tile_node, target_tile_node) -> void:
 ## Check if puzzle is solved
 func _check_puzzle_solved() -> void:
 	if PuzzleManager.is_puzzle_solved(puzzle_state):
-		print("Puzzle solved!")
+		print("Rectangle puzzle solved!")
 		puzzle_state.is_solved = true
-
-		# Play victory sound
-		if AudioManager:
-			AudioManager.play_sfx("level_complete")
-
-		# Trigger haptic feedback
-		if AudioManager:
-			AudioManager.trigger_haptic(0.8)
-
-		# Save progress
 		_save_progress()
+		await _handle_puzzle_completion()
 
-		# Navigate to level complete screen
-		await get_tree().create_timer(1.0).timeout
-		GameManager.navigate_to_level_complete()
+## Unified puzzle completion handler
+## Plays victory effects, delays for player feedback, then navigates to completion screen
+## This method provides a centralized place to integrate SFX and VFX effects
+func _handle_puzzle_completion() -> void:
+	# Play victory sound
+	if AudioManager:
+		AudioManager.play_sfx("level_complete")
+
+	# Trigger haptic feedback
+	if AudioManager:
+		AudioManager.trigger_haptic(0.8)
+
+	# TODO: Add confetti VFX here
+
+	# Delay to let player see completed puzzle and effects
+	await get_tree().create_timer(2.5).timeout
+
+	# Navigate to level complete screen
+	GameManager.navigate_to_level_complete()
 
 ## Save progress after completing level
 func _save_progress() -> void:
@@ -354,7 +361,7 @@ func _spawn_spiral_rings() -> void:
 	rings_container = Control.new()
 	rings_container.name = "RingsContainer"
 	rings_container.custom_minimum_size = puzzle_area.size
-	rings_container.mouse_filter = Control.MOUSE_FILTER_STOP  # Capture all input here
+	rings_container.mouse_filter = Control.MOUSE_FILTER_STOP # Capture all input here
 	puzzle_area.add_child(rings_container)
 
 	# Connect input handling to this container
@@ -388,7 +395,7 @@ func _spawn_spiral_rings() -> void:
 
 		print("Added ring %d to container" % i)
 
-		ring_nodes[i] = ring_node  # Store in correct position
+		ring_nodes[i] = ring_node # Store in correct position
 
 	print("Spawned %d spiral rings" % ring_nodes.size())
 
@@ -481,7 +488,7 @@ func _refresh_spiral_visuals() -> void:
 		if i < spiral_state.rings.size():
 			var ring = spiral_state.rings[i]
 			var ring_node = ring_nodes[i]
-			ring_node.ring_data = ring  # Update to current ring data (may have expanded)
+			ring_node.ring_data = ring # Update to current ring data (may have expanded)
 			ring_node.update_visual()
 
 ## Check if spiral puzzle is solved
@@ -491,21 +498,9 @@ func _check_spiral_puzzle_solved() -> void:
 	if spiral_state.is_puzzle_solved():
 		print("Spiral puzzle solved!")
 		spiral_state.is_solved = true
-
-		# Play victory sound
-		if AudioManager:
-			AudioManager.play_sfx("level_complete")
-
-		# Trigger haptic feedback
-		if AudioManager:
-			AudioManager.trigger_haptic(0.8)
-
-		# Save progress
 		_save_spiral_progress()
 
-		# Navigate to level complete screen
-		await get_tree().create_timer(1.0).timeout
-		GameManager.navigate_to_level_complete()
+		await _handle_puzzle_completion()
 
 ## Save progress for spiral puzzle
 func _save_spiral_progress() -> void:
