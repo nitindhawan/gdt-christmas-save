@@ -43,10 +43,10 @@ func _update_toggle_visual(button: Button, is_on: bool) -> void:
 		# Create green StyleBox for ON state
 		var style_on = StyleBoxFlat.new()
 		style_on.bg_color = COLOR_ON
-		style_on.corner_radius_top_left = 12
-		style_on.corner_radius_top_right = 12
-		style_on.corner_radius_bottom_left = 12
-		style_on.corner_radius_bottom_right = 12
+		style_on.corner_radius_top_left = 16
+		style_on.corner_radius_top_right = 16
+		style_on.corner_radius_bottom_left = 16
+		style_on.corner_radius_bottom_right = 16
 		button.add_theme_stylebox_override("normal", style_on)
 		button.add_theme_stylebox_override("hover", style_on)
 		button.add_theme_stylebox_override("pressed", style_on)
@@ -59,10 +59,10 @@ func _update_toggle_visual(button: Button, is_on: bool) -> void:
 		# Create gray StyleBox for OFF state
 		var style_off = StyleBoxFlat.new()
 		style_off.bg_color = COLOR_OFF
-		style_off.corner_radius_top_left = 12
-		style_off.corner_radius_top_right = 12
-		style_off.corner_radius_bottom_left = 12
-		style_off.corner_radius_bottom_right = 12
+		style_off.corner_radius_top_left = 16
+		style_off.corner_radius_top_right = 16
+		style_off.corner_radius_bottom_left = 16
+		style_off.corner_radius_bottom_right = 16
 		button.add_theme_stylebox_override("normal", style_off)
 		button.add_theme_stylebox_override("hover", style_off)
 		button.add_theme_stylebox_override("pressed", style_off)

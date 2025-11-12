@@ -47,14 +47,14 @@ anchor_right = 1.0
 anchor_bottom = 1.0
 grow_horizontal = 2
 grow_vertical = 2
-theme_override_constants/margin_left = 40
-theme_override_constants/margin_top = 40
-theme_override_constants/margin_right = 40
-theme_override_constants/margin_bottom = 40
+theme_override_constants/margin_left = 50
+theme_override_constants/margin_top = 50
+theme_override_constants/margin_right = 50
+theme_override_constants/margin_bottom = 50
 
 [node name="VBoxContainer" type="VBoxContainer" parent="CenterContainer/ModalPanel/MarginContainer"]
 layout_mode = 2
-theme_override_constants/separation = 30
+theme_override_constants/separation = 50
 
 [node name="Header" type="HBoxContainer" parent="CenterContainer/ModalPanel/MarginContainer/VBoxContainer"]
 custom_minimum_size = Vector2(0, 100)
@@ -75,13 +75,15 @@ theme_override_font_sizes/font_size = 96
 text = "✕"
 
 [node name="ToggleSection" type="VBoxContainer" parent="CenterContainer/ModalPanel/MarginContainer/VBoxContainer"]
-custom_minimum_size = Vector2(0, 600)
+custom_minimum_size = Vector2(0, 480)
 layout_mode = 2
-theme_override_constants/separation = 40
+theme_override_constants/separation = 60
 
 [node name="SoundToggle" type="HBoxContainer" parent="CenterContainer/ModalPanel/MarginContainer/VBoxContainer/ToggleSection"]
-custom_minimum_size = Vector2(0, 180)
+custom_minimum_size = Vector2(0, 120)
 layout_mode = 2
+theme_override_constants/separation = 30
+alignment = 1
 
 [node name="Label" type="Label" parent="CenterContainer/ModalPanel/MarginContainer/VBoxContainer/ToggleSection/SoundToggle"]
 layout_mode = 2
@@ -92,15 +94,17 @@ text = "Sound"
 vertical_alignment = 1
 
 [node name="ToggleButton" type="Button" parent="CenterContainer/ModalPanel/MarginContainer/VBoxContainer/ToggleSection/SoundToggle"]
-custom_minimum_size = Vector2(200, 90)
+custom_minimum_size = Vector2(240, 100)
 layout_mode = 2
 theme_override_colors/font_color = Color(1, 1, 1, 1)
-theme_override_font_sizes/font_size = 48
+theme_override_font_sizes/font_size = 56
 text = "ON"
 
 [node name="MusicToggle" type="HBoxContainer" parent="CenterContainer/ModalPanel/MarginContainer/VBoxContainer/ToggleSection"]
-custom_minimum_size = Vector2(0, 180)
+custom_minimum_size = Vector2(0, 120)
 layout_mode = 2
+theme_override_constants/separation = 30
+alignment = 1
 
 [node name="Label" type="Label" parent="CenterContainer/ModalPanel/MarginContainer/VBoxContainer/ToggleSection/MusicToggle"]
 layout_mode = 2
@@ -111,15 +115,17 @@ text = "Music"
 vertical_alignment = 1
 
 [node name="ToggleButton" type="Button" parent="CenterContainer/ModalPanel/MarginContainer/VBoxContainer/ToggleSection/MusicToggle"]
-custom_minimum_size = Vector2(200, 90)
+custom_minimum_size = Vector2(240, 100)
 layout_mode = 2
 theme_override_colors/font_color = Color(1, 1, 1, 1)
-theme_override_font_sizes/font_size = 48
+theme_override_font_sizes/font_size = 56
 text = "ON"
 
 [node name="VibrationToggle" type="HBoxContainer" parent="CenterContainer/ModalPanel/MarginContainer/VBoxContainer/ToggleSection"]
-custom_minimum_size = Vector2(0, 180)
+custom_minimum_size = Vector2(0, 120)
 layout_mode = 2
+theme_override_constants/separation = 30
+alignment = 1
 
 [node name="Label" type="Label" parent="CenterContainer/ModalPanel/MarginContainer/VBoxContainer/ToggleSection/VibrationToggle"]
 layout_mode = 2
@@ -130,10 +136,10 @@ text = "Vibrations"
 vertical_alignment = 1
 
 [node name="ToggleButton" type="Button" parent="CenterContainer/ModalPanel/MarginContainer/VBoxContainer/ToggleSection/VibrationToggle"]
-custom_minimum_size = Vector2(200, 90)
+custom_minimum_size = Vector2(240, 100)
 layout_mode = 2
 theme_override_colors/font_color = Color(1, 1, 1, 1)
-theme_override_font_sizes/font_size = 48
+theme_override_font_sizes/font_size = 56
 text = "ON"
 
 [node name="ButtonSection" type="VBoxContainer" parent="CenterContainer/ModalPanel/MarginContainer/VBoxContainer"]
