@@ -160,6 +160,10 @@ func _on_tile_drag_ended(dragged_tile_node, target_tile_node) -> void:
 	# Swap in puzzle state
 	PuzzleManager.swap_tiles(puzzle_state, tile1_index, tile2_index)
 
+	# Play swap sound
+	if AudioManager:
+		AudioManager.play_sfx("tile_swap")
+
 	# Refresh the entire grid to show new positions and update draggable status
 	_refresh_tile_positions()
 
@@ -311,6 +315,11 @@ func _process(delta: float) -> void:
 	# Check for merges
 	if spiral_state.check_and_merge_rings():
 		print("Rings merged! Active rings: %d" % spiral_state.active_ring_count)
+
+		# Play merge sound
+		if AudioManager:
+			AudioManager.play_sfx("ring_merge")
+
 		_refresh_spiral_visuals()
 
 		# Check if puzzle solved
