@@ -400,8 +400,8 @@ ProgressManager.load_save_data()
 **Core Scripts**:
 - `spiral_ring.gd` (84 lines): Ring data, merge logic, physics update
 - `spiral_puzzle_state.gd` (121 lines): Puzzle state, ring collection, validation
-- `spiral_ring_node.gd` (334 lines): Visual rendering, input handling, signals
-- `spiral_ring_node.tscn`: Scene definition for ring node
+- `spiral_ring_node.gd` (296 lines): MeshInstance2D-based rendering, mesh generation
+- `spiral_ring_node.tscn`: Scene definition for ring node (MeshInstance2D type)
 
 **Key Integration Points**:
 - `puzzle_manager.gd`: Contains `_generate_spiral_puzzle()`, `_create_rings_from_image()`
@@ -415,13 +415,16 @@ ProgressManager.load_save_data()
 - **Outermost ring (index = ring_count-1)**: Starts with `is_locked = true` (static reference)
 - All other rings scrambled to random angles (±180°, min 20° from correct)
 
-### Spiral Ring Rendering
-- Use custom `_draw()` to create textured donut polygons
-  - 128 segments for smooth circles
-  - Apply rotation to texture UV coordinates (not vertices)
-  - Each ring rendered as 2 triangles per segment
-- Borders: 4px white (normal), dark gray (merged)
-- Debug: Ring index displayed as text overlay
+### Spiral Ring Rendering (Mesh-Based)
+- **MeshInstance2D with pre-generated ArrayMesh**
+  - Mesh created once in `_ready()` via `_create_ring_mesh()`
+  - 128 segments, 256 vertices, 256 triangles per ring
+  - UV coordinates baked into mesh (no per-frame recalculation)
+- **Rotation via node transform** (not UV manipulation)
+  - `rotation = deg_to_rad(ring_data.current_angle)`
+- **Borders via Line2D children**
+  - White for unlocked rings, dark gray for locked
+- **Performance**: 3-7 draw calls total (vs 768-1,792 in old implementation)
 
 ### Spiral Physics Loop (CRITICAL)
 Must run in `GameplayScreen._process(delta)` for smooth animation:
@@ -432,15 +435,20 @@ func _process(delta):
         if spiral_state.check_and_merge_rings():  # Check merges each frame
             AudioManager.play_sfx("ring_merge")
             _refresh_spiral_visuals()
+            # Regenerate meshes after merge (inner_radius changes)
+            for ring_node in ring_nodes:
+                if ring_node != null:
+                    ring_node.regenerate_mesh()
         _update_spiral_ring_visuals()  # Update visual display
         if spiral_state.is_puzzle_solved():
             _check_spiral_puzzle_solved()
 ```
 
 ### Spiral Input Handling
-- `spiral_ring_node.gd` handles touch events via `_gui_input()`
-- Emits signals: `ring_rotated(angle_delta, ring_index)`, `ring_flicked(angular_velocity, ring_index)`
-- Tracks touch history (5 samples) for flick velocity calculation
+- **Centralized in `gameplay_screen.gd`** via `_on_rings_container_input()`
+- Determines touched ring via radial distance check
+- Calls external methods on ring nodes: `start_drag_external()`, `update_drag_external()`, `end_drag_external()`
+- Ring nodes track touch history (5 samples) for flick velocity calculation
 - Touch samples: angle + timestamp, used to calculate average velocity on release
 
 ### Spiral Merge Detection (CRITICAL IMPLEMENTATION)

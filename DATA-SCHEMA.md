@@ -305,7 +305,7 @@ func swap_positions(other_tile: Tile) -> void:
     other_tile.current_position = temp_pos
 ```
 
-### SpiralRing Class (scripts/spiral_ring.gd - 102 lines)
+### SpiralRing Class (scripts/spiral_ring.gd - 84 lines)
 ```gdscript
 class_name SpiralRing
 extends Resource
@@ -405,7 +405,7 @@ func _normalize_angle(angle: float) -> float:
     return angle
 ```
 
-### SpiralPuzzleState Class (scripts/spiral_puzzle_state.gd - 131 lines)
+### SpiralPuzzleState Class (scripts/spiral_puzzle_state.gd - 121 lines)
 ```gdscript
 class_name SpiralPuzzleState
 extends Resource
@@ -537,6 +537,20 @@ func get_correct_ring_count() -> int:
             count += 1
     return count
 ```
+
+### SpiralRingNode Visual Component (scripts/spiral_ring_node.gd - 296 lines)
+**Note**: Visual rendering implementation, not a data class.
+
+- **Base class**: `MeshInstance2D` (optimized mesh-based rendering)
+- **Mesh generation**: Pre-generates ArrayMesh once in `_ready()` via `_create_ring_mesh()`
+  - 128 segments, 256 vertices, 256 triangles per ring
+  - UV coordinates baked into mesh (no per-frame recalculation)
+- **Rotation**: Applied via node transform (`rotation = deg_to_rad(ring_data.current_angle)`)
+- **Borders**: Line2D child nodes (white for unlocked, dark gray for locked)
+- **Input handling**: External methods called by centralized handler in `gameplay_screen.gd`
+  - `start_drag_external(touch_pos)`, `update_drag_external(touch_pos)`, `end_drag_external()`
+- **Mesh regeneration**: `regenerate_mesh()` called after ring merges (when inner_radius changes)
+- **Performance**: Single draw call per ring (3-7 total vs 768-1,792 in triangle-based approach)
 
 ---
 

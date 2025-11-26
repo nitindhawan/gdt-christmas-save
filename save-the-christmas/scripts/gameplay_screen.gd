@@ -5,25 +5,30 @@ extends Control
 
 const TILE_NODE_SCENE = preload("res://scenes/tile_node.tscn")
 const SPIRAL_RING_NODE_SCENE = preload("res://scenes/spiral_ring_node.tscn")
+const ARROW_NODE_SCENE = preload("res://scenes/arrow_node.tscn")
 const SETTINGS_POPUP_SCENE = preload("res://scenes/settings_popup.tscn")
 const EXIT_DIALOG_SCENE = preload("res://scenes/exit_confirmation_dialog.tscn")
 const SpiralPuzzleState = preload("res://scripts/spiral_puzzle_state.gd")
+const ArrowPuzzleState = preload("res://scripts/arrow_puzzle_state.gd")
 
 # Game state
 var current_level_id: int = 1
 var current_difficulty: int = GameConstants.Difficulty.EASY
-var puzzle_state: Resource # Can be PuzzleState or SpiralPuzzleState
+var puzzle_state: Resource # Can be PuzzleState, SpiralPuzzleState, or ArrowPuzzleState
 var tile_nodes: Array = []
 var ring_nodes: Array = []
+var arrow_nodes: Array = []
 var rings_container: Control = null # Container for spiral ring nodes
+var arrows_container: Control = null # Container for arrow nodes
+var background_image: TextureRect = null # Background image for arrow puzzle
 var source_texture: Texture2D
 var is_spiral_puzzle: bool = false
+var is_arrow_puzzle: bool = false
 var puzzle_center: Vector2 = Vector2(540, 960) # Center of 1080x1920 screen
 
 # UI references
 @onready var level_label = $MarginContainer/VBoxContainer/TopHUD/MarginContainer/HBoxContainer/LevelLabel
 @onready var puzzle_grid = $MarginContainer/VBoxContainer/PuzzleArea/PuzzleGrid
-@onready var hint_button = $MarginContainer/VBoxContainer/BottomHUD/CenterContainer/HintButton
 
 func _ready() -> void:
 	# Get level and difficulty from GameManager
@@ -54,17 +59,23 @@ func _initialize_gameplay() -> void:
 
 	# Determine puzzle type
 	is_spiral_puzzle = puzzle_state is SpiralPuzzleState
+	is_arrow_puzzle = puzzle_state is ArrowPuzzleState
 
 	if is_spiral_puzzle:
 		# Setup spiral puzzle
 		_setup_spiral_puzzle()
 		await _spawn_spiral_rings()
+	elif is_arrow_puzzle:
+		# Setup arrow puzzle
+		_setup_arrow_puzzle()
+		_spawn_arrows()
 	else:
 		# Setup rectangle puzzle
 		_setup_puzzle_grid()
 		_spawn_tiles()
 
-	print("Gameplay initialized successfully (%s puzzle)" % ("Spiral" if is_spiral_puzzle else "Rectangle"))
+	var puzzle_type_name = "Spiral" if is_spiral_puzzle else ("Arrow" if is_arrow_puzzle else "Rectangle")
+	print("Gameplay initialized successfully (%s puzzle)" % puzzle_type_name)
 
 ## Setup puzzle grid layout based on difficulty
 func _setup_puzzle_grid() -> void:
@@ -222,40 +233,6 @@ func _save_progress() -> void:
 
 	print("Progress saved: Level %d, %s completed" % [current_level_id, difficulty_str])
 
-## Handle hint button
-func _on_hint_button_pressed() -> void:
-	if AudioManager:
-		AudioManager.play_sfx("button_click")
-
-	# Check hint limit
-	var level_data = LevelManager.get_level(current_level_id)
-	var hint_limit = level_data.get("hint_limit", GameConstants.DEFAULT_HINT_LIMIT)
-
-	if puzzle_state.hints_used >= hint_limit:
-		print("Hint limit reached")
-		# TODO: Show message "No more hints available"
-		return
-
-	# Use hint
-	var hinted_tile_index = PuzzleManager.use_hint(puzzle_state)
-	if hinted_tile_index == -1:
-		print("No hint needed - puzzle already solved")
-		return
-
-	# Play hint sound
-	if AudioManager:
-		AudioManager.play_sfx("hint_used")
-
-	# Update hint button text
-	hint_button.text = "💡 Hint (%d/%d)" % [puzzle_state.hints_used, hint_limit]
-
-	# Refresh tile display (re-spawn to show new positions)
-	_refresh_tile_positions()
-
-	# Check if puzzle solved after hint
-	await get_tree().create_timer(GameConstants.TILE_SWAP_DURATION + 0.1).timeout
-	_check_puzzle_solved()
-
 ## Refresh tile positions without re-instantiating
 func _refresh_tile_positions() -> void:
 	# Clear current grid
@@ -321,6 +298,11 @@ func _process(delta: float) -> void:
 			AudioManager.play_sfx("ring_merge")
 
 		_refresh_spiral_visuals()
+
+		# Regenerate meshes for remaining rings (inner_radius may have changed)
+		for ring_node in ring_nodes:
+			if ring_node != null:
+				ring_node.regenerate_mesh()
 
 		# Check if puzzle solved
 		if spiral_state.is_puzzle_solved():
@@ -399,8 +381,9 @@ func _spawn_spiral_rings() -> void:
 		# Add to rings container
 		rings_container.add_child(ring_node)
 
-		# Set anchors to fill the container
-		ring_node.set_anchors_preset(Control.PRESET_FULL_RECT)
+		# MeshInstance2D uses position, not anchors
+		# Center the ring at the container's center
+		ring_node.position = rings_container.size / 2.0
 
 		print("Added ring %d to container" % i)
 
@@ -413,7 +396,7 @@ func _spawn_spiral_rings() -> void:
 	print("Layout complete. Final puzzle area size: %v" % puzzle_area.size)
 
 ## Centralized input handler for all rings
-var _dragging_ring_node: Control = null
+var _dragging_ring_node: MeshInstance2D = null
 
 func _on_rings_container_input(event: InputEvent) -> void:
 	if not is_spiral_puzzle:
@@ -534,3 +517,176 @@ func _save_spiral_progress() -> void:
 	ProgressManager.save_progress()
 
 	print("Spiral progress saved: Level %d, %s completed" % [current_level_id, difficulty_str])
+
+## ============================================================================
+## ARROW PUZZLE METHODS
+## ============================================================================
+
+## Setup arrow puzzle with background image and arrows container
+func _setup_arrow_puzzle() -> void:
+	# Hide rectangle grid
+	puzzle_grid.visible = false
+
+	# Get puzzle area control
+	var puzzle_area = $MarginContainer/VBoxContainer/PuzzleArea
+
+	# Set minimum size for puzzle area
+	puzzle_area.custom_minimum_size = Vector2(900, 900)
+	puzzle_area.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+
+	var arrow_state = puzzle_state as ArrowPuzzleState
+	print("Arrow puzzle configured: %dx%d grid = %d arrows" % [
+		arrow_state.grid_size.x, arrow_state.grid_size.y, arrow_state.arrows.size()
+	])
+
+## Spawn arrow nodes in a grid layout
+func _spawn_arrows() -> void:
+	# Clear existing arrows
+	for arrow_node in arrow_nodes:
+		arrow_node.queue_free()
+	arrow_nodes.clear()
+
+	var arrow_state = puzzle_state as ArrowPuzzleState
+
+	# Get puzzle area control
+	var puzzle_area = $MarginContainer/VBoxContainer/PuzzleArea
+
+	# Wait for layout
+	await get_tree().process_frame
+
+	# Ensure puzzle area has size
+	if puzzle_area.size.x == 0 or puzzle_area.size.y == 0:
+		puzzle_area.size = Vector2(900, 900)
+
+	# Create background image (full level image visible)
+	background_image = TextureRect.new()
+	background_image.name = "BackgroundImage"
+	background_image.texture = source_texture
+	background_image.expand_mode = TextureRect.EXPAND_FIT_WIDTH_PROPORTIONAL
+	background_image.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_CENTERED
+	background_image.custom_minimum_size = puzzle_area.size
+	background_image.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	puzzle_area.add_child(background_image)
+
+	# Create arrows container (overlay on top of background)
+	arrows_container = Control.new()
+	arrows_container.name = "ArrowsContainer"
+	arrows_container.custom_minimum_size = puzzle_area.size
+	arrows_container.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	puzzle_area.add_child(arrows_container)
+
+	await get_tree().process_frame
+
+	# Calculate arrow size and spacing
+	var arrow_size = _calculate_arrow_size(arrow_state.grid_size)
+	var grid_width = arrow_state.grid_size.x * arrow_size.x + (arrow_state.grid_size.x - 1) * GameConstants.ARROW_GRID_SPACING
+	var grid_height = arrow_state.grid_size.y * arrow_size.y + (arrow_state.grid_size.y - 1) * GameConstants.ARROW_GRID_SPACING
+
+	# Center the grid in the puzzle area
+	var start_x = (arrows_container.size.x - grid_width) / 2.0
+	var start_y = (arrows_container.size.y - grid_height) / 2.0
+
+	# Create arrow nodes
+	arrow_nodes.resize(arrow_state.arrows.size())
+
+	for arrow in arrow_state.arrows:
+		var arrow_node = ARROW_NODE_SCENE.instantiate()
+		arrow_node.custom_minimum_size = arrow_size
+
+		# Position in grid
+		var pos_x = start_x + arrow.grid_position.x * (arrow_size.x + GameConstants.ARROW_GRID_SPACING)
+		var pos_y = start_y + arrow.grid_position.y * (arrow_size.y + GameConstants.ARROW_GRID_SPACING)
+		arrow_node.position = Vector2(pos_x, pos_y)
+		arrow_node.size = arrow_size
+
+		arrows_container.add_child(arrow_node)
+
+		# Setup arrow (loads texture and sets rotation)
+		arrow_node.setup(arrow)
+
+		# Connect signal
+		arrow_node.arrow_tapped.connect(_on_arrow_tapped)
+
+		arrow_nodes[arrow.arrow_id] = arrow_node
+
+	print("Spawned %d arrows in %dx%d grid" % [arrow_nodes.size(), arrow_state.grid_size.x, arrow_state.grid_size.y])
+
+## Calculate arrow size based on grid dimensions
+func _calculate_arrow_size(grid_size: Vector2i) -> Vector2:
+	var puzzle_area = $MarginContainer/VBoxContainer/PuzzleArea
+	var available_width = puzzle_area.size.x - 40  # Margins
+	var available_height = puzzle_area.size.y - 40
+
+	# Calculate size based on grid
+	var arrow_width = (available_width - (grid_size.x - 1) * GameConstants.ARROW_GRID_SPACING) / grid_size.x
+	var arrow_height = (available_height - (grid_size.y - 1) * GameConstants.ARROW_GRID_SPACING) / grid_size.y
+
+	# Use the smaller dimension to keep arrows square
+	var arrow_size = min(arrow_width, arrow_height)
+	arrow_size = min(arrow_size, 120.0)  # Max size cap
+
+	return Vector2(arrow_size, arrow_size)
+
+## Handle arrow tap
+func _on_arrow_tapped(arrow_id: int) -> void:
+	if AudioManager:
+		AudioManager.play_sfx("button_click")
+
+	var arrow_state = puzzle_state as ArrowPuzzleState
+
+	# Increment tap count
+	arrow_state.increment_tap_count()
+
+	# Attempt arrow movement
+	var result = arrow_state.attempt_arrow_movement(arrow_id)
+
+	var arrow_node = arrow_nodes[arrow_id]
+
+	if result.success:
+		# Arrow can exit - animate and remove
+		arrow_state.mark_arrow_exited(arrow_id)
+		arrow_node.animate_exit()
+		await arrow_node.tree_exited
+
+		# Check if puzzle solved
+		if arrow_state.is_puzzle_solved():
+			_check_arrow_puzzle_solved()
+	else:
+		# Arrow is blocked - bounce back
+		arrow_node.animate_bounce()
+		if AudioManager:
+			AudioManager.play_sfx("error")
+
+## Check if arrow puzzle is solved
+func _check_arrow_puzzle_solved() -> void:
+	var arrow_state = puzzle_state as ArrowPuzzleState
+
+	if arrow_state.is_puzzle_solved():
+		print("Arrow puzzle solved!")
+		arrow_state.is_solved = true
+		_save_arrow_progress()
+
+		await _handle_puzzle_completion()
+
+## Save progress for arrow puzzle
+func _save_arrow_progress() -> void:
+	var arrow_state = puzzle_state as ArrowPuzzleState
+	var difficulty_str = GameConstants.difficulty_to_string(current_difficulty)
+
+	# Set star for this level and difficulty
+	ProgressManager.set_star(current_level_id, difficulty_str, true)
+
+	# Unlock next level if completing Easy
+	if current_difficulty == GameConstants.Difficulty.EASY:
+		ProgressManager.unlock_next_level()
+
+	# Update current level
+	ProgressManager.current_level = current_level_id
+
+	# Update statistics
+	ProgressManager.total_swaps_made += arrow_state.tap_count
+
+	# Save to disk
+	ProgressManager.save_progress()
+
+	print("Arrow progress saved: Level %d, %s completed" % [current_level_id, difficulty_str])

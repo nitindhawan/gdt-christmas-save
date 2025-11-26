@@ -5,6 +5,8 @@ extends Node
 
 const SpiralRing = preload("res://scripts/spiral_ring.gd")
 const SpiralPuzzleState = preload("res://scripts/spiral_puzzle_state.gd")
+const ArrowPuzzleState = preload("res://scripts/arrow_puzzle_state.gd")
+const Arrow = preload("res://scripts/arrow.gd")
 
 ## Generate a puzzle state from level data and difficulty
 func generate_puzzle(level_id: int, difficulty: int) -> Resource:
@@ -19,6 +21,8 @@ func generate_puzzle(level_id: int, difficulty: int) -> Resource:
 	# Route to appropriate generation method
 	if puzzle_type == "spiral_twist":
 		return _generate_spiral_puzzle(level_id, difficulty, level_data)
+	elif puzzle_type == "arrow_puzzle":
+		return _generate_arrow_puzzle(level_id, difficulty, level_data)
 	else:
 		return _generate_rectangle_puzzle(level_id, difficulty, level_data)
 
@@ -178,6 +182,101 @@ func _scramble_rings(puzzle_state: SpiralPuzzleState) -> void:
 
 	print("Spiral puzzle scrambled (attempts: %d, max angle: %.1f)" % [attempts + 1, max_angle_diff])
 
+## Generate an arrow puzzle
+func _generate_arrow_puzzle(level_id: int, difficulty: int, level_data: Dictionary) -> ArrowPuzzleState:
+	var difficulty_str = GameConstants.difficulty_to_string(difficulty)
+	var diff_config = level_data["difficulty_configs"][difficulty_str]
+
+	if diff_config == null:
+		push_error("No difficulty config found for %s" % difficulty_str)
+		return null
+
+	# Get grid size from difficulty config or use defaults
+	var grid_size: Vector2i
+	if diff_config.has("grid_size"):
+		# JSON stores as dictionary with x and y
+		if diff_config["grid_size"] is Dictionary:
+			grid_size = Vector2i(
+				diff_config["grid_size"].get("x", 5),
+				diff_config["grid_size"].get("y", 4)
+			)
+		else:
+			grid_size = diff_config["grid_size"]
+	else:
+		grid_size = _get_default_arrow_grid_size(difficulty)
+
+	# Load level texture (for background rendering)
+	var texture = LevelManager.get_level_texture(level_id)
+	if texture == null:
+		push_error("Failed to load level image for level %d" % level_id)
+		return null
+
+	# Create arrow puzzle state
+	var puzzle_state = ArrowPuzzleState.new()
+	puzzle_state.level_id = level_id
+	puzzle_state.difficulty = difficulty_str
+	puzzle_state.grid_size = grid_size
+	puzzle_state.tap_count = 0
+	puzzle_state.is_solved = false
+
+	# Pick a random direction set (one of 4 pairs)
+	var direction_sets = [
+		[Arrow.Direction.LEFT, Arrow.Direction.UP],
+		[Arrow.Direction.LEFT, Arrow.Direction.DOWN],
+		[Arrow.Direction.RIGHT, Arrow.Direction.UP],
+		[Arrow.Direction.RIGHT, Arrow.Direction.DOWN]
+	]
+	var selected_set = direction_sets[randi() % 4]
+
+	# Create properly typed array
+	var typed_direction_set: Array[int] = []
+	typed_direction_set.append(selected_set[0])
+	typed_direction_set.append(selected_set[1])
+	puzzle_state.direction_set = typed_direction_set
+
+	# Create arrows for the grid
+	puzzle_state.arrows = _create_arrows_for_grid(grid_size, puzzle_state.direction_set)
+	puzzle_state.active_arrow_count = puzzle_state.arrows.size()
+
+	print("Generated arrow puzzle: Level %d, %s, Grid %dx%d, Arrows: %d, Directions: %s" % [
+		level_id, difficulty_str, grid_size.x, grid_size.y,
+		puzzle_state.arrows.size(), puzzle_state.get_direction_set_name()
+	])
+
+	return puzzle_state
+
+## Get default arrow grid size based on difficulty
+func _get_default_arrow_grid_size(difficulty: int) -> Vector2i:
+	match difficulty:
+		GameConstants.Difficulty.EASY:
+			return GameConstants.ARROW_GRID_EASY
+		GameConstants.Difficulty.NORMAL:
+			return GameConstants.ARROW_GRID_NORMAL
+		GameConstants.Difficulty.HARD:
+			return GameConstants.ARROW_GRID_HARD
+		_:
+			return GameConstants.ARROW_GRID_EASY
+
+## Create arrows for a grid with specified direction set
+func _create_arrows_for_grid(grid_size: Vector2i, direction_set: Array[int]) -> Array[Arrow]:
+	var arrows: Array[Arrow] = []
+	var arrow_id = 0
+
+	for row in range(grid_size.y):
+		for col in range(grid_size.x):
+			var arrow = Arrow.new()
+			arrow.arrow_id = arrow_id
+			arrow.grid_position = Vector2i(col, row)
+			# Randomly pick one of the two allowed directions
+			arrow.direction = direction_set[randi() % 2]
+			arrow.has_exited = false
+			arrow.is_animating = false
+
+			arrows.append(arrow)
+			arrow_id += 1
+
+	return arrows
+
 ## Create tiles from an image divided into a grid
 func create_tiles_from_image(texture: Texture2D, rows: int, columns: int) -> Array[Tile]:
 	var tiles: Array[Tile] = []
@@ -257,41 +356,6 @@ func swap_tiles(puzzle_state: PuzzleState, tile1_index: int, tile2_index: int) -
 
 	puzzle_state.swap_count += 1
 	print("Swapped tiles %d and %d (total swaps: %d)" % [tile1_index, tile2_index, puzzle_state.swap_count])
-
-## Use a hint - move one incorrect tile to correct position
-func use_hint(puzzle_state: PuzzleState) -> int:
-	# Find first incorrect tile
-	var incorrect_tile_index = -1
-	for i in range(puzzle_state.tiles.size()):
-		if not puzzle_state.tiles[i].is_correct():
-			incorrect_tile_index = i
-			break
-
-	if incorrect_tile_index == -1:
-		print("No incorrect tiles found - puzzle already solved!")
-		return -1
-
-	# Find the tile currently at the correct position
-	var incorrect_tile = puzzle_state.tiles[incorrect_tile_index]
-	var target_position = incorrect_tile.correct_position
-
-	var tile_at_correct_position_index = -1
-	for i in range(puzzle_state.tiles.size()):
-		if puzzle_state.tiles[i].current_position == target_position:
-			tile_at_correct_position_index = i
-			break
-
-	if tile_at_correct_position_index == -1:
-		push_error("Could not find tile at target position")
-		return -1
-
-	# Swap the tiles
-	swap_tiles(puzzle_state, incorrect_tile_index, tile_at_correct_position_index)
-	puzzle_state.hints_used += 1
-
-	print("Hint used: Moved tile %d to correct position (hints used: %d)" % [incorrect_tile_index, puzzle_state.hints_used])
-
-	return incorrect_tile_index
 
 ## Get tile index by grid position
 func get_tile_index_at_position(puzzle_state: PuzzleState, position: Vector2i) -> int:
