@@ -19,7 +19,7 @@
           "ring_count": 7
         }
       },
-      "hint_limit": 3,
+      "hint_limit": 0,
       "tags": ["tree", "festive", "outdoor"]
     },
     {
@@ -45,7 +45,7 @@
           "tile_count": 30
         }
       },
-      "hint_limit": 3,
+      "hint_limit": 0,
       "tags": ["santa", "workshop", "indoor"]
     },
     {
@@ -53,19 +53,19 @@
       "name": "Winter Wonderland",
       "image_path": "res://assets/levels/level_03.png",
       "thumbnail_path": "res://assets/levels/thumbnails/level_03_thumb.png",
-      "puzzle_type": "spiral_twist",
+      "puzzle_type": "arrow_puzzle",
       "difficulty_configs": {
         "easy": {
-          "ring_count": 3
+          "grid_size": {"x": 5, "y": 4}
         },
         "normal": {
-          "ring_count": 5
+          "grid_size": {"x": 6, "y": 5}
         },
         "hard": {
-          "ring_count": 7
+          "grid_size": {"x": 8, "y": 7}
         }
       },
-      "hint_limit": 3,
+      "hint_limit": 0,
       "tags": ["snow", "winter", "outdoor"]
     }
   ]
