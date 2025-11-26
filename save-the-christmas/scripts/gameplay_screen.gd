@@ -6,51 +6,31 @@ extends Control
 const TILE_NODE_SCENE = preload("res://scenes/tile_node.tscn")
 const SPIRAL_RING_NODE_SCENE = preload("res://scenes/spiral_ring_node.tscn")
 const SETTINGS_POPUP_SCENE = preload("res://scenes/settings_popup.tscn")
+const EXIT_DIALOG_SCENE = preload("res://scenes/exit_confirmation_dialog.tscn")
 const SpiralPuzzleState = preload("res://scripts/spiral_puzzle_state.gd")
 
 # Game state
 var current_level_id: int = 1
 var current_difficulty: int = GameConstants.Difficulty.EASY
-var puzzle_state: Resource  # Can be PuzzleState or SpiralPuzzleState
+var puzzle_state: Resource # Can be PuzzleState or SpiralPuzzleState
 var tile_nodes: Array = []
 var ring_nodes: Array = []
-var rings_container: Control = null  # Container for spiral ring nodes
+var rings_container: Control = null # Container for spiral ring nodes
 var source_texture: Texture2D
 var is_spiral_puzzle: bool = false
-var puzzle_center: Vector2 = Vector2(540, 960)  # Center of 1080x1920 screen
+var puzzle_center: Vector2 = Vector2(540, 960) # Center of 1080x1920 screen
 
 # UI references
 @onready var level_label = $MarginContainer/VBoxContainer/TopHUD/MarginContainer/HBoxContainer/LevelLabel
 @onready var puzzle_grid = $MarginContainer/VBoxContainer/PuzzleArea/PuzzleGrid
 @onready var hint_button = $MarginContainer/VBoxContainer/BottomHUD/CenterContainer/HintButton
-@onready var confirmation_dialog = $ConfirmationDialog
 
 func _ready() -> void:
 	# Get level and difficulty from GameManager
 	current_level_id = GameManager.get_current_level()
 	current_difficulty = GameManager.get_current_difficulty()
 
-	# Style confirmation dialog for mobile
-	_style_confirmation_dialog()
-
 	_initialize_gameplay()
-
-## Style confirmation dialog for mobile readability
-func _style_confirmation_dialog() -> void:
-	# Set larger font sizes for dialog text
-	confirmation_dialog.add_theme_font_size_override("font_size", 36)
-
-	# Style the buttons - access them from the dialog
-	var ok_button = confirmation_dialog.get_ok_button()
-	var cancel_button = confirmation_dialog.get_cancel_button()
-
-	# Set minimum sizes to meet mobile touch targets (88x88px minimum)
-	ok_button.custom_minimum_size = Vector2(200, 100)
-	cancel_button.custom_minimum_size = Vector2(200, 100)
-
-	# Set larger font sizes for buttons
-	ok_button.add_theme_font_size_override("font_size", 32)
-	cancel_button.add_theme_font_size_override("font_size", 32)
 
 ## Initialize gameplay with current level and difficulty
 func _initialize_gameplay() -> void:
@@ -89,7 +69,7 @@ func _initialize_gameplay() -> void:
 ## Setup puzzle grid layout based on difficulty
 func _setup_puzzle_grid() -> void:
 	var grid_size = puzzle_state.grid_size
-	puzzle_grid.columns = grid_size.y  # columns
+	puzzle_grid.columns = grid_size.y # columns
 
 	print("Grid configured: %d rows x %d columns" % [grid_size.x, grid_size.y])
 
@@ -180,6 +160,10 @@ func _on_tile_drag_ended(dragged_tile_node, target_tile_node) -> void:
 	# Swap in puzzle state
 	PuzzleManager.swap_tiles(puzzle_state, tile1_index, tile2_index)
 
+	# Play swap sound
+	if AudioManager:
+		AudioManager.play_sfx("tile_swap")
+
 	# Refresh the entire grid to show new positions and update draggable status
 	_refresh_tile_positions()
 
@@ -190,23 +174,30 @@ func _on_tile_drag_ended(dragged_tile_node, target_tile_node) -> void:
 ## Check if puzzle is solved
 func _check_puzzle_solved() -> void:
 	if PuzzleManager.is_puzzle_solved(puzzle_state):
-		print("Puzzle solved!")
+		print("Rectangle puzzle solved!")
 		puzzle_state.is_solved = true
-
-		# Play victory sound
-		if AudioManager:
-			AudioManager.play_sfx("level_complete")
-
-		# Trigger haptic feedback
-		if AudioManager:
-			AudioManager.trigger_haptic(0.8)
-
-		# Save progress
 		_save_progress()
+		await _handle_puzzle_completion()
 
-		# Navigate to level complete screen
-		await get_tree().create_timer(1.0).timeout
-		GameManager.navigate_to_level_complete()
+## Unified puzzle completion handler
+## Plays victory effects, delays for player feedback, then navigates to completion screen
+## This method provides a centralized place to integrate SFX and VFX effects
+func _handle_puzzle_completion() -> void:
+	# Play victory sound
+	if AudioManager:
+		AudioManager.play_sfx("level_complete")
+
+	# Trigger haptic feedback
+	if AudioManager:
+		AudioManager.trigger_haptic(0.8)
+
+	# TODO: Add confetti VFX here
+
+	# Delay to let player see completed puzzle and effects
+	await get_tree().create_timer(2.5).timeout
+
+	# Navigate to level complete screen
+	GameManager.navigate_to_level_complete()
 
 ## Save progress after completing level
 func _save_progress() -> void:
@@ -280,11 +271,13 @@ func _on_back_button_pressed() -> void:
 	if AudioManager:
 		AudioManager.play_sfx("button_click")
 
-	# Show confirmation dialog
-	confirmation_dialog.popup_centered()
+	# Show custom exit confirmation dialog
+	var dialog = EXIT_DIALOG_SCENE.instantiate()
+	dialog.exit_confirmed.connect(_on_exit_confirmed)
+	add_child(dialog)
 
-## Handle confirmation dialog confirmed (exit level)
-func _on_confirmation_dialog_confirmed() -> void:
+## Handle exit confirmed from dialog
+func _on_exit_confirmed() -> void:
 	GameManager.navigate_to_level_selection()
 
 ## Handle share button
@@ -322,6 +315,11 @@ func _process(delta: float) -> void:
 	# Check for merges
 	if spiral_state.check_and_merge_rings():
 		print("Rings merged! Active rings: %d" % spiral_state.active_ring_count)
+
+		# Play merge sound
+		if AudioManager:
+			AudioManager.play_sfx("ring_merge")
+
 		_refresh_spiral_visuals()
 
 		# Check if puzzle solved
@@ -372,7 +370,7 @@ func _spawn_spiral_rings() -> void:
 	rings_container = Control.new()
 	rings_container.name = "RingsContainer"
 	rings_container.custom_minimum_size = puzzle_area.size
-	rings_container.mouse_filter = Control.MOUSE_FILTER_STOP  # Capture all input here
+	rings_container.mouse_filter = Control.MOUSE_FILTER_STOP # Capture all input here
 	puzzle_area.add_child(rings_container)
 
 	# Connect input handling to this container
@@ -406,7 +404,7 @@ func _spawn_spiral_rings() -> void:
 
 		print("Added ring %d to container" % i)
 
-		ring_nodes[i] = ring_node  # Store in correct position
+		ring_nodes[i] = ring_node # Store in correct position
 
 	print("Spawned %d spiral rings" % ring_nodes.size())
 
@@ -499,7 +497,7 @@ func _refresh_spiral_visuals() -> void:
 		if i < spiral_state.rings.size():
 			var ring = spiral_state.rings[i]
 			var ring_node = ring_nodes[i]
-			ring_node.ring_data = ring  # Update to current ring data (may have expanded)
+			ring_node.ring_data = ring # Update to current ring data (may have expanded)
 			ring_node.update_visual()
 
 ## Check if spiral puzzle is solved
@@ -509,21 +507,9 @@ func _check_spiral_puzzle_solved() -> void:
 	if spiral_state.is_puzzle_solved():
 		print("Spiral puzzle solved!")
 		spiral_state.is_solved = true
-
-		# Play victory sound
-		if AudioManager:
-			AudioManager.play_sfx("level_complete")
-
-		# Trigger haptic feedback
-		if AudioManager:
-			AudioManager.trigger_haptic(0.8)
-
-		# Save progress
 		_save_spiral_progress()
 
-		# Navigate to level complete screen
-		await get_tree().create_timer(1.0).timeout
-		GameManager.navigate_to_level_complete()
+		await _handle_puzzle_completion()
 
 ## Save progress for spiral puzzle
 func _save_spiral_progress() -> void:

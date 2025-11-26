@@ -10,11 +10,14 @@ var sfx_player: AudioStreamPlayer
 # Audio file paths
 const MUSIC_PATH = "res://assets/audio/christmas_music_01.ogg"
 const SFX_PATHS = {
-	"tile_select": "res://assets/audio/tile_select.ogg",
-	"tile_swap": "res://assets/audio/tile_swap.ogg",
-	"level_complete": "res://assets/audio/level_complete.ogg",
-	"button_click": "res://assets/audio/button_click.ogg",
-	"hint_used": "res://assets/audio/hint_used.ogg"
+	"button_click": "res://assets/audio/click.wav",
+	"tile_swap": "res://assets/audio/match1.wav",
+	"tile_drop": "res://assets/audio/match1.wav",
+	"ring_merge": "res://assets/audio/match2.wav",
+	"level_complete": "res://assets/audio/level_complete.wav",
+	"hint_used": "res://assets/audio/match1.wav",
+	# Legacy paths (kept for compatibility)
+	"tile_select": "res://assets/audio/tile_select.ogg"
 }
 
 # Cached sound effects
@@ -106,6 +109,11 @@ func play_sfx(sfx_name: String) -> void:
 	sfx_player.stream = stream
 	sfx_player.volume_db = linear_to_db(ProgressManager.sound_volume)
 	sfx_player.play()
+
+## Play a random match sound for variety (match1 or match2)
+func play_match_sfx() -> void:
+	var sound_name = "tile_swap" if randf() < 0.5 else "ring_merge"
+	play_sfx(sound_name)
 
 ## Set music enabled/disabled
 func set_music_enabled(enabled: bool) -> void:
