@@ -97,30 +97,6 @@ func rotate_ring(ring_index: int, angle_delta: float) -> void:
 		ring.current_angle = ring._normalize_angle(ring.current_angle)
 		rotation_count += 1
 
-## Use hint: snap one random incorrect ring to correct angle
-func use_hint() -> int:
-	var incorrect_rings = []
-
-	# Find all rings that are not locked and not at correct angle
-	for i in range(rings.size()):
-		var ring = rings[i]
-		if ring != null and not ring.is_locked and not ring.is_angle_correct():
-			incorrect_rings.append(i)
-
-	if incorrect_rings.is_empty():
-		return -1
-
-	# Pick random incorrect ring
-	var ring_index = incorrect_rings[randi() % incorrect_rings.size()]
-	var ring = rings[ring_index]
-
-	# Snap to correct angle
-	ring.current_angle = ring.correct_angle
-	ring.angular_velocity = 0.0
-	hints_used += 1
-
-	return ring_index
-
 ## Get count of rings at correct angles
 func get_correct_ring_count() -> int:
 	var count = 0

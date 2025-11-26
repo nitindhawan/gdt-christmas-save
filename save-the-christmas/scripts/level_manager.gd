@@ -78,18 +78,27 @@ func _parse_level_data(level_dict: Dictionary) -> Dictionary:
 
 	return level_data
 
-## Generate a dynamic level (cycles through 3 images, alternates puzzle types)
+## Generate a dynamic level (cycles through 3 images, 3-way puzzle type rotation)
 func _generate_dynamic_level(level_id: int) -> Dictionary:
 	# Cycle through 3 images
 	var image_index = ((level_id - 1) % 3) + 1  # 1, 2, or 3
 
-	# Determine puzzle type: odd levels = spiral, even levels = rectangle
-	var is_spiral = (level_id % 2) == 1
-	var puzzle_type = "spiral_twist" if is_spiral else "rectangle_jigsaw"
+	# Determine puzzle type: 3-way rotation
+	# Level % 3 == 1 -> Spiral Twist
+	# Level % 3 == 2 -> Rectangle Jigsaw
+	# Level % 3 == 0 -> Arrow Puzzle
+	var puzzle_type: String
+	var mod_result = level_id % 3
+	if mod_result == 1:
+		puzzle_type = "spiral_twist"
+	elif mod_result == 2:
+		puzzle_type = "rectangle_jigsaw"
+	else:  # mod_result == 0
+		puzzle_type = "arrow_puzzle"
 
 	# Generate difficulty configs based on puzzle type
 	var difficulty_configs = {}
-	if is_spiral:
+	if puzzle_type == "spiral_twist":
 		# Spiral puzzle configs
 		difficulty_configs = {
 			"easy": {
@@ -100,6 +109,19 @@ func _generate_dynamic_level(level_id: int) -> Dictionary:
 			},
 			"hard": {
 				"ring_count": GameConstants.SPIRAL_RINGS_HARD
+			}
+		}
+	elif puzzle_type == "arrow_puzzle":
+		# Arrow puzzle configs
+		difficulty_configs = {
+			"easy": {
+				"grid_size": GameConstants.ARROW_GRID_EASY
+			},
+			"normal": {
+				"grid_size": GameConstants.ARROW_GRID_NORMAL
+			},
+			"hard": {
+				"grid_size": GameConstants.ARROW_GRID_HARD
 			}
 		}
 	else:
@@ -130,7 +152,7 @@ func _generate_dynamic_level(level_id: int) -> Dictionary:
 		"thumbnail_path": "res://assets/levels/thumbnails/level_0%d_thumb.png" % image_index,
 		"puzzle_type": puzzle_type,
 		"difficulty_configs": difficulty_configs,
-		"hint_limit": GameConstants.DEFAULT_HINT_LIMIT,
+		"hint_limit": 0,  # Hints removed
 		"tags": []
 	}
 

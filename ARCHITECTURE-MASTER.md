@@ -84,14 +84,15 @@ These 6 core systems are configured in Project Settings → AutoLoad:
 - Player interaction: Centralized input handler in gameplay_screen, drag to rotate, flick for momentum
 - Physics-based: Angular velocity (max 720°/s), deceleration (200°/s²), update_physics() called in _process(delta)
 - Ring merging: Adjacent rings merge when angle ≤5° and velocity ≤10°/s
-- **Merge behavior**: Keeps outer ring, expands inner_radius, removes inner ring from array
+- **Merge behavior**: Keeps outer ring, expands inner_radius, removes inner ring from array, regenerates meshes
 - Merged rings continue rotating until they merge with the outermost locked ring
 - Win condition: rings.size() == 1 (only locked outermost ring remains)
 - Hint system: Snaps random incorrect ring to correct angle (0°)
+- **Rendering**: MeshInstance2D with pre-generated ArrayMesh (3-7 draw calls vs 768-1,792 in triangle-based approach)
 - See **GAME-RULES.md** for complete mechanics
 - **Implementation files**:
-  - Core data: `spiral_ring.gd` (102 lines), `spiral_puzzle_state.gd` (131 lines)
-  - Visual: `spiral_ring_node.gd` (377 lines), `spiral_ring_node.tscn`
+  - Core data: `spiral_ring.gd` (84 lines), `spiral_puzzle_state.gd` (121 lines)
+  - Visual: `spiral_ring_node.gd` (296 lines, MeshInstance2D-based), `spiral_ring_node.tscn`
   - Generation: `puzzle_manager.gd` methods: _generate_spiral_puzzle(), _create_rings_from_image()
   - Gameplay: `gameplay_screen.gd` methods: _setup_spiral_puzzle(), _spawn_spiral_rings(), _process() physics loop
 

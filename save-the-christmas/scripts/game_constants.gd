@@ -31,6 +31,19 @@ const SPIRAL_RINGS_EASY = 3
 const SPIRAL_RINGS_NORMAL = 5
 const SPIRAL_RINGS_HARD = 7
 
+# Puzzle mechanics - Arrow Puzzle
+const ARROW_BOUNCE_DURATION = 0.2  # Bounce-back animation duration (seconds)
+const ARROW_EXIT_DURATION = 0.15  # Fade-out on success (seconds)
+const ARROW_GRID_SPACING = 10  # Pixels between arrows
+
+# Arrow grid sizes per difficulty (columns, rows)
+const ARROW_GRID_EASY = Vector2i(5, 4)  # 20 arrows
+const ARROW_GRID_NORMAL = Vector2i(6, 5)  # 30 arrows
+const ARROW_GRID_HARD = Vector2i(8, 7)  # 56 arrows
+
+# Arrow asset path
+const ARROW_TEXTURE_PATH = "res://assets/ui/up_arrow.png"
+
 # Audio settings
 const DEFAULT_MUSIC_VOLUME = 0.7
 const DEFAULT_SOUND_VOLUME = 0.8
@@ -48,7 +61,8 @@ enum Difficulty {
 
 enum PuzzleType {
 	RECTANGLE_JIGSAW = 0,
-	SPIRAL_TWIST = 1
+	SPIRAL_TWIST = 1,
+	ARROW_PUZZLE = 2
 }
 
 ## Helper function: Convert Difficulty enum to string

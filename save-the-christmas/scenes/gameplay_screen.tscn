@@ -103,13 +103,6 @@ anchor_bottom = 1.0
 grow_horizontal = 2
 grow_vertical = 2
 
-[node name="HintButton" type="Button" parent="MarginContainer/VBoxContainer/BottomHUD/CenterContainer"]
-custom_minimum_size = Vector2(600, 110)
-layout_mode = 2
-theme_override_font_sizes/font_size = 32
-text = "💡 Hint"
-
 [connection signal="pressed" from="MarginContainer/VBoxContainer/TopHUD/MarginContainer/HBoxContainer/BackButton" to="." method="_on_back_button_pressed"]
 [connection signal="pressed" from="MarginContainer/VBoxContainer/TopHUD/MarginContainer/HBoxContainer/ShareButton" to="." method="_on_share_button_pressed"]
 [connection signal="pressed" from="MarginContainer/VBoxContainer/TopHUD/MarginContainer/HBoxContainer/SettingsButton" to="." method="_on_settings_button_pressed"]
-[connection signal="pressed" from="MarginContainer/VBoxContainer/BottomHUD/CenterContainer/HintButton" to="." method="_on_hint_button_pressed"]
