@@ -293,4 +293,4 @@ func _get_touch_angle(touch_pos: Vector2) -> float:
 ## Update visual rotation (called from parent)
 func update_visual() -> void:
 	# Simple rotation update - rotate the mesh, not the UVs!
-	rotation = -deg_to_rad(ring_data.current_angle)
+	rotation = deg_to_rad(ring_data.current_angle)
