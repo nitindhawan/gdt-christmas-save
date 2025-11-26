@@ -279,7 +279,7 @@ func _draw_ring_segment(center: Vector2) -> void:
 	if not source_texture:
 		return
 
-	var rotation_rad = deg_to_rad(ring_data.current_angle)
+	var rotation_rad = - deg_to_rad(ring_data.current_angle)
 
 	# Draw ring as a donut shape using textured polygon
 	var segments = 128  # More segments for smoother rings

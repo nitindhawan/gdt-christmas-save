@@ -1,6 +1,13 @@
-[gd_scene load_steps=2 format=3 uid="uid://dq7b5yp2m8wae"]
+[gd_scene load_steps=3 format=3 uid="uid://dq7b5yp2m8wae"]
 
-[ext_resource type="Script" path="res://scripts/settings_popup.gd" id="1_1"]
+[ext_resource type="Script" uid="uid://b2bkvxyusrob3" path="res://scripts/settings_popup.gd" id="1_1"]
+
+[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_panel"]
+bg_color = Color(0.15, 0.12, 0.12, 1)
+corner_radius_top_left = 20
+corner_radius_top_right = 20
+corner_radius_bottom_right = 20
+corner_radius_bottom_left = 20
 
 [node name="SettingsPopup" type="Control"]
 layout_mode = 3
@@ -18,7 +25,7 @@ anchor_right = 1.0
 anchor_bottom = 1.0
 grow_horizontal = 2
 grow_vertical = 2
-color = Color(0, 0, 0, 0.6)
+color = Color(0, 0, 0, 0.85)
 
 [node name="CenterContainer" type="CenterContainer" parent="."]
 layout_mode = 1
@@ -31,6 +38,7 @@ grow_vertical = 2
 [node name="ModalPanel" type="Panel" parent="CenterContainer"]
 custom_minimum_size = Vector2(850, 1200)
 layout_mode = 2
+theme_override_styles/panel = SubResource("StyleBoxFlat_panel")
 
 [node name="MarginContainer" type="MarginContainer" parent="CenterContainer/ModalPanel"]
 layout_mode = 1
@@ -39,14 +47,14 @@ anchor_right = 1.0
 anchor_bottom = 1.0
 grow_horizontal = 2
 grow_vertical = 2
-theme_override_constants/margin_left = 40
-theme_override_constants/margin_top = 40
-theme_override_constants/margin_right = 40
-theme_override_constants/margin_bottom = 40
+theme_override_constants/margin_left = 50
+theme_override_constants/margin_top = 50
+theme_override_constants/margin_right = 50
+theme_override_constants/margin_bottom = 50
 
 [node name="VBoxContainer" type="VBoxContainer" parent="CenterContainer/ModalPanel/MarginContainer"]
 layout_mode = 2
-theme_override_constants/separation = 30
+theme_override_constants/separation = 50
 
 [node name="Header" type="HBoxContainer" parent="CenterContainer/ModalPanel/MarginContainer/VBoxContainer"]
 custom_minimum_size = Vector2(0, 100)
@@ -55,72 +63,84 @@ layout_mode = 2
 [node name="TitleLabel" type="Label" parent="CenterContainer/ModalPanel/MarginContainer/VBoxContainer/Header"]
 layout_mode = 2
 size_flags_horizontal = 3
-theme_override_colors/font_color = Color(0.243137, 0.152941, 0.137255, 1)
-theme_override_font_sizes/font_size = 48
+theme_override_colors/font_color = Color(0.8666667, 0.74509805, 0.72156864, 1)
+theme_override_font_sizes/font_size = 96
 text = "Settings"
 
 [node name="CloseButton" type="Button" parent="CenterContainer/ModalPanel/MarginContainer/VBoxContainer/Header"]
 custom_minimum_size = Vector2(60, 60)
 layout_mode = 2
-theme_override_colors/font_color = Color(0.243137, 0.152941, 0.137255, 1)
-theme_override_font_sizes/font_size = 48
+theme_override_colors/font_color = Color(0.8666667, 0.74509805, 0.72156864, 1)
+theme_override_font_sizes/font_size = 96
 text = "✕"
 
 [node name="ToggleSection" type="VBoxContainer" parent="CenterContainer/ModalPanel/MarginContainer/VBoxContainer"]
-custom_minimum_size = Vector2(0, 400)
+custom_minimum_size = Vector2(0, 480)
 layout_mode = 2
-theme_override_constants/separation = 25
+theme_override_constants/separation = 60
 
 [node name="SoundToggle" type="HBoxContainer" parent="CenterContainer/ModalPanel/MarginContainer/VBoxContainer/ToggleSection"]
 custom_minimum_size = Vector2(0, 120)
 layout_mode = 2
+theme_override_constants/separation = 30
+alignment = 1
 
 [node name="Label" type="Label" parent="CenterContainer/ModalPanel/MarginContainer/VBoxContainer/ToggleSection/SoundToggle"]
 layout_mode = 2
 size_flags_horizontal = 3
-theme_override_colors/font_color = Color(0.243137, 0.152941, 0.137255, 1)
-theme_override_font_sizes/font_size = 32
+theme_override_colors/font_color = Color(0.8663964, 0.7433841, 0.72069246, 1)
+theme_override_font_sizes/font_size = 64
 text = "Sound"
 vertical_alignment = 1
 
-[node name="CheckButton" type="CheckButton" parent="CenterContainer/ModalPanel/MarginContainer/VBoxContainer/ToggleSection/SoundToggle"]
-custom_minimum_size = Vector2(120, 60)
+[node name="ToggleButton" type="Button" parent="CenterContainer/ModalPanel/MarginContainer/VBoxContainer/ToggleSection/SoundToggle"]
+custom_minimum_size = Vector2(240, 100)
 layout_mode = 2
-button_pressed = true
+theme_override_colors/font_color = Color(1, 1, 1, 1)
+theme_override_font_sizes/font_size = 56
+text = "ON"
 
 [node name="MusicToggle" type="HBoxContainer" parent="CenterContainer/ModalPanel/MarginContainer/VBoxContainer/ToggleSection"]
 custom_minimum_size = Vector2(0, 120)
 layout_mode = 2
+theme_override_constants/separation = 30
+alignment = 1
 
 [node name="Label" type="Label" parent="CenterContainer/ModalPanel/MarginContainer/VBoxContainer/ToggleSection/MusicToggle"]
 layout_mode = 2
 size_flags_horizontal = 3
-theme_override_colors/font_color = Color(0.243137, 0.152941, 0.137255, 1)
-theme_override_font_sizes/font_size = 32
+theme_override_colors/font_color = Color(0.8666667, 0.74509805, 0.72156864, 1)
+theme_override_font_sizes/font_size = 64
 text = "Music"
 vertical_alignment = 1
 
-[node name="CheckButton" type="CheckButton" parent="CenterContainer/ModalPanel/MarginContainer/VBoxContainer/ToggleSection/MusicToggle"]
-custom_minimum_size = Vector2(120, 60)
+[node name="ToggleButton" type="Button" parent="CenterContainer/ModalPanel/MarginContainer/VBoxContainer/ToggleSection/MusicToggle"]
+custom_minimum_size = Vector2(240, 100)
 layout_mode = 2
-button_pressed = true
+theme_override_colors/font_color = Color(1, 1, 1, 1)
+theme_override_font_sizes/font_size = 56
+text = "ON"
 
 [node name="VibrationToggle" type="HBoxContainer" parent="CenterContainer/ModalPanel/MarginContainer/VBoxContainer/ToggleSection"]
 custom_minimum_size = Vector2(0, 120)
 layout_mode = 2
+theme_override_constants/separation = 30
+alignment = 1
 
 [node name="Label" type="Label" parent="CenterContainer/ModalPanel/MarginContainer/VBoxContainer/ToggleSection/VibrationToggle"]
 layout_mode = 2
 size_flags_horizontal = 3
-theme_override_colors/font_color = Color(0.243137, 0.152941, 0.137255, 1)
-theme_override_font_sizes/font_size = 32
+theme_override_colors/font_color = Color(0.8666667, 0.74509805, 0.72156864, 1)
+theme_override_font_sizes/font_size = 64
 text = "Vibrations"
 vertical_alignment = 1
 
-[node name="CheckButton" type="CheckButton" parent="CenterContainer/ModalPanel/MarginContainer/VBoxContainer/ToggleSection/VibrationToggle"]
-custom_minimum_size = Vector2(120, 60)
+[node name="ToggleButton" type="Button" parent="CenterContainer/ModalPanel/MarginContainer/VBoxContainer/ToggleSection/VibrationToggle"]
+custom_minimum_size = Vector2(240, 100)
 layout_mode = 2
-button_pressed = true
+theme_override_colors/font_color = Color(1, 1, 1, 1)
+theme_override_font_sizes/font_size = 56
+text = "ON"
 
 [node name="ButtonSection" type="VBoxContainer" parent="CenterContainer/ModalPanel/MarginContainer/VBoxContainer"]
 custom_minimum_size = Vector2(0, 300)
@@ -133,14 +153,14 @@ alignment = 1
 custom_minimum_size = Vector2(720, 110)
 layout_mode = 2
 size_flags_horizontal = 4
-theme_override_font_sizes/font_size = 32
+theme_override_font_sizes/font_size = 64
 text = "Send Feedback"
 
 [node name="RemoveAdsButton" type="Button" parent="CenterContainer/ModalPanel/MarginContainer/VBoxContainer/ButtonSection"]
 custom_minimum_size = Vector2(720, 110)
 layout_mode = 2
 size_flags_horizontal = 4
-theme_override_font_sizes/font_size = 32
+theme_override_font_sizes/font_size = 64
 text = "Remove Ads"
 
 [node name="FooterLinks" type="HBoxContainer" parent="CenterContainer/ModalPanel/MarginContainer/VBoxContainer"]
@@ -152,7 +172,7 @@ alignment = 1
 [node name="PrivacyButton" type="Button" parent="CenterContainer/ModalPanel/MarginContainer/VBoxContainer/FooterLinks"]
 layout_mode = 2
 theme_override_colors/font_color = Color(0, 0.4, 0.8, 1)
-theme_override_font_sizes/font_size = 28
+theme_override_font_sizes/font_size = 56
 text = "Privacy"
 flat = true
 
@@ -165,17 +185,16 @@ text = "|"
 [node name="TermsButton" type="Button" parent="CenterContainer/ModalPanel/MarginContainer/VBoxContainer/FooterLinks"]
 layout_mode = 2
 theme_override_colors/font_color = Color(0, 0.4, 0.8, 1)
-theme_override_font_sizes/font_size = 28
+theme_override_font_sizes/font_size = 56
 text = "Terms"
 flat = true
 
+[connection signal="gui_input" from="Overlay" to="." method="_on_overlay_gui_input"]
 [connection signal="pressed" from="CenterContainer/ModalPanel/MarginContainer/VBoxContainer/Header/CloseButton" to="." method="_on_close_button_pressed"]
-[connection signal="toggled" from="CenterContainer/ModalPanel/MarginContainer/VBoxContainer/ToggleSection/SoundToggle/CheckButton" to="." method="_on_sound_toggle_toggled"]
-[connection signal="toggled" from="CenterContainer/ModalPanel/MarginContainer/VBoxContainer/ToggleSection/MusicToggle/CheckButton" to="." method="_on_music_toggle_toggled"]
-[connection signal="toggled" from="CenterContainer/ModalPanel/MarginContainer/VBoxContainer/ToggleSection/VibrationToggle/CheckButton" to="." method="_on_vibration_toggle_toggled"]
+[connection signal="pressed" from="CenterContainer/ModalPanel/MarginContainer/VBoxContainer/ToggleSection/SoundToggle/ToggleButton" to="." method="_on_sound_toggle_pressed"]
+[connection signal="pressed" from="CenterContainer/ModalPanel/MarginContainer/VBoxContainer/ToggleSection/MusicToggle/ToggleButton" to="." method="_on_music_toggle_pressed"]
+[connection signal="pressed" from="CenterContainer/ModalPanel/MarginContainer/VBoxContainer/ToggleSection/VibrationToggle/ToggleButton" to="." method="_on_vibration_toggle_pressed"]
 [connection signal="pressed" from="CenterContainer/ModalPanel/MarginContainer/VBoxContainer/ButtonSection/FeedbackButton" to="." method="_on_feedback_button_pressed"]
 [connection signal="pressed" from="CenterContainer/ModalPanel/MarginContainer/VBoxContainer/ButtonSection/RemoveAdsButton" to="." method="_on_remove_ads_button_pressed"]
 [connection signal="pressed" from="CenterContainer/ModalPanel/MarginContainer/VBoxContainer/FooterLinks/PrivacyButton" to="." method="_on_privacy_button_pressed"]
 [connection signal="pressed" from="CenterContainer/ModalPanel/MarginContainer/VBoxContainer/FooterLinks/TermsButton" to="." method="_on_terms_button_pressed"]
-
-[connection signal="gui_input" from="Overlay" to="." method="_on_overlay_gui_input"]

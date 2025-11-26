@@ -107,23 +107,24 @@
 
 ### Layout
 - **Top Bar** (~100px):
-  - Close button (✕): Top-left corner, ~80×80px, white X icon
-  - Share button (⤴): Top-right corner, ~80×80px, white share icon
+  - Close button (✕): Top-left corner, ~80×80px, 72px font **[Updated]**, white X icon
+  - Share button (⤴): Top-right corner, ~80×80px, 56px font **[Updated]**, white share icon
 
 - **Level Preview Section** (center ~900×900px area):
-  - Level Number: Centered above image, 32-36px font
+  - Level Number: Centered above image, 64px font **[Updated: increased from 36px]**
   - Preview Image: 850-900px square **[CRITICAL]**, centered
   - Border: 4px gold rounded rectangle
 
 - **Difficulty Buttons Section** (lower ~700px):
-  - Container: VBoxContainer with 20-30px spacing
-  - Button Size: 850-900px width, 140-160px height each
+  - Container: VBoxContainer with 30px spacing **[Updated]**
+  - Button Size: 850px width, 150px height each **[Updated]**
+  - Button Font: 56px **[Updated: increased from 32px]**
 
 **Button States**:
 - **Play Easy**: Green (#165B33) if unlocked, Grey (#757575) if locked
-  - Text: "Play Easy" + 1 star icon (40-50px, gold)
-- **Play Normal**: Same color logic + 2 star icons
-- **Play Hard**: Same color logic + 3 star icons
+  - Text: "Play Easy ⭐" (56px font) **[Updated]**
+- **Play Normal**: Same color logic + "Play Normal ⭐⭐" (56px font) **[Updated]**
+- **Play Hard**: Same color logic + "Play Hard ⭐⭐⭐" (56px font) **[Updated]**
 - **Locked state**: 50% opacity, lock icon (left side)
 
 ### Interaction
@@ -181,13 +182,23 @@
 - **Hint Button**: Auto-swap one incorrect tile with sparkle effect
 - **Back Button**: Show confirmation dialog (see below)
 
-### Confirmation Dialog (Back Button)
-- **Dialog Size**: 600-700px width, 350-400px height, centered
-- **Background**: White with dark border
-- **Text**: "Exit Level? Progress will not be saved." (centered, 24-28px)
-- **Buttons**: 250-300px width, 80-100px height each, 30-40px gap
-  - Stay: Green background
-  - Exit: Red background
+### Confirmation Dialog (Back Button) **[Updated]**
+- **Dialog Size**: 850px width, 700px height, centered **[Updated: custom scene]**
+- **Background Panel**: Dark brown Color(0.15, 0.12, 0.12, 1) **[Updated: matches settings popup]**
+  - Corner radius: 20px **[Updated]**
+  - Padding: 60px all around **[Updated]**
+- **Title**: "Exit Level?", 80px font **[Updated: larger]**, light beige Color(0.866, 0.745, 0.722, 1) **[Updated: matches settings]**
+- **Text**: "Exit level? Progress will not be saved.", 56px font **[Updated: larger]**, light beige color **[Updated: matches settings]**
+- **Buttons**: 320×120px each **[Updated: even larger for mobile]**, 40px gap **[Updated]**
+  - **Exit Button**: Red background Color(0.77, 0.12, 0.23, 1.0) (#C41E3A) **[Updated: styled]**
+    - Font: 60px, White text **[Updated: larger]**
+    - Corner radius: 20px **[Updated]**
+    - Pressed state: Darker red Color(0.65, 0.1, 0.2, 1.0) **[Updated]**
+  - **Stay Button**: Green background Color(0.09, 0.36, 0.2, 1.0) (#165B33) **[Updated: styled]**
+    - Font: 60px, White text **[Updated: larger]**
+    - Corner radius: 20px **[Updated]**
+    - Pressed state: Darker green Color(0.07, 0.3, 0.17, 1.0) **[Updated]**
+- **Implementation**: Custom scene (exit_confirmation_dialog.tscn) with signal-based communication **[Updated]**
 
 ---
 
@@ -197,27 +208,28 @@
 - **Title Section** (top ~400px):
   - "Well Done!" text:
     - Position: Centered, upper area
-    - Font: Title font, 60-72px, Gold color
+    - Font: Title font, 72px **[Updated]**, Gold color
     - Animation: Fade in + scale up (0.4-0.6s) **[Target]**
-  - Subtitle: "You have solved Level N" (centered, 32-36px, White)
+  - Subtitle: "You have solved Level N" (centered, 56px **[Updated: increased from 36px]**, White)
   - Stars Display:
     - Position: Centered below subtitle
-    - Size: 3 stars, each 70-80px, spacing 15-20px
+    - Size: 3 stars, each 80px **[Updated]**, spacing 20px **[Updated]**
     - Animation: Pop in sequentially with 0.1-0.2s delay **[Target]**
 
 - **Completed Image Section** (center ~900×900px area):
-  - Image: 850-900px square, centered
-  - Border: 6-8px gold rounded rectangle
+  - Image: 850px square **[Updated]**, centered
+  - Border: 6px gold rounded rectangle **[Updated]**
   - Corner badge: Small "✓" icon (50-60px) top-right
 
 - **Button Section** (lower ~400px):
-  - **Share Button**: 700-800px width, 80-100px height
+  - **Share Button**: 750px width, 100px height **[Updated]**
     - Background: Transparent with white border
-    - Icon + Text: "Share Photo"
-  - **Download Button** (optional): Same sizing as Share
-  - **Continue Button**: 700-800px width, 120-140px height
+    - Icon + Text: "⤴ Share Photo" (56px font) **[Updated: increased from 32px]**
+  - **Download Button**: 750px width, 100px height **[Updated]**
+    - Icon + Text: "💾 Download" (56px font) **[Updated: increased from 32px]**
+  - **Continue Button**: 750px width, 130px height **[Updated]**
     - Background: Green (#165B33)
-    - Text: "Continue", 32-36px font, White
+    - Text: "Continue", 60px font **[Updated: increased from 36px]**, White
     - Border radius: 15-20px
 
 ### Interaction
@@ -232,36 +244,46 @@
 ## Screen 6: Settings Popup (Modal)
 
 ### Layout
-- **Modal Background**: Full screen rgba(0, 0, 0, 0.6) **[CRITICAL]**
+- **Modal Background**: Full screen rgba(0, 0, 0, 0.85) **[CRITICAL - Updated: darker overlay for better contrast]**
 - **Modal Panel**:
-  - Size: 850-900px width, 1100-1200px height
+  - Size: 850px width, 1200px height **[CRITICAL]**
   - Position: Centered
-  - Background: White
-  - Border radius: 25-30px
+  - Background: Dark brown Color(0.15, 0.12, 0.12, 1) or rgba(38, 31, 31, 1) **[Updated: solid background]**
+  - Border radius: 20px **[Updated: consistent rounding]**
+  - Padding/Margins: 50px all around **[Updated: increased breathing room]**
 
 - **Header** (~100px):
-  - Title "Settings": Left side, 40-48px font, Dark brown
-  - Close button (✕): Right side, ~60×60px, dark brown X
+  - Title "Settings": Left side, 96px font **[Updated]**, Color(0.866, 0.745, 0.722, 1) beige/tan **[Updated]**
+  - Close button (✕): Right side, 60×60px, same beige color
 
-- **Toggle Section** (middle ~400px):
-  - 3 toggle items, each ~150px height, 20-30px gap
-  - Layout per item:
-    - Label: Left side, 28-32px font, Dark brown
-    - Switch: Right side, 100-120px width, 50-60px height
-    - Colors: On=Green, Off=Grey
+- **Toggle Section** (middle ~480px) **[Updated: more compact]**:
+  - 3 toggle items, each 120px height **[Updated]**, 60px gap between rows **[Updated: better spacing]**
+  - Section separation: 50px **[Updated]**
+  - Layout per item (HBoxContainer with alignment=1 for vertical centering):
+    - Label: Left side, 64px font **[Updated]**, beige color, expands to fill (size_flags_horizontal=3)
+    - Horizontal gap between label and button: 30px **[Updated]**
+    - Toggle Button: Right side, **240×100px** **[CRITICAL - Updated: custom buttons instead of switches]**
+      - Font size: 56px **[Updated]**
+      - Text: "ON" or "OFF" **[Updated: explicit state text]**
+      - Corner radius: 16px **[Updated]**
+      - Colors **[Updated: clear visual states]**:
+        - ON state: Green Color(0.2, 0.7, 0.3, 1.0), White text
+        - OFF state: Gray Color(0.4, 0.4, 0.4, 1.0), White text
   - Items: Sound, Music, Vibrations
 
 - **Button Section** (~300px):
-  - **Send Feedback**: 700-740px width, 100-120px height
-    - Background: Red (#C41E3A)
-    - Text: 28-32px, White
+  - Section spacing from toggles: 50px **[Updated]**
+  - **Send Feedback**: 720px width, 110px height **[Updated: specific sizes]**
+    - Background: Default button style
+    - Text: 64px font **[Updated]**, White
   - **Remove Ads**: Same sizing
-    - Background: Green (#165B33)
+    - Background: Default button style
+  - Button spacing: 20px **[Updated]**
 
 - **Footer Links** (~100px):
-  - Container: HBoxContainer, centered, 30-40px gap
-  - "Privacy" link: 24-28px, Blue (#0066CC), underline on touch
-  - Separator: " | ", grey
+  - Container: HBoxContainer, centered, 40px gap **[Updated]**
+  - "Privacy" link: 56px font **[Updated]**, Blue Color(0, 0.4, 0.8, 1) **[Updated]**
+  - Separator: " | ", grey, 28px font
   - "Terms" link: Same as Privacy
 
 ### Interaction

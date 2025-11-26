@@ -43,7 +43,7 @@ layout_mode = 2
 [node name="CloseButton" type="Button" parent="MarginContainer/VBoxContainer/TopBar"]
 custom_minimum_size = Vector2(80, 80)
 layout_mode = 2
-theme_override_font_sizes/font_size = 48
+theme_override_font_sizes/font_size = 72
 text = "✕"
 
 [node name="Spacer" type="Control" parent="MarginContainer/VBoxContainer/TopBar"]
@@ -53,7 +53,7 @@ size_flags_horizontal = 3
 [node name="ShareButton" type="Button" parent="MarginContainer/VBoxContainer/TopBar"]
 custom_minimum_size = Vector2(80, 80)
 layout_mode = 2
-theme_override_font_sizes/font_size = 36
+theme_override_font_sizes/font_size = 56
 text = "⤴"
 
 [node name="PreviewSection" type="VBoxContainer" parent="MarginContainer/VBoxContainer"]
@@ -64,7 +64,7 @@ alignment = 1
 
 [node name="LevelLabel" type="Label" parent="MarginContainer/VBoxContainer/PreviewSection"]
 layout_mode = 2
-theme_override_font_sizes/font_size = 36
+theme_override_font_sizes/font_size = 64
 text = "Level 1"
 horizontal_alignment = 1
 
@@ -103,21 +103,21 @@ alignment = 1
 custom_minimum_size = Vector2(850, 150)
 layout_mode = 2
 size_flags_horizontal = 4
-theme_override_font_sizes/font_size = 32
+theme_override_font_sizes/font_size = 56
 text = "Play Easy ⭐"
 
 [node name="NormalButton" type="Button" parent="MarginContainer/VBoxContainer/DifficultyButtons"]
 custom_minimum_size = Vector2(850, 150)
 layout_mode = 2
 size_flags_horizontal = 4
-theme_override_font_sizes/font_size = 32
+theme_override_font_sizes/font_size = 56
 text = "Play Normal ⭐⭐"
 
 [node name="HardButton" type="Button" parent="MarginContainer/VBoxContainer/DifficultyButtons"]
 custom_minimum_size = Vector2(850, 150)
 layout_mode = 2
 size_flags_horizontal = 4
-theme_override_font_sizes/font_size = 32
+theme_override_font_sizes/font_size = 56
 text = "Play Hard ⭐⭐⭐"
 
 [connection signal="pressed" from="MarginContainer/VBoxContainer/TopBar/CloseButton" to="." method="_on_close_button_pressed"]
