@@ -322,6 +322,11 @@ func _process(delta: float) -> void:
 
 		_refresh_spiral_visuals()
 
+		# Regenerate meshes for remaining rings (inner_radius may have changed)
+		for ring_node in ring_nodes:
+			if ring_node != null:
+				ring_node.regenerate_mesh()
+
 		# Check if puzzle solved
 		if spiral_state.is_puzzle_solved():
 			_check_spiral_puzzle_solved()
@@ -399,8 +404,9 @@ func _spawn_spiral_rings() -> void:
 		# Add to rings container
 		rings_container.add_child(ring_node)
 
-		# Set anchors to fill the container
-		ring_node.set_anchors_preset(Control.PRESET_FULL_RECT)
+		# MeshInstance2D uses position, not anchors
+		# Center the ring at the container's center
+		ring_node.position = rings_container.size / 2.0
 
 		print("Added ring %d to container" % i)
 
@@ -413,7 +419,7 @@ func _spawn_spiral_rings() -> void:
 	print("Layout complete. Final puzzle area size: %v" % puzzle_area.size)
 
 ## Centralized input handler for all rings
-var _dragging_ring_node: Control = null
+var _dragging_ring_node: MeshInstance2D = null
 
 func _on_rings_container_input(event: InputEvent) -> void:
 	if not is_spiral_puzzle:
