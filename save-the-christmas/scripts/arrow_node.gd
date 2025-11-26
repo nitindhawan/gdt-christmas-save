@@ -10,6 +10,7 @@ signal arrow_tapped(arrow_id: int)
 var arrow_data: Arrow
 var original_position: Vector2
 
+@onready var shadow: Panel = $Shadow
 @onready var background: Panel = $Background
 @onready var arrow_texture: TextureRect = $ArrowTexture
 
@@ -23,6 +24,12 @@ func setup(arrow: Arrow) -> void:
 	var texture = load(GameConstants.ARROW_TEXTURE_PATH)
 	if texture:
 		arrow_texture.texture = texture
+
+	# Wait for layout to get proper size
+	await get_tree().process_frame
+
+	# Set pivot to center of the TextureRect for proper rotation
+	arrow_texture.pivot_offset = arrow_texture.size / 2.0
 
 	# Rotate arrow based on direction
 	arrow_texture.rotation_degrees = arrow.get_rotation_degrees()
