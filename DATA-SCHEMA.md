@@ -60,10 +60,30 @@ This document defines all data structures used in "Save the Christmas" including
           "tile_count": 30
         }
       },
-      "hint_limit": 3,
+      "hint_limit": 0,
       "tags": ["indoor", "warm", "festive"]
+    },
+    {
+      "level_id": 3,
+      "name": "Snowy Village",
+      "image_path": "res://assets/levels/level_03.png",
+      "thumbnail_path": "res://assets/levels/thumbnails/level_03_thumb.png",
+      "puzzle_type": "arrow_puzzle",
+      "difficulty_configs": {
+        "easy": {
+          "grid_size": {"x": 5, "y": 4}
+        },
+        "normal": {
+          "grid_size": {"x": 6, "y": 5}
+        },
+        "hard": {
+          "grid_size": {"x": 8, "y": 7}
+        }
+      },
+      "hint_limit": 0,
+      "tags": ["village", "snow", "outdoor"]
     }
-    // ... levels 3-20 follow same structure (odd=spiral, even=rectangle)
+    // ... levels 4-20 follow 3-way rotation (Level % 3: 1=spiral, 2=rectangle, 0=arrow)
   ]
 }
 ```
@@ -80,21 +100,23 @@ This document defines all data structures used in "Save the Christmas" including
 - **name** (string): Display name of the level (e.g., "Christmas Tree")
 - **image_path** (string): Path to full-resolution source image (2048×2048px PNG, circular for spiral puzzles)
 - **thumbnail_path** (string): Path to thumbnail for level selection (512×512px PNG)
-- **puzzle_type** (string): Type of puzzle mechanics - "rectangle_jigsaw" or "spiral_twist"
+- **puzzle_type** (string): Type of puzzle mechanics - "rectangle_jigsaw", "spiral_twist", or "arrow_puzzle"
 - **difficulty_configs** (object): Configuration for each difficulty
   - Rectangle Jigsaw: {rows, columns, tile_count}
   - Spiral Twist: {ring_count}
-- **hint_limit** (int, optional): Maximum hints allowed (default: 3)
+  - Arrow Puzzle: {grid_size: {x: columns, y: rows}}
+- **hint_limit** (int, optional): Maximum hints allowed (set to 0, hints removed from game)
 - **tags** (array, optional): Category tags for future filtering/searching
 
 ### Validation Rules
 - `level_id` must be sequential (1, 2, 3, ..., 20)
 - Rectangle Jigsaw: `tile_count` must equal `rows × columns`
 - Spiral Twist: `ring_count` must be 3-7
+- Arrow Puzzle: `grid_size` must be Vector2i (x=columns, y=rows)
 - `image_path` must point to existing asset
 - `difficulty_configs` must contain all three difficulties (easy, normal, hard)
 - All images must be square aspect ratio (1:1)
-- Odd-numbered levels typically use "spiral_twist", even use "rectangle_jigsaw"
+- Puzzle type determined by level_id % 3: 1=spiral_twist, 2=rectangle_jigsaw, 0=arrow_puzzle
 
 ---
 
@@ -405,6 +427,117 @@ func _normalize_angle(angle: float) -> float:
     return angle
 ```
 
+### Arrow Class (scripts/arrow.gd - 69 lines)
+```gdscript
+class_name Arrow
+extends Resource
+
+enum Direction { UP = 0, DOWN = 1, LEFT = 2, RIGHT = 3 }
+
+## Individual arrow element (Arrow Puzzle)
+var arrow_id: int = 0  # Unique identifier
+var grid_position: Vector2i = Vector2i(0, 0)  # Position in grid (column, row)
+var direction: Direction = Direction.UP  # Which way arrow points
+var has_exited: bool = false  # Whether arrow has left the grid
+var is_animating: bool = false  # Prevents double-tapping during animation
+
+func get_rotation_degrees() -> float:
+    """Returns rotation angle for rendering (0/90/180/270)"""
+    match direction:
+        Direction.UP: return 0.0
+        Direction.RIGHT: return 90.0
+        Direction.DOWN: return 180.0
+        Direction.LEFT: return 270.0
+        _: return 0.0
+
+func get_direction_vector() -> Vector2i:
+    """Returns movement vector for this direction"""
+    match direction:
+        Direction.UP: return Vector2i(0, -1)
+        Direction.DOWN: return Vector2i(0, 1)
+        Direction.LEFT: return Vector2i(-1, 0)
+        Direction.RIGHT: return Vector2i(1, 0)
+        _: return Vector2i(0, 0)
+
+func blocks_position(check_pos: Vector2i) -> bool:
+    """Check if this arrow blocks a given grid position"""
+    return not has_exited and grid_position == check_pos
+```
+
+### ArrowPuzzleState Class (scripts/arrow_puzzle_state.gd - 146 lines)
+```gdscript
+class_name ArrowPuzzleState
+extends Resource
+
+const Arrow = preload("res://scripts/arrow.gd")
+
+## Current arrow puzzle state
+var level_id: int = 0
+var difficulty: String = "easy"
+var grid_size: Vector2i = Vector2i(5, 4)  # (columns, rows)
+var arrows: Array[Arrow] = []  # All arrow objects
+var active_arrow_count: int = 0  # Arrows still in play (not exited)
+var tap_count: int = 0  # Number of taps made
+var direction_set: Array[int] = []  # Two allowed directions (e.g., [LEFT, UP])
+var is_solved: bool = false
+
+## KEY IMPLEMENTATION: Arrow puzzle validation
+func is_puzzle_solved() -> bool:
+    """Puzzle solved when all arrows have exited"""
+    return active_arrow_count == 0
+
+func attempt_arrow_movement(arrow_id: int) -> Dictionary:
+    """Core movement logic with collision detection
+    Returns: {success: bool, blocked_by: int or -1}"""
+    var arrow = get_arrow_by_id(arrow_id)
+    if arrow == null or arrow.has_exited or arrow.is_animating:
+        return {success: false, blocked_by: -1}
+
+    var dir_vector = arrow.get_direction_vector()
+    var current_pos = arrow.grid_position
+
+    # Trace path step-by-step
+    while true:
+        var next_pos = current_pos + dir_vector
+
+        # Check if out of bounds (success - arrow exits)
+        if is_position_out_of_bounds(next_pos):
+            return {success: true, blocked_by: -1}
+
+        # Check if blocked by another arrow
+        if is_position_blocked(next_pos, arrow_id):
+            var blocking_arrow = get_arrow_at_position(next_pos)
+            return {success: false, blocked_by: blocking_arrow.arrow_id if blocking_arrow else -1}
+
+        current_pos = next_pos
+
+func mark_arrow_exited(arrow_id: int) -> void:
+    """Mark arrow as exited and decrement counter"""
+    var arrow = get_arrow_by_id(arrow_id)
+    if arrow != null and not arrow.has_exited:
+        arrow.has_exited = true
+        active_arrow_count -= 1
+
+func get_arrow_at_position(pos: Vector2i) -> Arrow:
+    """Find arrow at specific grid position"""
+    for arrow in arrows:
+        if arrow != null and not arrow.has_exited and arrow.grid_position == pos:
+            return arrow
+    return null
+
+func is_position_blocked(pos: Vector2i, excluding_id: int) -> bool:
+    """Check if position occupied by another arrow"""
+    for arrow in arrows:
+        if arrow != null and arrow.arrow_id != excluding_id:
+            if arrow.blocks_position(pos):
+                return true
+    return false
+
+func is_position_out_of_bounds(pos: Vector2i) -> bool:
+    """Check if position outside grid boundaries"""
+    return pos.x < 0 or pos.x >= grid_size.x or pos.y < 0 or pos.y >= grid_size.y
+```
+
 ### SpiralPuzzleState Class (scripts/spiral_puzzle_state.gd - 121 lines)
 ```gdscript
 class_name SpiralPuzzleState
@@ -591,6 +724,18 @@ const SPIRAL_RINGS_EASY = 3
 const SPIRAL_RINGS_NORMAL = 5
 const SPIRAL_RINGS_HARD = 7
 
+## Puzzle mechanics - Arrow Puzzle
+const ARROW_BOUNCE_DURATION = 0.2  # Bounce-back animation
+const ARROW_EXIT_DURATION = 0.15   # Exit fade duration
+const ARROW_GRID_SPACING = 10      # Pixels between arrows
+
+## Arrow grid sizes per difficulty
+const ARROW_GRID_EASY = Vector2i(5, 4)    # 20 arrows
+const ARROW_GRID_NORMAL = Vector2i(6, 5)  # 30 arrows
+const ARROW_GRID_HARD = Vector2i(8, 7)    # 56 arrows
+
+const ARROW_TEXTURE_PATH = "res://assets/ui/up_arrow.png"
+
 ## Audio settings
 const DEFAULT_MUSIC_VOLUME = 0.7
 const DEFAULT_SOUND_VOLUME = 0.8
@@ -601,7 +746,7 @@ const THUMBNAIL_SIZE = 512  # 512×512 pixels
 
 ## Enums
 enum Difficulty { EASY, NORMAL, HARD }
-enum PuzzleType { RECTANGLE_JIGSAW, SPIRAL_TWIST }
+enum PuzzleType { RECTANGLE_JIGSAW, SPIRAL_TWIST, ARROW_PUZZLE }
 
 ## Helper functions for difficulty string conversion
 static func difficulty_to_string(diff: Difficulty) -> String

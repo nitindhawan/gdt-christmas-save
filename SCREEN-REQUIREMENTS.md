@@ -165,21 +165,37 @@
     - Selected: 6-8px gold border, scale 1.03-1.05× **[Target]**
     - Texture: AtlasTexture displaying region of source image
 
+  **Arrow Puzzle Layout (Alternative to Rectangle Grid):**
+  - **Puzzle Area** (900×900px, centered):
+    - Background: Full level image (TextureRect, stretched to fit)
+    - Arrows Container: Control overlay with grid of arrow nodes
+    - Arrow Size: Calculated based on grid size (max 120px, with 10px spacing)
+    - Grid centered in puzzle area
+  - **Arrow Node Appearance**:
+    - Size: 100×100px Control
+    - Shadow: Dark background panel with 4px offset
+    - Background: White glow panel with 3px inset
+    - Arrow Texture: Rotated arrow image (0°/90°/180°/270° based on direction)
+    - Semi-transparent to show level image beneath
+
 - **Bottom HUD** (150-180px height):
   - Background: Semi-transparent dark overlay
-  - Hint Button:
-    - Size: 500-600px width, 100-120px height
-    - Position: Centered
-    - Background: Gold (#FFD700)
-    - Text: "💡 Hint", Font: 28-32px, Color: Dark brown
-    - Border radius: 15-20px
+  - Reserved for future features (hint system removed)
 
 ### Interaction States
+
+**Rectangle Jigsaw**:
 - **Tile Selection**:
   - First tap: Highlight with gold border, scale up
   - Second tap (different): Swap with animation (0.2-0.4s tween) **[Target]**
   - Second tap (same): Deselect, remove highlight
-- **Hint Button**: Auto-swap one incorrect tile with sparkle effect
+
+**Arrow Puzzle**:
+- **Arrow Tap**: Attempt movement in arrow's direction
+  - Success: Arrow exits and disappears (0.15s fade)
+  - Blocked: Arrow bounces back (0.2s animation) + error sound
+
+**Common**:
 - **Back Button**: Show confirmation dialog (see below)
 
 ### Confirmation Dialog (Back Button) **[Updated]**

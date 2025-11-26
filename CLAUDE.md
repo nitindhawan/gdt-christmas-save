@@ -4,7 +4,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## Project Overview
 
-**Save the Christmas** is a 2D mobile puzzle game built with Godot 4.5.1. Players solve Christmas-themed image puzzles using two distinct mechanics: Spiral Twist (rotating rings) and Rectangle Jigsaw (tile swapping). The game features 20 levels with three difficulty modes (Easy, Normal, Hard), earning up to 3 stars per level.
+**Save the Christmas** is a 2D mobile puzzle game built with Godot 4.5.1. Players solve Christmas-themed image puzzles using three distinct mechanics: Spiral Twist (rotating rings), Rectangle Jigsaw (tile swapping), and Arrow Puzzle (directional movement). The game features 20 levels with three difficulty modes (Easy, Normal, Hard), earning up to 3 stars per level.
 
 **Platform**: Mobile (iOS/Android) - Portrait mode only
 **Status**: Implementation in progress (Spiral Puzzle feature branch active)
@@ -130,6 +130,7 @@ These must be configured in Project Settings → AutoLoad:
 - Properties: level_id, image_path, puzzle_type, difficulty_configs {easy, normal, hard}
 - Rectangle Jigsaw difficulty: {rows, columns, tile_count}
 - Spiral Twist difficulty: {ring_count}
+- Arrow Puzzle difficulty: {grid_size}
 
 **PuzzleState** (`scripts/puzzle_state.gd`): Runtime rectangle jigsaw puzzle state
 - Tracks current tile arrangement, selected tiles, swap count
@@ -144,6 +145,16 @@ These must be configured in Project Settings → AutoLoad:
 **Tile** (`scripts/tile.gd`): Individual tile data (Rectangle Jigsaw)
 - Properties: current_position, correct_position, texture_region
 - Method: `is_correct()` compares positions
+
+**Arrow** (`scripts/arrow.gd`): Individual arrow data (Arrow Puzzle)
+- Properties: arrow_id, grid_position, direction, has_exited, is_animating
+- Direction enum: UP, DOWN, LEFT, RIGHT
+- Methods: `get_rotation_degrees()`, `get_direction_vector()`, `blocks_position()`
+
+**ArrowPuzzleState** (`scripts/arrow_puzzle_state.gd`): Runtime arrow puzzle state
+- Tracks arrows, active_arrow_count, tap_count, direction_set
+- Method: `is_puzzle_solved()` returns active_arrow_count == 0
+- Method: `attempt_arrow_movement()` handles collision detection and movement
 
 **SpiralRing** (`scripts/spiral_ring.gd`): Individual ring data (Spiral Twist)
 - Properties: ring_index, current_angle, angular_velocity, inner_radius, outer_radius, is_locked
@@ -210,9 +221,10 @@ LoadingScreen (initial boot)
 
 ## Puzzle Mechanics
 
-The game features TWO puzzle types that alternate between levels:
-- **Odd-numbered levels (1, 3, 5, ...)**: Spiral Twist
-- **Even-numbered levels (2, 4, 6, ...)**: Rectangle Jigsaw
+The game features THREE puzzle types that rotate through levels:
+- **Level % 3 == 1 (1, 4, 7, 10, ...)**: Spiral Twist
+- **Level % 3 == 2 (2, 5, 8, 11, ...)**: Rectangle Jigsaw
+- **Level % 3 == 0 (3, 6, 9, 12, ...)**: Arrow Puzzle
 
 ### Spiral Twist Puzzle Type
 - Circular image divided into concentric rings
@@ -232,6 +244,16 @@ The game features TWO puzzle types that alternate between levels:
 - **Normal**: 3×4 grid (12 tiles)
 - **Hard**: 5×6 grid (30 tiles)
 
+### Arrow Puzzle Type
+- Grid of arrows overlaid on background image
+- **Easy**: 5×4 grid (20 arrows)
+- **Normal**: 6×5 grid (30 arrows)
+- **Hard**: 8×7 grid (56 arrows)
+- Tap arrow → moves in direction until exiting grid or hitting another arrow
+- Blocked arrows bounce back with 0.2s animation
+- Win condition: All arrows have exited (active_arrow_count == 0)
+- Direction algorithm: 2-direction sets (LEFT+UP, LEFT+DOWN, RIGHT+UP, RIGHT+DOWN) guarantee solvability
+
 ### Ring Interaction (Spiral Twist)
 1. **Touch down**: Select ring (within inner/outer radius)
 2. **Drag**: Ring rotates following finger, no momentum during drag
@@ -250,10 +272,9 @@ The game features TWO puzzle types that alternate between levels:
 3. **Validation**: After each swap, check if puzzle solved
 
 ### Hint System
-- **Spiral Twist**: Snaps one random incorrect ring to correct angle (0°)
-- **Rectangle Jigsaw**: Automatically swaps one incorrect tile to correct position
-- Limited to 3 hints per level (configurable in levels.json)
-- Animation: Sparkle/glow effect on hinted element
+- **Removed**: The hint system has been removed from the entire game
+- All levels have hint_limit set to 0
+- No hint buttons appear in gameplay screens
 
 ## Data Schema
 
@@ -274,7 +295,7 @@ The game features TWO puzzle types that alternate between levels:
         "normal": {"ring_count": 5},
         "hard": {"ring_count": 7}
       },
-      "hint_limit": 3
+      "hint_limit": 0
     },
     {
       "level_id": 2,
@@ -287,7 +308,20 @@ The game features TWO puzzle types that alternate between levels:
         "normal": {"rows": 3, "columns": 4, "tile_count": 12},
         "hard": {"rows": 5, "columns": 6, "tile_count": 30}
       },
-      "hint_limit": 3
+      "hint_limit": 0
+    },
+    {
+      "level_id": 3,
+      "name": "Snowy Village",
+      "image_path": "res://assets/levels/level_03.png",
+      "thumbnail_path": "res://assets/levels/thumbnails/level_03_thumb.png",
+      "puzzle_type": "arrow_puzzle",
+      "difficulty_configs": {
+        "easy": {"grid_size": {"x": 5, "y": 4}},
+        "normal": {"grid_size": {"x": 6, "y": 5}},
+        "hard": {"grid_size": {"x": 8, "y": 7}}
+      },
+      "hint_limit": 0
     }
   ]
 }
@@ -472,9 +506,34 @@ Check adjacent rings each frame in `check_and_merge_rings()`:
 - Tiles must track both current_position and correct_position
 - Scramble using Fisher-Yates shuffle (ensures solvability)
 
+### Arrow Puzzle Implementation Files
+**Core Scripts**:
+- `arrow.gd` (69 lines): Arrow element data class with direction enum
+- `arrow_puzzle_state.gd` (146 lines): Puzzle state, collision detection, movement logic
+- `arrow_node.gd` (107 lines): Visual arrow node with tap handling and animations
+- `arrow_node.tscn`: Scene definition for arrow node (Control type)
+
+**Key Integration Points**:
+- `puzzle_manager.gd`: Contains `_generate_arrow_puzzle()`, `_create_arrows_for_grid()`
+- `gameplay_screen.gd`: Contains `_setup_arrow_puzzle()`, `_spawn_arrows()`, `_on_arrow_tapped()`
+- `game_constants.gd`: Arrow puzzle constants (grid sizes, animation durations, texture path)
+
+**Arrow Generation**:
+- Select random direction set from 4 options: [LEFT, UP], [LEFT, DOWN], [RIGHT, UP], [RIGHT, DOWN]
+- Each arrow randomly assigned one of the two allowed directions
+- Grid filled with arrows at all positions
+
+**Arrow Movement Logic**:
+- Trace path step-by-step in arrow's direction
+- Exit success: Path reaches grid boundary
+- Exit failure: Path blocked by another arrow (bounce animation)
+- Collision detection via grid position checking
+
 ### Animation Standards
 - **Tile swap**: 0.3s ease-in-out tween
 - **Selection**: 0.1s scale to 1.05×
+- **Arrow bounce**: 0.2s bounce-back animation
+- **Arrow exit**: 0.15s fade-out
 - **Screen transition**: 0.3s fade with 50px slide
 - **Stars pop-in**: 0.3s each with 0.2s delay between
 
