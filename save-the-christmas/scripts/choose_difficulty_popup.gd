@@ -5,9 +5,9 @@ extends Control
 
 signal difficulty_chosen(difficulty: int)
 
-@onready var title_label = $CenterContainer/PanelContainer/VBoxContainer/TitleLabel
-@onready var easy_button = $CenterContainer/PanelContainer/VBoxContainer/ButtonContainer/EasyButton
-@onready var hard_button = $CenterContainer/PanelContainer/VBoxContainer/ButtonContainer/HardButton
+@onready var title_label = $CenterContainer/PanelContainer/MarginContainer/VBoxContainer/TitleLabel
+@onready var easy_button = $CenterContainer/PanelContainer/MarginContainer/VBoxContainer/ButtonContainer/EasyButton
+@onready var hard_button = $CenterContainer/PanelContainer/MarginContainer/VBoxContainer/ButtonContainer/HardButton
 
 func _ready() -> void:
 	_apply_theme()

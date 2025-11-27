@@ -1,4 +1,4 @@
-[gd_scene load_steps=4 format=3 uid="uid://chooseδifficulty001"]
+[gd_scene load_steps=5 format=3 uid="uid://chooseδifficulty001"]
 
 [ext_resource type="Script" path="res://scripts/choose_difficulty_popup.gd" id="1"]
 [ext_resource type="Shader" path="res://shaders/gaussian_blur.gdshader" id="2"]
@@ -6,6 +6,18 @@
 [sub_resource type="ShaderMaterial" id="ShaderMaterial_blur"]
 shader = ExtResource("2")
 shader_parameter/blur_amount = 2.5
+
+[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_panel"]
+bg_color = Color(0.047, 0.165, 0.282, 1)
+border_width_left = 4
+border_width_top = 4
+border_width_right = 4
+border_width_bottom = 4
+border_color = Color(0.941, 0.973, 1.0, 1.0)
+corner_radius_top_left = 20
+corner_radius_top_right = 20
+corner_radius_bottom_right = 20
+corner_radius_bottom_left = 20
 
 [node name="ChooseDifficultyPopup" type="Control"]
 layout_mode = 3
@@ -38,31 +50,42 @@ grow_horizontal = 2
 grow_vertical = 2
 
 [node name="PanelContainer" type="PanelContainer" parent="CenterContainer"]
+custom_minimum_size = Vector2(600, 350)
 layout_mode = 2
+theme_override_styles/panel = SubResource("StyleBoxFlat_panel")
 
-[node name="VBoxContainer" type="VBoxContainer" parent="CenterContainer/PanelContainer"]
+[node name="MarginContainer" type="MarginContainer" parent="CenterContainer/PanelContainer"]
 layout_mode = 2
-theme_override_constants/separation = 40
+theme_override_constants/margin_left = 50
+theme_override_constants/margin_top = 50
+theme_override_constants/margin_right = 50
+theme_override_constants/margin_bottom = 50
 
-[node name="TitleLabel" type="Label" parent="CenterContainer/PanelContainer/VBoxContainer"]
+[node name="VBoxContainer" type="VBoxContainer" parent="CenterContainer/PanelContainer/MarginContainer"]
+layout_mode = 2
+theme_override_constants/separation = 50
+
+[node name="TitleLabel" type="Label" parent="CenterContainer/PanelContainer/MarginContainer/VBoxContainer"]
 layout_mode = 2
 text = "Choose Difficulty"
 horizontal_alignment = 1
 vertical_alignment = 1
 
-[node name="ButtonContainer" type="HBoxContainer" parent="CenterContainer/PanelContainer/VBoxContainer"]
+[node name="ButtonContainer" type="HBoxContainer" parent="CenterContainer/PanelContainer/MarginContainer/VBoxContainer"]
 layout_mode = 2
-theme_override_constants/separation = 30
+theme_override_constants/separation = 40
 
-[node name="EasyButton" type="Button" parent="CenterContainer/PanelContainer/VBoxContainer/ButtonContainer"]
-custom_minimum_size = Vector2(200, 80)
+[node name="EasyButton" type="Button" parent="CenterContainer/PanelContainer/MarginContainer/VBoxContainer/ButtonContainer"]
+custom_minimum_size = Vector2(220, 100)
 layout_mode = 2
+size_flags_horizontal = 3
 text = "Play Easy"
 
-[node name="HardButton" type="Button" parent="CenterContainer/PanelContainer/VBoxContainer/ButtonContainer"]
-custom_minimum_size = Vector2(200, 80)
+[node name="HardButton" type="Button" parent="CenterContainer/PanelContainer/MarginContainer/VBoxContainer/ButtonContainer"]
+custom_minimum_size = Vector2(220, 100)
 layout_mode = 2
+size_flags_horizontal = 3
 text = "Play Hard"
 
-[connection signal="pressed" from="CenterContainer/PanelContainer/VBoxContainer/ButtonContainer/EasyButton" to="." method="_on_easy_button_pressed"]
-[connection signal="pressed" from="CenterContainer/PanelContainer/VBoxContainer/ButtonContainer/HardButton" to="." method="_on_hard_button_pressed"]
+[connection signal="pressed" from="CenterContainer/PanelContainer/MarginContainer/VBoxContainer/ButtonContainer/EasyButton" to="." method="_on_easy_button_pressed"]
+[connection signal="pressed" from="CenterContainer/PanelContainer/MarginContainer/VBoxContainer/ButtonContainer/HardButton" to="." method="_on_hard_button_pressed"]
