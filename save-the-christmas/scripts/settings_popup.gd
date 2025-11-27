@@ -18,6 +18,7 @@ signal settings_closed
 @onready var feedback_button = $CenterContainer/ModalPanel/MarginContainer/VBoxContainer/ButtonSection/FeedbackButton
 @onready var remove_ads_button = $CenterContainer/ModalPanel/MarginContainer/VBoxContainer/ButtonSection/RemoveAdsButton
 @onready var privacy_button = $CenterContainer/ModalPanel/MarginContainer/VBoxContainer/FooterLinks/PrivacyButton
+@onready var separator_label = $CenterContainer/ModalPanel/MarginContainer/VBoxContainer/FooterLinks/Separator
 @onready var terms_button = $CenterContainer/ModalPanel/MarginContainer/VBoxContainer/FooterLinks/TermsButton
 
 func _ready() -> void:
@@ -38,6 +39,7 @@ func _apply_theme() -> void:
 	ThemeManager.apply_large(feedback_button)
 	ThemeManager.apply_large(remove_ads_button)
 	ThemeManager.apply_large(privacy_button)
+	ThemeManager.apply_small(separator_label, Color(0.5, 0.5, 0.5, 1.0))
 	ThemeManager.apply_large(terms_button)
 
 ## Load current settings from ProgressManager

@@ -3,7 +3,7 @@
 [ext_resource type="Script" uid="uid://b2bkvxyusrob3" path="res://scripts/settings_popup.gd" id="1_1"]
 
 [sub_resource type="StyleBoxFlat" id="StyleBoxFlat_panel"]
-bg_color = Color(0.15, 0.12, 0.12, 1)
+bg_color = Color(0.047, 0.165, 0.282, 1)
 corner_radius_top_left = 20
 corner_radius_top_right = 20
 corner_radius_bottom_right = 20
@@ -25,7 +25,7 @@ anchor_right = 1.0
 anchor_bottom = 1.0
 grow_horizontal = 2
 grow_vertical = 2
-color = Color(0, 0, 0, 0.85)
+color = Color(0.031, 0.11, 0.188, 0.9)
 
 [node name="CenterContainer" type="CenterContainer" parent="."]
 layout_mode = 1
@@ -178,8 +178,6 @@ flat = true
 
 [node name="Separator" type="Label" parent="CenterContainer/ModalPanel/MarginContainer/VBoxContainer/FooterLinks"]
 layout_mode = 2
-theme_override_colors/font_color = Color(0.5, 0.5, 0.5, 1)
-theme_override_font_sizes/font_size = 28
 text = "|"
 
 [node name="TermsButton" type="Button" parent="CenterContainer/ModalPanel/MarginContainer/VBoxContainer/FooterLinks"]

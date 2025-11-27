@@ -16,30 +16,37 @@ const FONT_SIZE_SMALL = 24    # Small text, badges
 # ============================================================================
 # COLOR SYSTEM (Semantic Colors)
 # ============================================================================
+# New Christmas Color Palette:
+# - Snow White (#F0F8FF): Large snowy areas, backgrounds, clean text
+# - Rich Christmas Red (#B3001B): Primary actions, accents, ribbons
+# - Forest Green (#0B6623): Secondary actions, toggle ON state
+# - Warm Gold (#FFD700): Stars, lights, borders, score/level text
+# - Deep Night Blue (#081C30): Night sky, modal backdrops
 
 # === PRIMARY PALETTE ===
-const COLOR_PRIMARY = Color(0.086, 0.357, 0.2, 1.0)           # #165B33 Christmas green
-const COLOR_PRIMARY_DARK = Color(0.06, 0.25, 0.14, 1.0)      # Darker variant
-const COLOR_PRIMARY_LIGHT = Color(0.12, 0.5, 0.28, 1.0)      # Lighter variant
+const COLOR_PRIMARY = Color(0.043, 0.4, 0.137, 1.0)          # #0B6623 Forest Green
+const COLOR_PRIMARY_DARK = Color(0.03, 0.28, 0.096, 1.0)     # Darker variant
+const COLOR_PRIMARY_LIGHT = Color(0.06, 0.52, 0.18, 1.0)     # Lighter variant
 
-const COLOR_SECONDARY = Color(0.6, 0.1, 0.1, 1.0)            # #9A1A1A Christmas red
-const COLOR_SECONDARY_DARK = Color(0.45, 0.08, 0.08, 1.0)
-const COLOR_SECONDARY_LIGHT = Color(0.75, 0.12, 0.12, 1.0)
+const COLOR_SECONDARY = Color(0.702, 0.0, 0.106, 1.0)        # #B3001B Rich Christmas Red
+const COLOR_SECONDARY_DARK = Color(0.5, 0.0, 0.075, 1.0)     # Darker variant
+const COLOR_SECONDARY_LIGHT = Color(0.85, 0.0, 0.13, 1.0)    # Lighter variant
 
-const COLOR_ACCENT = Color(1.0, 0.843, 0.0, 1.0)             # #FFD700 Gold
-const COLOR_ACCENT_DIM = Color(0.7, 0.6, 0.0, 1.0)
+const COLOR_ACCENT = Color(1.0, 0.843, 0.0, 1.0)             # #FFD700 Warm Gold
+const COLOR_ACCENT_DIM = Color(0.7, 0.6, 0.0, 1.0)           # Dimmed gold
 
 # === BACKGROUND COLORS ===
-const COLOR_BG_DARKEST = Color(0.1, 0.1, 0.15, 1.0)          # Main dark
-const COLOR_BG_DARK = Color(0.15, 0.12, 0.12, 1.0)           # Panel warm
-const COLOR_BG_GAME = Color(0.2, 0.05, 0.05, 1.0)            # Gameplay
-const COLOR_BG_DIFFICULTY = Color(0.27, 0, 0, 1.0)           # Difficulty screen
-const COLOR_BG_WIN = Color(0.137, 0, 0, 1.0)                 # Win screen
+const COLOR_BG_DARKEST = Color(0.031, 0.11, 0.188, 1.0)      # #081C30 Deep Night Blue
+const COLOR_BG_DARK = Color(0.047, 0.165, 0.282, 1.0)        # Lighter night blue (panels)
+const COLOR_BG_LIGHT = Color(0.941, 0.973, 1.0, 1.0)         # #F0F8FF Snow White
+const COLOR_BG_GAME = Color(0.031, 0.11, 0.188, 1.0)         # Deep Night Blue (gameplay)
+const COLOR_BG_DIFFICULTY = Color(0.047, 0.165, 0.282, 1.0)  # Lighter night blue
+const COLOR_BG_WIN = Color(0.047, 0.165, 0.282, 1.0)         # Lighter night blue
 
 # === TEXT COLORS ===
-const COLOR_TEXT_PRIMARY = Color(1.0, 1.0, 1.0, 1.0)         # Pure white
-const COLOR_TEXT_SECONDARY = Color(0.866, 0.745, 0.721, 1.0) # Warm tan
-const COLOR_TEXT_DISABLED = Color(0.5, 0.5, 0.5, 1.0)
+const COLOR_TEXT_PRIMARY = Color(0.941, 0.973, 1.0, 1.0)     # #F0F8FF Snow White
+const COLOR_TEXT_SECONDARY = Color(0.8, 0.85, 0.9, 1.0)      # Slightly dimmed snow white
+const COLOR_TEXT_DISABLED = Color(0.5, 0.5, 0.5, 1.0)        # Gray
 
 # === STATE COLORS ===
 const COLOR_STATE_SUCCESS = COLOR_ACCENT
@@ -52,11 +59,11 @@ const COLOR_BORDER_PRIMARY = COLOR_PRIMARY                    # Green
 const COLOR_BORDER_ACCENT = COLOR_ACCENT                      # Gold
 const COLOR_BORDER_LOCKED = Color(0.5, 0.5, 0.5, 1.0)
 
-const COLOR_TOGGLE_ON = Color(0.2, 0.7, 0.3, 1.0)            # Active green
+const COLOR_TOGGLE_ON = COLOR_PRIMARY                         # #0B6623 Forest Green (Active)
 const COLOR_TOGGLE_OFF = Color(0.4, 0.4, 0.4, 1.0)           # Inactive grey
 
-const COLOR_OVERLAY = Color(0, 0, 0, 0.85)
-const COLOR_SHADOW = Color(0, 0, 0, 0.4)
+const COLOR_OVERLAY = Color(0.031, 0.11, 0.188, 0.9)         # Deep Night Blue overlay
+const COLOR_SHADOW = Color(0, 0, 0, 0.4)                     # Black shadow
 
 # === MODULATION COLORS ===
 const COLOR_MOD_DESATURATE = Color(0.5, 0.5, 0.5, 1.0)       # Locked state
