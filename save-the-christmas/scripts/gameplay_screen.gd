@@ -41,10 +41,16 @@ var puzzle_center: Vector2 = Vector2(540, 960) # Center of 1080x1920 screen
 # UI references
 @onready var level_label = $MarginContainer/VBoxContainer/TopHUD/MarginContainer/HBoxContainer/LevelLabel
 @onready var puzzle_grid = $MarginContainer/VBoxContainer/PuzzleArea/PuzzleGrid
+@onready var back_button = $MarginContainer/VBoxContainer/TopHUD/MarginContainer/HBoxContainer/BackButton
+@onready var share_button = $MarginContainer/VBoxContainer/TopHUD/MarginContainer/HBoxContainer/ShareButton
+@onready var settings_button = $MarginContainer/VBoxContainer/TopHUD/MarginContainer/HBoxContainer/SettingsButton
 
 func _ready() -> void:
 	# Get level from GameManager
 	current_level_id = GameManager.get_current_level()
+
+	# Hide back button (not used in new UX)
+	back_button.visible = false
 
 	# Start with difficulty selection
 	current_state = GameplayState.CHOOSE_DIFFICULTY
@@ -52,12 +58,14 @@ func _ready() -> void:
 
 ## Show difficulty selection popup
 func _show_difficulty_popup() -> void:
+	print("Showing difficulty popup")
 	var popup = CHOOSE_DIFFICULTY_POPUP_SCENE.instantiate()
 	popup.difficulty_chosen.connect(_on_difficulty_chosen)
 	add_child(popup)
 
 ## Handle difficulty selection
 func _on_difficulty_chosen(difficulty: int) -> void:
+	print("Difficulty chosen: ", difficulty)
 	current_difficulty = difficulty
 	GameManager.current_difficulty = difficulty
 	current_state = GameplayState.GRINCH_TRANSITION
@@ -65,6 +73,7 @@ func _on_difficulty_chosen(difficulty: int) -> void:
 
 ## Start grinch transition animation
 func _start_grinch_transition() -> void:
+	print("Starting grinch transition")
 	var transition = GRINCH_TRANSITION_SCENE.instantiate()
 	transition.transition_complete.connect(_on_transition_complete)
 	add_child(transition)
@@ -72,6 +81,7 @@ func _start_grinch_transition() -> void:
 
 ## Handle transition complete
 func _on_transition_complete() -> void:
+	print("Transition complete, initializing puzzle")
 	current_state = GameplayState.INITIALIZING_PUZZLE
 	_initialize_gameplay()
 	current_state = GameplayState.ACTIVE_PUZZLE
