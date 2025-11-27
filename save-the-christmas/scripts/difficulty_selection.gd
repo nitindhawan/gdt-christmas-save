@@ -6,6 +6,8 @@ extends Control
 var current_level_id: int = 1
 
 # UI Node references
+@onready var close_button = $MarginContainer/VBoxContainer/TopBar/CloseButton
+@onready var share_button = $MarginContainer/VBoxContainer/TopBar/ShareButton
 @onready var level_label = $MarginContainer/VBoxContainer/PreviewSection/LevelLabel
 @onready var preview_image = $MarginContainer/VBoxContainer/PreviewSection/PreviewContainer/PreviewPanel/MarginContainer/PreviewImage
 @onready var easy_button = $MarginContainer/VBoxContainer/DifficultyButtons/EasyButton
@@ -13,9 +15,25 @@ var current_level_id: int = 1
 @onready var hard_button = $MarginContainer/VBoxContainer/DifficultyButtons/HardButton
 
 func _ready():
+	# Apply theme
+	_apply_theme()
+
 	# Get level ID from GameManager
 	current_level_id = GameManager.get_current_level()
 	initialize(current_level_id)
+
+func _apply_theme() -> void:
+	# Apply font sizes from ThemeManager
+	# close_button: 72 → 80 (XLARGE)
+	# share_button: 56 → 64 (LARGE)
+	# level_label: 64 → 64 (LARGE) ✓
+	# difficulty buttons: 56 → 64 (LARGE)
+	ThemeManager.apply_xlarge(close_button)
+	ThemeManager.apply_large(share_button)
+	ThemeManager.apply_large(level_label)
+	ThemeManager.apply_large(easy_button)
+	ThemeManager.apply_large(normal_button)
+	ThemeManager.apply_large(hard_button)
 
 ## Initialize the difficulty selection screen with a level ID
 func initialize(level_id: int) -> void:
@@ -60,14 +78,15 @@ func _update_button_states() -> void:
 ## Apply visual style to difficulty button based on state
 func _apply_button_style(button: Button, is_unlocked: bool, has_star: bool) -> void:
 	if is_unlocked:
-		# Green background for unlocked
-		button.modulate = Color(0.086, 0.357, 0.2, 1.0)  # #165B33
 		if has_star:
 			# Gold tint if star earned
 			button.modulate = Color(1.0, 0.843, 0.0, 0.3)  # Gold overlay
+		else:
+			# Green background for unlocked
+			button.modulate = ThemeManager.COLOR_PRIMARY
 	else:
 		# Grey and semi-transparent if locked
-		button.modulate = Color(0.46, 0.46, 0.46, 0.5)  # Grey 50% opacity
+		button.modulate = ThemeManager.COLOR_STATE_LOCKED
 
 ## Handle Close button - return to Level Selection
 func _on_close_button_pressed() -> void:

@@ -46,6 +46,9 @@ var puzzle_center: Vector2 = Vector2(540, 960) # Center of 1080x1920 screen
 @onready var settings_button = $MarginContainer/VBoxContainer/TopHUD/MarginContainer/HBoxContainer/SettingsButton
 
 func _ready() -> void:
+	# Apply theme
+	_apply_theme()
+
 	# Get level from GameManager
 	current_level_id = GameManager.get_current_level()
 
@@ -55,6 +58,17 @@ func _ready() -> void:
 	# Start with difficulty selection
 	current_state = GameplayState.CHOOSE_DIFFICULTY
 	_show_difficulty_popup()
+
+func _apply_theme() -> void:
+	# Apply font sizes from ThemeManager
+	# level_label: 32 → 32 (MEDIUM) ✓
+	# back_button: 36 → 32 (MEDIUM)
+	# share_button: 28 → 32 (MEDIUM)
+	# settings_button: 32 → 32 (MEDIUM) ✓
+	ThemeManager.apply_medium(level_label)
+	ThemeManager.apply_medium(back_button)
+	ThemeManager.apply_medium(share_button)
+	ThemeManager.apply_medium(settings_button)
 
 ## Show difficulty selection popup
 func _show_difficulty_popup() -> void:

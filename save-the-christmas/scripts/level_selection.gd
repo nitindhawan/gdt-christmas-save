@@ -7,9 +7,18 @@ const LEVEL_CELL_SCENE = preload("res://scenes/level_cell.tscn")
 const SETTINGS_POPUP_SCENE = preload("res://scenes/settings_popup.tscn")
 
 @onready var grid_container: GridContainer = $MarginContainer/VBoxContainer/ScrollContainer/GridContainer
+@onready var title_label: Label = $MarginContainer/VBoxContainer/TitleBar/Title
 
 func _ready() -> void:
+	# Apply theme
+	_apply_theme()
+
 	_populate_level_grid()
+
+func _apply_theme() -> void:
+	# Apply font sizes from ThemeManager
+	# Title: 60 → 64 (LARGE)
+	ThemeManager.apply_large(title_label)
 
 ## Populate grid with level cells
 func _populate_level_grid() -> void:

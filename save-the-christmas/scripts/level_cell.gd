@@ -18,6 +18,20 @@ var star_count: int = 0
 @onready var overlay_icon: Label = $MarginContainer/Content/OverlayIcon
 @onready var level_number_bg: Panel = $MarginContainer/Content/LevelNumberBg
 
+func _ready() -> void:
+	_apply_theme()
+
+func _apply_theme() -> void:
+	# Apply font sizes from ThemeManager
+	# level_number_label: 24 → 24 (SMALL) ✓
+	# stars: 40 → 32 (MEDIUM)
+	# overlay_icon: 80 → 80 (XLARGE) ✓
+	ThemeManager.apply_small(level_number_label)
+	ThemeManager.apply_medium(star1)
+	ThemeManager.apply_medium(star2)
+	ThemeManager.apply_medium(star3)
+	ThemeManager.apply_xlarge(overlay_icon)
+
 ## Setup level cell with data
 func setup(p_level_id: int, thumbnail_texture: Texture2D, p_star_count: int, p_is_unlocked: bool, p_is_beaten: bool) -> void:
 	level_id = p_level_id
@@ -49,27 +63,14 @@ func _update_visual_state() -> void:
 
 ## Set locked appearance
 func _set_locked_appearance() -> void:
-	# Desaturate thumbnail
-	thumbnail.modulate = Color(0.5, 0.5, 0.5, 1.0)
-
-	# Grey border
-	var style_box = StyleBoxFlat.new()
-	style_box.bg_color = Color(0.3, 0.3, 0.3, 1.0)
-	style_box.border_width_left = 4
-	style_box.border_width_top = 4
-	style_box.border_width_right = 4
-	style_box.border_width_bottom = 4
-	style_box.border_color = Color(0.5, 0.5, 0.5, 1.0)
-	style_box.corner_radius_top_left = 8
-	style_box.corner_radius_top_right = 8
-	style_box.corner_radius_bottom_left = 8
-	style_box.corner_radius_bottom_right = 8
-	add_theme_stylebox_override("panel", style_box)
+	# Apply theme styling
+	ThemeManager.apply_level_cell_theme(self, ThemeManager.LevelState.LOCKED)
+	thumbnail.modulate = ThemeManager.get_level_cell_modulation(ThemeManager.LevelState.LOCKED)
 
 	# Show lock icon
 	overlay_icon.text = "🔒"
 	overlay_icon.visible = true
-	overlay_icon.modulate = Color(1, 1, 1, 0.8)
+	overlay_icon.modulate = ThemeManager.get_level_cell_icon_modulation(ThemeManager.LevelState.LOCKED)
 
 	# Hide stars
 	star1.visible = false
@@ -78,27 +79,14 @@ func _set_locked_appearance() -> void:
 
 ## Set unlocked appearance (not beaten yet)
 func _set_unlocked_appearance() -> void:
-	# Full color thumbnail
-	thumbnail.modulate = Color(1, 1, 1, 1)
-
-	# Green border
-	var style_box = StyleBoxFlat.new()
-	style_box.bg_color = Color(0.2, 0.2, 0.2, 1.0)
-	style_box.border_width_left = 4
-	style_box.border_width_top = 4
-	style_box.border_width_right = 4
-	style_box.border_width_bottom = 4
-	style_box.border_color = Color(0.09, 0.36, 0.2, 1.0)  # Green
-	style_box.corner_radius_top_left = 8
-	style_box.corner_radius_top_right = 8
-	style_box.corner_radius_bottom_left = 8
-	style_box.corner_radius_bottom_right = 8
-	add_theme_stylebox_override("panel", style_box)
+	# Apply theme styling
+	ThemeManager.apply_level_cell_theme(self, ThemeManager.LevelState.UNLOCKED)
+	thumbnail.modulate = ThemeManager.get_level_cell_modulation(ThemeManager.LevelState.UNLOCKED)
 
 	# Show play icon
 	overlay_icon.text = "▶"
 	overlay_icon.visible = true
-	overlay_icon.modulate = Color(1, 1, 1, 0.6)
+	overlay_icon.modulate = ThemeManager.get_level_cell_icon_modulation(ThemeManager.LevelState.UNLOCKED)
 
 	# Show empty stars
 	star1.visible = true
@@ -107,28 +95,16 @@ func _set_unlocked_appearance() -> void:
 	star1.text = "☆"
 	star2.text = "☆"
 	star3.text = "☆"
-	star1.modulate = Color(0.7, 0.7, 0.7, 1.0)
-	star2.modulate = Color(0.7, 0.7, 0.7, 1.0)
-	star3.modulate = Color(0.7, 0.7, 0.7, 1.0)
+	var empty_star_color = Color(0.7, 0.7, 0.7, 1.0)
+	star1.modulate = empty_star_color
+	star2.modulate = empty_star_color
+	star3.modulate = empty_star_color
 
 ## Set beaten appearance (has stars)
 func _set_beaten_appearance() -> void:
-	# Full color thumbnail
-	thumbnail.modulate = Color(1, 1, 1, 1)
-
-	# Gold border
-	var style_box = StyleBoxFlat.new()
-	style_box.bg_color = Color(0.2, 0.2, 0.2, 1.0)
-	style_box.border_width_left = 4
-	style_box.border_width_top = 4
-	style_box.border_width_right = 4
-	style_box.border_width_bottom = 4
-	style_box.border_color = Color(1.0, 0.84, 0.0, 1.0)  # Gold
-	style_box.corner_radius_top_left = 8
-	style_box.corner_radius_top_right = 8
-	style_box.corner_radius_bottom_left = 8
-	style_box.corner_radius_bottom_right = 8
-	add_theme_stylebox_override("panel", style_box)
+	# Apply theme styling
+	ThemeManager.apply_level_cell_theme(self, ThemeManager.LevelState.BEATEN)
+	thumbnail.modulate = ThemeManager.get_level_cell_modulation(ThemeManager.LevelState.BEATEN)
 
 	# Hide overlay icon (no play icon for beaten levels)
 	overlay_icon.visible = false
@@ -138,7 +114,7 @@ func _set_beaten_appearance() -> void:
 	star2.visible = true
 	star3.visible = true
 
-	var gold_color = Color(1.0, 0.84, 0.0, 1.0)
+	var gold_color = ThemeManager.COLOR_ACCENT
 	var empty_color = Color(0.5, 0.5, 0.5, 1.0)
 
 	if star_count >= 1:
@@ -183,7 +159,7 @@ func _on_button_pressed() -> void:
 ## Animate button press feedback
 func _animate_press() -> void:
 	var tween = create_tween()
-	tween.set_ease(Tween.EASE_OUT)
-	tween.set_trans(Tween.TRANS_BACK)
-	tween.tween_property(self, "scale", Vector2(0.95, 0.95), 0.1)
-	tween.tween_property(self, "scale", Vector2(1.0, 1.0), 0.1)
+	tween.set_ease(ThemeManager.EASE_BUTTON)
+	tween.set_trans(ThemeManager.TRANS_BUTTON)
+	tween.tween_property(self, "scale", Vector2(ThemeManager.SCALE_PRESSED, ThemeManager.SCALE_PRESSED), ThemeManager.ANIM_INSTANT)
+	tween.tween_property(self, "scale", Vector2(1.0, 1.0), ThemeManager.ANIM_INSTANT)

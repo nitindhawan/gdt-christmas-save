@@ -7,15 +7,42 @@ var completed_level_id: int = 1
 var completed_difficulty: int = GameConstants.Difficulty.EASY
 
 # UI references
+@onready var title_label = $MarginContainer/VBoxContainer/TitleSection/TitleLabel
 @onready var subtitle_label = $MarginContainer/VBoxContainer/TitleSection/SubtitleLabel
+@onready var star1 = $MarginContainer/VBoxContainer/TitleSection/StarsContainer/Star1
+@onready var star2 = $MarginContainer/VBoxContainer/TitleSection/StarsContainer/Star2
+@onready var star3 = $MarginContainer/VBoxContainer/TitleSection/StarsContainer/Star3
+@onready var share_button = $MarginContainer/VBoxContainer/ButtonSection/ShareButton
+@onready var download_button = $MarginContainer/VBoxContainer/ButtonSection/DownloadButton
+@onready var continue_button = $MarginContainer/VBoxContainer/ButtonSection/ContinueButton
 @onready var completed_image = $MarginContainer/VBoxContainer/ImageSection/ImagePanel/MarginContainer/CompletedImage
 
 func _ready() -> void:
+	# Apply theme
+	_apply_theme()
+
 	# Get level and difficulty from GameManager
 	completed_level_id = GameManager.get_current_level()
 	completed_difficulty = GameManager.get_current_difficulty()
 
 	_initialize_screen()
+
+func _apply_theme() -> void:
+	# Apply font sizes from ThemeManager
+	# title_label: 72 → 80 (XLARGE)
+	# subtitle_label: 56 → 64 (LARGE)
+	# stars: 80 → 80 (XLARGE) ✓
+	# share_button: 56 → 64 (LARGE)
+	# download_button: 56 → 64 (LARGE)
+	# continue_button: 60 → 64 (LARGE)
+	ThemeManager.apply_xlarge(title_label, ThemeManager.COLOR_ACCENT)
+	ThemeManager.apply_large(subtitle_label)
+	ThemeManager.apply_xlarge(star1)
+	ThemeManager.apply_xlarge(star2)
+	ThemeManager.apply_xlarge(star3)
+	ThemeManager.apply_large(share_button)
+	ThemeManager.apply_large(download_button)
+	ThemeManager.apply_large(continue_button)
 
 ## Initialize screen with level data
 func _initialize_screen() -> void:

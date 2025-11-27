@@ -7,13 +7,38 @@ signal settings_closed
 
 # UI Node references
 @onready var overlay = $Overlay
+@onready var title_label = $CenterContainer/ModalPanel/MarginContainer/VBoxContainer/Header/TitleLabel
+@onready var close_button = $CenterContainer/ModalPanel/MarginContainer/VBoxContainer/Header/CloseButton
+@onready var sound_label = $CenterContainer/ModalPanel/MarginContainer/VBoxContainer/ToggleSection/SoundToggle/Label
 @onready var sound_toggle = $CenterContainer/ModalPanel/MarginContainer/VBoxContainer/ToggleSection/SoundToggle/ToggleButton
+@onready var music_label = $CenterContainer/ModalPanel/MarginContainer/VBoxContainer/ToggleSection/MusicToggle/Label
 @onready var music_toggle = $CenterContainer/ModalPanel/MarginContainer/VBoxContainer/ToggleSection/MusicToggle/ToggleButton
+@onready var vibration_label = $CenterContainer/ModalPanel/MarginContainer/VBoxContainer/ToggleSection/VibrationToggle/Label
 @onready var vibration_toggle = $CenterContainer/ModalPanel/MarginContainer/VBoxContainer/ToggleSection/VibrationToggle/ToggleButton
+@onready var feedback_button = $CenterContainer/ModalPanel/MarginContainer/VBoxContainer/ButtonSection/FeedbackButton
+@onready var remove_ads_button = $CenterContainer/ModalPanel/MarginContainer/VBoxContainer/ButtonSection/RemoveAdsButton
+@onready var privacy_button = $CenterContainer/ModalPanel/MarginContainer/VBoxContainer/FooterLinks/PrivacyButton
+@onready var terms_button = $CenterContainer/ModalPanel/MarginContainer/VBoxContainer/FooterLinks/TermsButton
 
 func _ready() -> void:
+	_apply_theme()
 	_load_settings()
 	_update_all_toggle_visuals()
+
+func _apply_theme() -> void:
+	# Apply font sizes from ThemeManager (96,64,56 → 80,64)
+	ThemeManager.apply_xlarge(title_label, ThemeManager.COLOR_TEXT_SECONDARY)
+	ThemeManager.apply_xlarge(close_button, ThemeManager.COLOR_TEXT_SECONDARY)
+	ThemeManager.apply_large(sound_label, ThemeManager.COLOR_TEXT_SECONDARY)
+	ThemeManager.apply_large(sound_toggle)
+	ThemeManager.apply_large(music_label, ThemeManager.COLOR_TEXT_SECONDARY)
+	ThemeManager.apply_large(music_toggle)
+	ThemeManager.apply_large(vibration_label, ThemeManager.COLOR_TEXT_SECONDARY)
+	ThemeManager.apply_large(vibration_toggle)
+	ThemeManager.apply_large(feedback_button)
+	ThemeManager.apply_large(remove_ads_button)
+	ThemeManager.apply_large(privacy_button)
+	ThemeManager.apply_large(terms_button)
 
 ## Load current settings from ProgressManager
 func _load_settings() -> void:

@@ -10,8 +10,15 @@ var loading_progress: float = 0.0
 var loading_complete: bool = false
 
 func _ready() -> void:
+	# Apply theme
+	_apply_theme()
+
 	# Start loading process
 	_start_loading()
+
+func _apply_theme() -> void:
+	# Apply font sizes from ThemeManager
+	ThemeManager.apply_medium(loading_label)
 
 func _process(delta: float) -> void:
 	if not loading_complete:
