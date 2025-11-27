@@ -562,15 +562,17 @@ func _save_spiral_progress() -> void:
 	var spiral_state = puzzle_state as SpiralPuzzleState
 	var difficulty_str = GameConstants.difficulty_to_string(current_difficulty)
 
-	# Set star for this level and difficulty
-	ProgressManager.set_star(current_level_id, difficulty_str, true)
+	# Mark as completed (replaces set_star)
+	ProgressManager.set_completion(current_level_id, difficulty_str, true)
 
 	# Unlock next level if completing Easy
 	if current_difficulty == GameConstants.Difficulty.EASY:
 		ProgressManager.unlock_next_level()
 
-	# Update current level
-	ProgressManager.current_level = current_level_id
+	# Update current level tracker
+	if current_level_id == ProgressManager.current_level:
+		var next_level = mini(current_level_id + 1, GameConstants.TOTAL_LEVELS)
+		ProgressManager.current_level = next_level
 
 	# Update statistics
 	ProgressManager.total_swaps_made += spiral_state.rotation_count
@@ -736,15 +738,17 @@ func _save_arrow_progress() -> void:
 	var arrow_state = puzzle_state as ArrowPuzzleState
 	var difficulty_str = GameConstants.difficulty_to_string(current_difficulty)
 
-	# Set star for this level and difficulty
-	ProgressManager.set_star(current_level_id, difficulty_str, true)
+	# Mark as completed (replaces set_star)
+	ProgressManager.set_completion(current_level_id, difficulty_str, true)
 
 	# Unlock next level if completing Easy
 	if current_difficulty == GameConstants.Difficulty.EASY:
 		ProgressManager.unlock_next_level()
 
-	# Update current level
-	ProgressManager.current_level = current_level_id
+	# Update current level tracker
+	if current_level_id == ProgressManager.current_level:
+		var next_level = mini(current_level_id + 1, GameConstants.TOTAL_LEVELS)
+		ProgressManager.current_level = next_level
 
 	# Update statistics
 	ProgressManager.total_swaps_made += arrow_state.tap_count
