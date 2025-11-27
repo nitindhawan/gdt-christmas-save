@@ -27,9 +27,9 @@ func _ready() -> void:
 	_update_all_toggle_visuals()
 
 func _apply_theme() -> void:
-	# Apply font sizes from ThemeManager (96,64,56 → 80,64)
+	# Apply font sizes from ThemeManager
+	# Note: close_button is now a TextureButton, no font theme needed
 	ThemeManager.apply_xlarge(title_label, ThemeManager.COLOR_TEXT_SECONDARY)
-	ThemeManager.apply_xlarge(close_button, ThemeManager.COLOR_TEXT_SECONDARY)
 	ThemeManager.apply_large(sound_label, ThemeManager.COLOR_TEXT_SECONDARY)
 	ThemeManager.apply_large(sound_toggle)
 	ThemeManager.apply_large(music_label, ThemeManager.COLOR_TEXT_SECONDARY)

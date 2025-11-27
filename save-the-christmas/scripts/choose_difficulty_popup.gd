@@ -20,8 +20,9 @@ func _apply_theme() -> void:
 	ThemeManager.apply_large(hard_button)
 
 func _setup_buttons() -> void:
-	ThemeManager.apply_button_theme(easy_button, ThemeManager.COLOR_PRIMARY_GREEN, "Play Easy")
-	ThemeManager.apply_button_theme(hard_button, ThemeManager.COLOR_PRIMARY_RED, "Play Hard")
+	# Apply button themes with 20px padding for proper text spacing
+	ThemeManager.apply_button_theme_with_padding(easy_button, ThemeManager.COLOR_PRIMARY, "Play Easy", 20)
+	ThemeManager.apply_button_theme_with_padding(hard_button, ThemeManager.COLOR_SECONDARY, "Play Hard", 20)
 
 func _on_easy_button_pressed() -> void:
 	if AudioManager:

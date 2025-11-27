@@ -353,11 +353,32 @@ static func create_button_style(bg_color: Color, corner_radius: int = 16) -> Sty
 	set_corner_radius(style, corner_radius)
 	return style
 
+## Create a styled button background with content margins (padding)
+static func create_button_style_with_padding(bg_color: Color, corner_radius: int = 16, padding: int = 20) -> StyleBoxFlat:
+	var style = StyleBoxFlat.new()
+	style.bg_color = bg_color
+	set_corner_radius(style, corner_radius)
+	# Add content margins for padding
+	style.content_margin_left = padding
+	style.content_margin_right = padding
+	style.content_margin_top = padding
+	style.content_margin_bottom = padding
+	return style
+
 ## Apply consistent theme to a button (legacy - kept for backward compatibility)
 static func apply_button_theme(button: Button, color: Color, text: String) -> void:
 	button.text = text
 	button.add_theme_color_override("font_color", COLOR_TEXT_PRIMARY)
 	var style = create_button_style(color)
+	button.add_theme_stylebox_override("normal", style)
+	button.add_theme_stylebox_override("hover", style)
+	button.add_theme_stylebox_override("pressed", style)
+
+## Apply button theme with proper padding
+static func apply_button_theme_with_padding(button: Button, color: Color, text: String, padding: int = 20) -> void:
+	button.text = text
+	button.add_theme_color_override("font_color", COLOR_TEXT_PRIMARY)
+	var style = create_button_style_with_padding(color, CORNER_RADIUS_MEDIUM, padding)
 	button.add_theme_stylebox_override("normal", style)
 	button.add_theme_stylebox_override("hover", style)
 	button.add_theme_stylebox_override("pressed", style)

@@ -39,11 +39,9 @@ var is_arrow_puzzle: bool = false
 var puzzle_center: Vector2 = Vector2(540, 960) # Center of 1080x1920 screen
 
 # UI references
-@onready var level_label = $MarginContainer/VBoxContainer/TopHUD/MarginContainer/HBoxContainer/LevelLabel
+@onready var level_label = $MarginContainer/VBoxContainer/TopHUD/LevelLabel
 @onready var puzzle_grid = $MarginContainer/VBoxContainer/PuzzleArea/PuzzleGrid
-@onready var back_button = $MarginContainer/VBoxContainer/TopHUD/MarginContainer/HBoxContainer/BackButton
-@onready var share_button = $MarginContainer/VBoxContainer/TopHUD/MarginContainer/HBoxContainer/ShareButton
-@onready var settings_button = $MarginContainer/VBoxContainer/TopHUD/MarginContainer/HBoxContainer/SettingsButton
+@onready var settings_button = $MarginContainer/VBoxContainer/TopHUD/SettingsButton
 
 func _ready() -> void:
 	# Apply theme
@@ -52,23 +50,14 @@ func _ready() -> void:
 	# Get level from GameManager
 	current_level_id = GameManager.get_current_level()
 
-	# Hide back button (not used in new UX)
-	back_button.visible = false
-
 	# Start with difficulty selection
 	current_state = GameplayState.CHOOSE_DIFFICULTY
 	_show_difficulty_popup()
 
 func _apply_theme() -> void:
 	# Apply font sizes from ThemeManager
-	# level_label: 32 → 32 (MEDIUM) ✓
-	# back_button: 36 → 32 (MEDIUM)
-	# share_button: 28 → 32 (MEDIUM)
-	# settings_button: 32 → 32 (MEDIUM) ✓
+	# level_label: MEDIUM (32px)
 	ThemeManager.apply_medium(level_label)
-	ThemeManager.apply_medium(back_button)
-	ThemeManager.apply_medium(share_button)
-	ThemeManager.apply_medium(settings_button)
 
 ## Show difficulty selection popup
 func _show_difficulty_popup() -> void:
@@ -308,40 +297,6 @@ func _refresh_tile_positions() -> void:
 	# Re-spawn tiles in new positions
 	_spawn_tiles()
 
-## Handle back button
-func _on_back_button_pressed() -> void:
-	if AudioManager:
-		AudioManager.play_sfx("button_click")
-
-	if current_state == GameplayState.ACTIVE_PUZZLE:
-		# Show exit confirmation during active puzzle
-		var dialog = EXIT_DIALOG_SCENE.instantiate()
-		dialog.exit_confirmed.connect(_on_exit_confirmed)
-		dialog.stay_pressed.connect(_on_stay_pressed)
-		add_child(dialog)
-	else:
-		# During transitions, allow immediate exit
-		_on_exit_confirmed()
-
-## Handle exit confirmed from dialog
-func _on_exit_confirmed() -> void:
-	# Exit to OS (no level selection anymore)
-	get_tree().quit()
-
-## Handle stay pressed from dialog
-func _on_stay_pressed() -> void:
-	# Close dialog, continue playing
-	if AudioManager:
-		AudioManager.play_sfx("button_click")
-
-## Handle share button
-func _on_share_button_pressed() -> void:
-	if AudioManager:
-		AudioManager.play_sfx("button_click")
-
-	print("Share button pressed")
-	# TODO: Implement screenshot + native share
-	# For MVP, placeholder
 
 ## Handle settings button
 func _on_settings_button_pressed() -> void:
