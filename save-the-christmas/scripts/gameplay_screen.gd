@@ -8,10 +8,22 @@ const SPIRAL_RING_NODE_SCENE = preload("res://scenes/spiral_ring_node.tscn")
 const ARROW_NODE_SCENE = preload("res://scenes/arrow_node.tscn")
 const SETTINGS_POPUP_SCENE = preload("res://scenes/settings_popup.tscn")
 const EXIT_DIALOG_SCENE = preload("res://scenes/exit_confirmation_dialog.tscn")
+const CHOOSE_DIFFICULTY_POPUP_SCENE = preload("res://scenes/choose_difficulty_popup.tscn")
+const GRINCH_TRANSITION_SCENE = preload("res://scenes/grinch_transition.tscn")
 const SpiralPuzzleState = preload("res://scripts/spiral_puzzle_state.gd")
 const ArrowPuzzleState = preload("res://scripts/arrow_puzzle_state.gd")
 
+# Gameplay state machine
+enum GameplayState {
+	CHOOSE_DIFFICULTY,
+	GRINCH_TRANSITION,
+	INITIALIZING_PUZZLE,
+	ACTIVE_PUZZLE,
+	PUZZLE_COMPLETE
+}
+
 # Game state
+var current_state: GameplayState = GameplayState.CHOOSE_DIFFICULTY
 var current_level_id: int = 1
 var current_difficulty: int = GameConstants.Difficulty.EASY
 var puzzle_state: Resource # Can be PuzzleState, SpiralPuzzleState, or ArrowPuzzleState
@@ -31,11 +43,38 @@ var puzzle_center: Vector2 = Vector2(540, 960) # Center of 1080x1920 screen
 @onready var puzzle_grid = $MarginContainer/VBoxContainer/PuzzleArea/PuzzleGrid
 
 func _ready() -> void:
-	# Get level and difficulty from GameManager
+	# Get level from GameManager
 	current_level_id = GameManager.get_current_level()
-	current_difficulty = GameManager.get_current_difficulty()
 
+	# Start with difficulty selection
+	current_state = GameplayState.CHOOSE_DIFFICULTY
+	_show_difficulty_popup()
+
+## Show difficulty selection popup
+func _show_difficulty_popup() -> void:
+	var popup = CHOOSE_DIFFICULTY_POPUP_SCENE.instantiate()
+	popup.difficulty_chosen.connect(_on_difficulty_chosen)
+	add_child(popup)
+
+## Handle difficulty selection
+func _on_difficulty_chosen(difficulty: int) -> void:
+	current_difficulty = difficulty
+	GameManager.current_difficulty = difficulty
+	current_state = GameplayState.GRINCH_TRANSITION
+	_start_grinch_transition()
+
+## Start grinch transition animation
+func _start_grinch_transition() -> void:
+	var transition = GRINCH_TRANSITION_SCENE.instantiate()
+	transition.transition_complete.connect(_on_transition_complete)
+	add_child(transition)
+	transition.play_transition()
+
+## Handle transition complete
+func _on_transition_complete() -> void:
+	current_state = GameplayState.INITIALIZING_PUZZLE
 	_initialize_gameplay()
+	current_state = GameplayState.ACTIVE_PUZZLE
 
 ## Initialize gameplay with current level and difficulty
 func _initialize_gameplay() -> void:
@@ -214,15 +253,17 @@ func _handle_puzzle_completion() -> void:
 func _save_progress() -> void:
 	var difficulty_str = GameConstants.difficulty_to_string(current_difficulty)
 
-	# Set star for this level and difficulty
-	ProgressManager.set_star(current_level_id, difficulty_str, true)
+	# Mark as completed (replaces set_star)
+	ProgressManager.set_completion(current_level_id, difficulty_str, true)
 
 	# Unlock next level if completing Easy
 	if current_difficulty == GameConstants.Difficulty.EASY:
 		ProgressManager.unlock_next_level()
 
-	# Update current level
-	ProgressManager.current_level = current_level_id
+	# Update current level tracker
+	if current_level_id == ProgressManager.current_level:
+		var next_level = mini(current_level_id + 1, GameConstants.TOTAL_LEVELS)
+		ProgressManager.current_level = next_level
 
 	# Update statistics
 	ProgressManager.total_swaps_made += puzzle_state.swap_count
@@ -248,14 +289,26 @@ func _on_back_button_pressed() -> void:
 	if AudioManager:
 		AudioManager.play_sfx("button_click")
 
-	# Show custom exit confirmation dialog
-	var dialog = EXIT_DIALOG_SCENE.instantiate()
-	dialog.exit_confirmed.connect(_on_exit_confirmed)
-	add_child(dialog)
+	if current_state == GameplayState.ACTIVE_PUZZLE:
+		# Show exit confirmation during active puzzle
+		var dialog = EXIT_DIALOG_SCENE.instantiate()
+		dialog.exit_confirmed.connect(_on_exit_confirmed)
+		dialog.stay_pressed.connect(_on_stay_pressed)
+		add_child(dialog)
+	else:
+		# During transitions, allow immediate exit
+		_on_exit_confirmed()
 
 ## Handle exit confirmed from dialog
 func _on_exit_confirmed() -> void:
-	GameManager.navigate_to_level_selection()
+	# Exit to OS (no level selection anymore)
+	get_tree().quit()
+
+## Handle stay pressed from dialog
+func _on_stay_pressed() -> void:
+	# Close dialog, continue playing
+	if AudioManager:
+		AudioManager.play_sfx("button_click")
 
 ## Handle share button
 func _on_share_button_pressed() -> void:

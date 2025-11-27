@@ -28,7 +28,6 @@ const SPIRAL_ROTATION_SNAP_ANGLE = 1.0  # Snap to correct when within this angle
 
 # Spiral ring counts per difficulty
 const SPIRAL_RINGS_EASY = 3
-const SPIRAL_RINGS_NORMAL = 5
 const SPIRAL_RINGS_HARD = 7
 
 # Puzzle mechanics - Arrow Puzzle
@@ -38,7 +37,6 @@ const ARROW_GRID_SPACING = 10  # Pixels between arrows
 
 # Arrow grid sizes per difficulty (columns, rows)
 const ARROW_GRID_EASY = Vector2i(5, 4)  # 20 arrows
-const ARROW_GRID_NORMAL = Vector2i(6, 5)  # 30 arrows
 const ARROW_GRID_HARD = Vector2i(8, 7)  # 56 arrows
 
 # Arrow asset path
@@ -55,8 +53,7 @@ const THUMBNAIL_SIZE = 512  # 512×512 pixels
 # Enums
 enum Difficulty {
 	EASY = 0,
-	NORMAL = 1,
-	HARD = 2
+	HARD = 1
 }
 
 enum PuzzleType {
@@ -70,8 +67,6 @@ static func difficulty_to_string(diff: Difficulty) -> String:
 	match diff:
 		Difficulty.EASY:
 			return "easy"
-		Difficulty.NORMAL:
-			return "normal"
 		Difficulty.HARD:
 			return "hard"
 		_:
@@ -82,8 +77,6 @@ static func string_to_difficulty(diff_str: String) -> Difficulty:
 	match diff_str.to_lower():
 		"easy":
 			return Difficulty.EASY
-		"normal":
-			return Difficulty.NORMAL
 		"hard":
 			return Difficulty.HARD
 		_:
