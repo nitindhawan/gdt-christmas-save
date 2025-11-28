@@ -14,7 +14,7 @@ config/name="Save the Christmas"
 run/main_scene="res://scenes/loading_screen.tscn"
 config/features=PackedStringArray("4.5", "Mobile")
 boot_splash/image="uid://yv2laatx7uf1"
-config/icon="res://icon.svg"
+config/icon="res://game_icon.png"
 
 [autoload]
 
