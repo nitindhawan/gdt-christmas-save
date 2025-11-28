@@ -50,6 +50,9 @@ func _ready() -> void:
 	# Get level from GameManager
 	current_level_id = GameManager.get_current_level()
 
+	# Set level label immediately so it shows during difficulty popup
+	level_label.text = "Puzzle %d" % current_level_id
+
 	# Start with difficulty selection
 	current_state = GameplayState.CHOOSE_DIFFICULTY
 	_show_difficulty_popup()
@@ -92,10 +95,6 @@ func _on_transition_complete() -> void:
 ## Initialize gameplay with current level and difficulty
 func _initialize_gameplay() -> void:
 	print("Initializing gameplay: Level %d, Difficulty %d" % [current_level_id, current_difficulty])
-
-	# Update UI label
-	var difficulty_str = GameConstants.difficulty_to_string(current_difficulty)
-	level_label.text = "Level %d - %s" % [current_level_id, difficulty_str.capitalize()]
 
 	# Load source texture
 	source_texture = LevelManager.get_level_texture(current_level_id)
@@ -564,9 +563,8 @@ func _setup_arrow_puzzle() -> void:
 	# Get puzzle area control
 	var puzzle_area = $MarginContainer/VBoxContainer/PuzzleArea
 
-	# Set minimum size for puzzle area
-	puzzle_area.custom_minimum_size = Vector2(900, 900)
-	puzzle_area.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	# Don't force a fixed size - let it expand naturally
+	# PuzzleArea already has size_flags_vertical = 3 to expand and fill available space
 
 	var arrow_state = puzzle_state as ArrowPuzzleState
 	print("Arrow puzzle configured: %dx%d grid = %d arrows" % [
@@ -585,27 +583,30 @@ func _spawn_arrows() -> void:
 	# Get puzzle area control
 	var puzzle_area = $MarginContainer/VBoxContainer/PuzzleArea
 
-	# Wait for layout
+	# Wait for layout to complete so puzzle_area has its actual size
 	await get_tree().process_frame
 
-	# Ensure puzzle area has size
-	if puzzle_area.size.x == 0 or puzzle_area.size.y == 0:
-		puzzle_area.size = Vector2(900, 900)
+	# Determine available size for puzzle (square aspect)
+	var available_width = puzzle_area.size.x
+	var available_height = puzzle_area.size.y
+	var puzzle_size = min(available_width, available_height)
 
 	# Create background image (full level image visible)
 	background_image = TextureRect.new()
 	background_image.name = "BackgroundImage"
 	background_image.texture = source_texture
-	background_image.expand_mode = TextureRect.EXPAND_FIT_WIDTH_PROPORTIONAL
+	background_image.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
 	background_image.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_CENTERED
-	background_image.custom_minimum_size = puzzle_area.size
+	background_image.custom_minimum_size = Vector2(puzzle_size, puzzle_size)
+	background_image.size = Vector2(puzzle_size, puzzle_size)
 	background_image.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	puzzle_area.add_child(background_image)
 
 	# Create arrows container (overlay on top of background)
 	arrows_container = Control.new()
 	arrows_container.name = "ArrowsContainer"
-	arrows_container.custom_minimum_size = puzzle_area.size
+	arrows_container.custom_minimum_size = Vector2(puzzle_size, puzzle_size)
+	arrows_container.size = Vector2(puzzle_size, puzzle_size)
 	arrows_container.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	puzzle_area.add_child(arrows_container)
 
@@ -647,9 +648,9 @@ func _spawn_arrows() -> void:
 
 ## Calculate arrow size based on grid dimensions
 func _calculate_arrow_size(grid_size: Vector2i) -> Vector2:
-	var puzzle_area = $MarginContainer/VBoxContainer/PuzzleArea
-	var available_width = puzzle_area.size.x - 40  # Margins
-	var available_height = puzzle_area.size.y - 40
+	# Use arrows_container size (which is the actual puzzle area size)
+	var available_width = arrows_container.size.x - 40  # Margins
+	var available_height = arrows_container.size.y - 40
 
 	# Calculate size based on grid
 	var arrow_width = (available_width - (grid_size.x - 1) * GameConstants.ARROW_GRID_SPACING) / grid_size.x

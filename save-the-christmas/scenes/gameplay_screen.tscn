@@ -40,6 +40,7 @@ theme_override_constants/separation = 20
 [node name="TopHUD" type="HBoxContainer" parent="MarginContainer/VBoxContainer"]
 custom_minimum_size = Vector2(0, 80)
 layout_mode = 2
+theme_override_constants/separation = 10
 
 [node name="LevelLabel" type="Label" parent="MarginContainer/VBoxContainer/TopHUD"]
 layout_mode = 2
@@ -48,7 +49,7 @@ text = "Puzzle 1"
 vertical_alignment = 1
 
 [node name="SettingsButton" type="TextureButton" parent="MarginContainer/VBoxContainer/TopHUD"]
-custom_minimum_size = Vector2(60, 60)
+custom_minimum_size = Vector2(80, 80)
 layout_mode = 2
 texture_normal = ExtResource("2_settings")
 ignore_texture_size = true
