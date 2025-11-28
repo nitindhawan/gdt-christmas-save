@@ -56,28 +56,6 @@ theme_override_font_sizes/font_size = 56
 text = "You have solved Level 1"
 horizontal_alignment = 1
 
-[node name="StarsContainer" type="HBoxContainer" parent="MarginContainer/VBoxContainer/TitleSection"]
-layout_mode = 2
-theme_override_constants/separation = 20
-alignment = 1
-
-[node name="Star1" type="Label" parent="MarginContainer/VBoxContainer/TitleSection/StarsContainer"]
-layout_mode = 2
-theme_override_font_sizes/font_size = 80
-text = "⭐"
-
-[node name="Star2" type="Label" parent="MarginContainer/VBoxContainer/TitleSection/StarsContainer"]
-visible = false
-layout_mode = 2
-theme_override_font_sizes/font_size = 80
-text = "⭐"
-
-[node name="Star3" type="Label" parent="MarginContainer/VBoxContainer/TitleSection/StarsContainer"]
-visible = false
-layout_mode = 2
-theme_override_font_sizes/font_size = 80
-text = "⭐"
-
 [node name="ImageSection" type="CenterContainer" parent="MarginContainer/VBoxContainer"]
 layout_mode = 2
 size_flags_vertical = 3
@@ -109,27 +87,11 @@ layout_mode = 2
 theme_override_constants/separation = 20
 alignment = 1
 
-[node name="ShareButton" type="Button" parent="MarginContainer/VBoxContainer/ButtonSection"]
-custom_minimum_size = Vector2(750, 100)
-layout_mode = 2
-size_flags_horizontal = 4
-theme_override_font_sizes/font_size = 56
-text = "⤴ Share Photo"
-
-[node name="DownloadButton" type="Button" parent="MarginContainer/VBoxContainer/ButtonSection"]
-custom_minimum_size = Vector2(750, 100)
-layout_mode = 2
-size_flags_horizontal = 4
-theme_override_font_sizes/font_size = 56
-text = "💾 Download"
-
 [node name="ContinueButton" type="Button" parent="MarginContainer/VBoxContainer/ButtonSection"]
-custom_minimum_size = Vector2(750, 130)
+custom_minimum_size = Vector2(720, 110)
 layout_mode = 2
 size_flags_horizontal = 4
-theme_override_font_sizes/font_size = 60
+theme_override_font_sizes/font_size = 64
 text = "Continue"
 
-[connection signal="pressed" from="MarginContainer/VBoxContainer/ButtonSection/ShareButton" to="." method="_on_share_button_pressed"]
-[connection signal="pressed" from="MarginContainer/VBoxContainer/ButtonSection/DownloadButton" to="." method="_on_download_button_pressed"]
 [connection signal="pressed" from="MarginContainer/VBoxContainer/ButtonSection/ContinueButton" to="." method="_on_continue_button_pressed"]

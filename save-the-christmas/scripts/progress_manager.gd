@@ -1,7 +1,7 @@
 extends Node
 
 ## Progress Manager AutoLoad Singleton
-## Handles save/load system, star tracking, and level unlock logic
+## Handles save/load system and level unlock logic
 
 var current_level: int = 1
 var highest_level_unlocked: int = 1
@@ -42,15 +42,12 @@ func load_save_data() -> void:
 	current_level = _save_file.get_value("progress", "current_level", 1)
 	highest_level_unlocked = _save_file.get_value("progress", "highest_level_unlocked", 1)
 
-	# Load completions (backward compatible with stars)
+	# Load completions
 	completions.clear()
 	for level_id in range(1, GameConstants.TOTAL_LEVELS + 1):
 		completions[level_id] = {
-			"easy": _save_file.get_value("completions", "level_%d_easy" % level_id,
-					_save_file.get_value("stars", "level_%d_easy" % level_id, false)),
-			"hard": _save_file.get_value("completions", "level_%d_hard" % level_id,
-					_save_file.get_value("stars", "level_%d_hard" % level_id,
-					_save_file.get_value("stars", "level_%d_normal" % level_id, false)))
+			"easy": _save_file.get_value("completions", "level_%d_easy" % level_id, false),
+			"hard": _save_file.get_value("completions", "level_%d_hard" % level_id, false)
 		}
 
 	# Load settings

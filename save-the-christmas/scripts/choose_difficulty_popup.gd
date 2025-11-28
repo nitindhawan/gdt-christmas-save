@@ -8,10 +8,19 @@ signal difficulty_chosen(difficulty: int)
 @onready var title_label = $CenterContainer/PanelContainer/MarginContainer/VBoxContainer/TitleLabel
 @onready var easy_button = $CenterContainer/PanelContainer/MarginContainer/VBoxContainer/ButtonContainer/EasyButton
 @onready var hard_button = $CenterContainer/PanelContainer/MarginContainer/VBoxContainer/ButtonContainer/HardButton
+@onready var blurred_background = $BlurredBackground
+@onready var back_buffer_copy = $BackBufferCopy
 
 func _ready() -> void:
+	_apply_blur_settings()
 	_apply_theme()
 	_setup_buttons()
+
+func _apply_blur_settings() -> void:
+	# Enable/disable blur shader based on flag
+	if not GameConstants.ENABLE_GAUSSIAN_BLUR:
+		blurred_background.material = null
+		back_buffer_copy.visible = false
 
 func _apply_theme() -> void:
 	# Apply font sizes from ThemeManager

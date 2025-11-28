@@ -46,6 +46,9 @@ const ARROW_TEXTURE_PATH = "res://assets/ui/up_arrow.png"
 const DEFAULT_MUSIC_VOLUME = 0.7
 const DEFAULT_SOUND_VOLUME = 0.8
 
+# Visual effects flags
+const ENABLE_GAUSSIAN_BLUR = false  # Set to true to enable blur shader on popups
+
 # Level image specifications
 const LEVEL_IMAGE_SIZE = 2048  # 2048×2048 pixels
 const THUMBNAIL_SIZE = 512  # 512×512 pixels

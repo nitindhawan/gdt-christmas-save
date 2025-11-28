@@ -8,7 +8,7 @@ extends Node
 # ============================================================================
 
 # 4 essential font sizes for the entire game
-const FONT_SIZE_XLARGE = 80   # Titles, large icons, stars
+const FONT_SIZE_XLARGE = 80   # Titles, large icons
 const FONT_SIZE_LARGE = 64    # Section headers, main buttons, labels
 const FONT_SIZE_MEDIUM = 32   # Normal text, smaller buttons
 const FONT_SIZE_SMALL = 24    # Small text, badges
@@ -20,7 +20,7 @@ const FONT_SIZE_SMALL = 24    # Small text, badges
 # - Snow White (#F0F8FF): Large snowy areas, backgrounds, clean text
 # - Rich Christmas Red (#B3001B): Primary actions, accents, ribbons
 # - Forest Green (#0B6623): Secondary actions, toggle ON state
-# - Warm Gold (#FFD700): Stars, lights, borders, score/level text
+# - Warm Gold (#FFD700): Lights, borders, score/level text
 # - Deep Night Blue (#081C30): Night sky, modal backdrops
 
 # === PRIMARY PALETTE ===
@@ -141,7 +141,6 @@ const ANIM_INSTANT = 0.1          # Button press
 const ANIM_FAST = 0.15            # Arrow exit
 const ANIM_NORMAL = 0.2           # Arrow bounce
 const ANIM_SLOW = 0.3             # Tile swap, transitions
-const ANIM_STAR_DELAY = 0.2       # Star sequence delay
 
 const SCALE_PRESSED = 0.95
 const SCALE_HOVER = 1.05
