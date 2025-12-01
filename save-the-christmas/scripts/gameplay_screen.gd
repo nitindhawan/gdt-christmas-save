@@ -483,7 +483,7 @@ func _on_rings_container_input(event: InputEvent) -> void:
 					if ring_index >= 0:
 						spiral_state.set_ring_velocity(ring_index, angular_velocity)
 					if AudioManager:
-						AudioManager.play_sfx("tile_drop")
+						AudioManager.play_sfx("ring_drag_stop")
 					_dragging_ring_node = null
 
 	# Handle mouse motion during drag
