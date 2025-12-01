@@ -7,8 +7,8 @@ signal drag_started(tile_node)
 signal drag_ended(tile_node, target_tile_node)
 signal hover_changed(tile_node, is_hovering, target_tile_node)
 
-# Tile data
-var tile_data: Tile
+# Tile data (can be Tile or RowTile)
+var tile_data  # Untyped to support both Tile and RowTile
 var tile_index: int = -1
 var is_draggable: bool = true
 var is_being_dragged: bool = false
@@ -42,6 +42,24 @@ func setup(tile: Tile, index: int, source_texture: Texture2D) -> void:
 
 	# Check if tile is in correct position
 	is_draggable = !tile.is_correct()
+
+	# Configure visual appearance
+	_update_border_visual()
+
+## Setup the tile for row tile puzzle (similar to setup but for RowTile)
+func setup_row_tile(row_data, index: int, source_texture: Texture2D) -> void:
+	tile_data = row_data  # Store as tile_data for compatibility
+	tile_index = index
+
+	# Create AtlasTexture for the row region
+	var atlas_texture = AtlasTexture.new()
+	atlas_texture.atlas = source_texture
+	atlas_texture.region = row_data.texture_region
+
+	tile_texture.texture = atlas_texture
+
+	# Row tiles are always draggable until in correct position
+	is_draggable = !row_data.is_correct()
 
 	# Configure visual appearance
 	_update_border_visual()

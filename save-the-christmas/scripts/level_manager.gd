@@ -18,18 +18,21 @@ func _generate_dynamic_level(level_id: int) -> Dictionary:
 		push_error("Invalid level_id: %d (valid range: 1-%d)" % [level_id, GameConstants.TOTAL_LEVELS])
 		return {}
 
-	# Determine puzzle type: 3-way rotation
-	# Level % 3 == 1 -> Spiral Twist
-	# Level % 3 == 2 -> Rectangle Jigsaw
-	# Level % 3 == 0 -> Arrow Puzzle
+	# Determine puzzle type: 4-way rotation
+	# Level % 4 == 1 -> Spiral Twist
+	# Level % 4 == 2 -> Tile Puzzle
+	# Level % 4 == 3 -> Arrow Puzzle
+	# Level % 4 == 0 -> Row Tile Puzzle
 	var puzzle_type: String
-	var mod_result = level_id % 3
+	var mod_result = level_id % 4
 	if mod_result == 1:
 		puzzle_type = "spiral_twist"
 	elif mod_result == 2:
-		puzzle_type = "rectangle_jigsaw"
-	else:  # mod_result == 0
+		puzzle_type = "tile_puzzle"
+	elif mod_result == 3:
 		puzzle_type = "arrow_puzzle"
+	else:  # mod_result == 0
+		puzzle_type = "row_tile_puzzle"
 
 	# Generate difficulty configs based on puzzle type
 	var difficulty_configs = {}
@@ -53,8 +56,18 @@ func _generate_dynamic_level(level_id: int) -> Dictionary:
 				"grid_size": GameConstants.ARROW_GRID_HARD
 			}
 		}
+	elif puzzle_type == "row_tile_puzzle":
+		# Row tile puzzle configs (only Easy and Hard)
+		difficulty_configs = {
+			"easy": {
+				"row_count": GameConstants.ROW_TILE_ROWS_EASY
+			},
+			"hard": {
+				"row_count": GameConstants.ROW_TILE_ROWS_HARD
+			}
+		}
 	else:
-		# Rectangle puzzle configs (only Easy and Hard)
+		# Tile puzzle configs (only Easy and Hard)
 		difficulty_configs = {
 			"easy": {
 				"rows": 2,

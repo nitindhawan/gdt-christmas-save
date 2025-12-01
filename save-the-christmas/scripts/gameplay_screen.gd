@@ -12,6 +12,7 @@ const CHOOSE_DIFFICULTY_POPUP_SCENE = preload("res://scenes/choose_difficulty_po
 const GRINCH_TRANSITION_SCENE = preload("res://scenes/grinch_transition.tscn")
 const SpiralPuzzleState = preload("res://scripts/spiral_puzzle_state.gd")
 const ArrowPuzzleState = preload("res://scripts/arrow_puzzle_state.gd")
+const RowTilePuzzleState = preload("res://scripts/row_tile_puzzle_state.gd")
 
 # Gameplay state machine
 enum GameplayState {
@@ -36,6 +37,7 @@ var background_image: TextureRect = null # Background image for arrow puzzle
 var source_texture: Texture2D
 var is_spiral_puzzle: bool = false
 var is_arrow_puzzle: bool = false
+var is_row_tile_puzzle: bool = false
 var puzzle_center: Vector2 = Vector2(540, 960) # Center of 1080x1920 screen
 
 # UI references
@@ -121,6 +123,7 @@ func _initialize_gameplay() -> void:
 	# Determine puzzle type
 	is_spiral_puzzle = puzzle_state is SpiralPuzzleState
 	is_arrow_puzzle = puzzle_state is ArrowPuzzleState
+	is_row_tile_puzzle = puzzle_state is RowTilePuzzleState
 
 	if is_spiral_puzzle:
 		# Setup spiral puzzle
@@ -130,12 +133,16 @@ func _initialize_gameplay() -> void:
 		# Setup arrow puzzle
 		_setup_arrow_puzzle()
 		_spawn_arrows()
+	elif is_row_tile_puzzle:
+		# Setup row tile puzzle
+		_setup_row_tile_puzzle()
+		_spawn_row_tiles()
 	else:
-		# Setup rectangle puzzle
+		# Setup tile puzzle
 		_setup_puzzle_grid()
 		_spawn_tiles()
 
-	var puzzle_type_name = "Spiral" if is_spiral_puzzle else ("Arrow" if is_arrow_puzzle else "Rectangle")
+	var puzzle_type_name = "Spiral" if is_spiral_puzzle else ("Arrow" if is_arrow_puzzle else ("Row Tile" if is_row_tile_puzzle else "Tile"))
 	print("Gameplay initialized successfully (%s puzzle)" % puzzle_type_name)
 
 ## Setup puzzle grid layout based on difficulty
@@ -215,6 +222,111 @@ func _calculate_tile_size() -> Vector2:
 
 	return Vector2(tile_width, tile_height)
 
+## Setup row tile puzzle layout
+func _setup_row_tile_puzzle() -> void:
+	# Row tiles are arranged vertically, 1 column
+	puzzle_grid.columns = 1
+	print("Row tile puzzle configured: %d rows" % puzzle_state.row_count)
+
+## Spawn row tile nodes
+func _spawn_row_tiles() -> void:
+	# Clear existing tiles
+	for child in puzzle_grid.get_children():
+		child.queue_free()
+	tile_nodes.clear()
+
+	# Calculate row tile size
+	var row_tile_size = _calculate_row_tile_size()
+
+	# Create row tile nodes in order by current position
+	for i in range(puzzle_state.row_count):
+		# Find which row should be in position i
+		var row_data = null
+		for row in puzzle_state.rows:
+			if row.current_position == i:
+				row_data = row
+				break
+
+		if row_data == null:
+			push_error("No row found at position %d" % i)
+			continue
+
+		# Create tile node for this row
+		var tile_node = TILE_NODE_SCENE.instantiate()
+		tile_node.custom_minimum_size = row_tile_size
+
+		# Add to tree first
+		puzzle_grid.add_child(tile_node)
+
+		# Setup the tile (we need to create a fake Tile-like object for the row)
+		# The row_data already has the texture_region
+		tile_node.setup_row_tile(row_data, row_data.row_id, source_texture)
+		tile_node.drag_ended.connect(_on_row_tile_drag_ended)
+
+		tile_nodes.append(tile_node)
+
+	print("Spawned %d row tiles" % tile_nodes.size())
+
+## Calculate row tile size for row puzzle
+func _calculate_row_tile_size() -> Vector2:
+	var image_size = source_texture.get_size()
+
+	# Available space
+	var available_width = 900.0
+	var available_height = 1500.0
+
+	# Calculate height per row
+	var row_height = available_height / puzzle_state.row_count
+
+	# Scale to maintain aspect ratio
+	var scale = available_width / image_size.x
+	var final_height = (image_size.y / puzzle_state.row_count) * scale
+
+	# Use the smaller of the two to ensure it fits
+	final_height = min(final_height, row_height)
+
+	return Vector2(available_width, final_height)
+
+## Handle row tile drag ended
+func _on_row_tile_drag_ended(dragged_tile_node, target_tile_node) -> void:
+	if target_tile_node == null:
+		print("Row tile dropped on empty space")
+		_refresh_row_tile_positions()
+		return
+
+	# Get the row indices
+	var row1_index = dragged_tile_node.tile_index
+	var row2_index = target_tile_node.tile_index
+
+	print("Swapping row tiles %d and %d" % [row1_index, row2_index])
+
+	# Swap in puzzle state
+	puzzle_state.swap_rows(row1_index, row2_index)
+
+	# Play swap sound
+	if AudioManager:
+		AudioManager.play_sfx("tile_swap")
+
+	# Refresh the grid
+	_refresh_row_tile_positions()
+
+	# Check if puzzle solved
+	await get_tree().create_timer(0.1).timeout
+	_check_row_puzzle_solved()
+
+## Refresh row tile positions after swap
+func _refresh_row_tile_positions() -> void:
+	# Re-spawn all row tiles to reflect new positions
+	_spawn_row_tiles()
+
+## Check if row puzzle is solved
+func _check_row_puzzle_solved() -> void:
+	if puzzle_state.is_puzzle_solved():
+		print("Row tile puzzle solved!")
+		puzzle_state.is_solved = true
+		_save_progress()
+		await _handle_puzzle_completion()
+
 ## Handle tile drag ended (swap if dropped on another tile)
 func _on_tile_drag_ended(dragged_tile_node, target_tile_node) -> void:
 	if target_tile_node == null:
@@ -246,7 +358,7 @@ func _on_tile_drag_ended(dragged_tile_node, target_tile_node) -> void:
 ## Check if puzzle is solved
 func _check_puzzle_solved() -> void:
 	if PuzzleManager.is_puzzle_solved(puzzle_state):
-		print("Rectangle puzzle solved!")
+		print("Tile puzzle solved!")
 		puzzle_state.is_solved = true
 		_save_progress()
 		await _handle_puzzle_completion()
@@ -289,7 +401,9 @@ func _save_progress() -> void:
 
 	# Update statistics
 	ProgressManager.total_swaps_made += puzzle_state.swap_count
-	ProgressManager.total_hints_used += puzzle_state.hints_used
+	# Hints are deprecated, but keep compatibility if property exists
+	if "hints_used" in puzzle_state:
+		ProgressManager.total_hints_used += puzzle_state.hints_used
 
 	# Save to disk
 	ProgressManager.save_progress()
@@ -352,7 +466,7 @@ func _process(delta: float) -> void:
 
 ## Setup spiral puzzle container
 func _setup_spiral_puzzle() -> void:
-	# Hide rectangle grid
+	# Hide tile grid
 	puzzle_grid.visible = false
 
 	# Get puzzle area control
@@ -606,7 +720,7 @@ func _save_spiral_progress() -> void:
 
 ## Setup arrow puzzle with background image and arrows container
 func _setup_arrow_puzzle() -> void:
-	# Hide rectangle grid
+	# Hide tile grid
 	puzzle_grid.visible = false
 
 	# Get puzzle area control

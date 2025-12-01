@@ -12,7 +12,7 @@ const TOTAL_LEVELS = 25
 const MAX_STARS_PER_LEVEL = 3
 const DEFAULT_HINT_LIMIT = 3
 
-# Puzzle mechanics - Rectangle Jigsaw
+# Puzzle mechanics - Tile Puzzle
 const TILE_SWAP_DURATION = 0.3 # seconds
 const TILE_SELECTION_SCALE = 1.05
 const HINT_ANIMATION_DURATION = 0.5
@@ -44,6 +44,10 @@ const ARROW_TEXTURE_PATH = "res://assets/ui/up_arrow.png"
 const EVIL_CLOUD_TEXTURE_PATH = "res://assets/ui/evil_clouds.png"
 const EVIL_CLOUD_GRID_SIZE = Vector2i(4, 4) # 4x4 grid = 16 faces
 
+# Row tile puzzle - row counts per difficulty
+const ROW_TILE_ROWS_EASY = 8 # 8 rows
+const ROW_TILE_ROWS_HARD = 16 # 16 rows
+
 # Audio settings
 const DEFAULT_MUSIC_VOLUME = 0.7
 const DEFAULT_SOUND_VOLUME = 0.8
@@ -61,9 +65,10 @@ enum Difficulty {
 }
 
 enum PuzzleType {
-	RECTANGLE_JIGSAW = 0,
+	TILE_PUZZLE = 0,
 	SPIRAL_TWIST = 1,
-	ARROW_PUZZLE = 2
+	ARROW_PUZZLE = 2,
+	ROW_TILE_PUZZLE = 3
 }
 
 ## Helper function: Convert Difficulty enum to string

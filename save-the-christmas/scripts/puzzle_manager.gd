@@ -7,6 +7,8 @@ const SpiralRing = preload("res://scripts/spiral_ring.gd")
 const SpiralPuzzleState = preload("res://scripts/spiral_puzzle_state.gd")
 const ArrowPuzzleState = preload("res://scripts/arrow_puzzle_state.gd")
 const Arrow = preload("res://scripts/arrow.gd")
+const RowTilePuzzleState = preload("res://scripts/row_tile_puzzle_state.gd")
+const RowTile = preload("res://scripts/row_tile.gd")
 
 ## Generate a puzzle state from level data and difficulty
 func generate_puzzle(level_id: int, difficulty: int) -> Resource:
@@ -16,18 +18,20 @@ func generate_puzzle(level_id: int, difficulty: int) -> Resource:
 		return null
 
 	# Determine puzzle type
-	var puzzle_type = level_data.get("puzzle_type", "rectangle_jigsaw")
+	var puzzle_type = level_data.get("puzzle_type", "tile_puzzle")
 
 	# Route to appropriate generation method
 	if puzzle_type == "spiral_twist":
 		return _generate_spiral_puzzle(level_id, difficulty, level_data)
 	elif puzzle_type == "arrow_puzzle":
 		return _generate_arrow_puzzle(level_id, difficulty, level_data)
+	elif puzzle_type == "row_tile_puzzle":
+		return _generate_row_tile_puzzle(level_id, difficulty, level_data)
 	else:
-		return _generate_rectangle_puzzle(level_id, difficulty, level_data)
+		return _generate_tile_puzzle(level_id, difficulty, level_data)
 
-## Generate a rectangle jigsaw puzzle (original implementation)
-func _generate_rectangle_puzzle(level_id: int, difficulty: int, level_data: Dictionary) -> PuzzleState:
+## Generate a tile puzzle (original implementation)
+func _generate_tile_puzzle(level_id: int, difficulty: int, level_data: Dictionary) -> PuzzleState:
 	# Get difficulty configuration
 	var difficulty_str = GameConstants.difficulty_to_string(difficulty)
 	var diff_config = level_data["difficulty_configs"][difficulty_str]
@@ -60,7 +64,7 @@ func _generate_rectangle_puzzle(level_id: int, difficulty: int, level_data: Dict
 	# Scramble tiles
 	scramble_tiles(puzzle_state)
 
-	print("Generated rectangle puzzle: Level %d, %s, Grid %dx%d, Tiles: %d" % [level_id, difficulty_str, rows, columns, puzzle_state.tiles.size()])
+	print("Generated tile puzzle: Level %d, %s, Grid %dx%d, Tiles: %d" % [level_id, difficulty_str, rows, columns, puzzle_state.tiles.size()])
 
 	return puzzle_state
 
@@ -305,6 +309,107 @@ func _create_arrows_for_grid(grid_size: Vector2i, direction_set: Array[int]) -> 
 			arrow_id += 1
 
 	return arrows
+
+## Generate a row tile puzzle
+func _generate_row_tile_puzzle(level_id: int, difficulty: int, level_data: Dictionary) -> RowTilePuzzleState:
+	var difficulty_str = GameConstants.difficulty_to_string(difficulty)
+	var diff_config = level_data["difficulty_configs"][difficulty_str]
+
+	if diff_config == null:
+		push_error("No difficulty config found for %s" % difficulty_str)
+		return null
+
+	# Get row count from difficulty config or use defaults
+	var row_count = diff_config.get("row_count", _get_default_row_count(difficulty))
+
+	# Load level texture
+	var texture = LevelManager.get_level_texture(level_id)
+	if texture == null:
+		push_error("Failed to load level image for level %d" % level_id)
+		return null
+
+	# Create row tile puzzle state
+	var puzzle_state = RowTilePuzzleState.new()
+	puzzle_state.level_id = level_id
+	puzzle_state.difficulty = difficulty_str
+	puzzle_state.row_count = row_count
+	puzzle_state.swap_count = 0
+	puzzle_state.is_solved = false
+
+	# Create rows from image
+	puzzle_state.rows = _create_rows_from_image(texture, row_count)
+
+	# Scramble rows
+	_scramble_rows(puzzle_state)
+
+	print("Generated row tile puzzle: Level %d, %s, Rows: %d" % [level_id, difficulty_str, row_count])
+
+	return puzzle_state
+
+## Get default row count based on difficulty
+func _get_default_row_count(difficulty: int) -> int:
+	match difficulty:
+		GameConstants.Difficulty.EASY:
+			return GameConstants.ROW_TILE_ROWS_EASY
+		GameConstants.Difficulty.HARD:
+			return GameConstants.ROW_TILE_ROWS_HARD
+		_:
+			return GameConstants.ROW_TILE_ROWS_EASY
+
+## Create rows from an image divided into horizontal strips
+func _create_rows_from_image(texture: Texture2D, row_count: int) -> Array[RowTile]:
+	var rows: Array[RowTile] = []
+
+	var image_size = texture.get_size()
+	var row_height = image_size.y / row_count
+
+	for i in range(row_count):
+		var row = RowTile.new()
+		row.row_id = i
+		row.correct_position = i
+		row.current_position = i  # Start in correct position
+
+		# Define texture region for this row (full width, portion of height)
+		var region_y = i * row_height
+		row.texture_region = Rect2(0, region_y, image_size.x, row_height)
+
+		rows.append(row)
+
+	return rows
+
+## Scramble rows using Fisher-Yates shuffle
+func _scramble_rows(puzzle_state: RowTilePuzzleState) -> void:
+	var rows = puzzle_state.rows
+	var n = rows.size()
+
+	# Fisher-Yates shuffle
+	for i in range(n - 1, 0, -1):
+		var j = randi() % (i + 1)
+
+		# Swap current positions
+		var temp_pos = rows[i].current_position
+		rows[i].current_position = rows[j].current_position
+		rows[j].current_position = temp_pos
+
+	# Verify puzzle is not already solved
+	var attempts = 0
+	while _is_row_puzzle_solved(puzzle_state) and attempts < 10:
+		# Shuffle again if already solved
+		for i in range(n - 1, 0, -1):
+			var j = randi() % (i + 1)
+			var temp_pos = rows[i].current_position
+			rows[i].current_position = rows[j].current_position
+			rows[j].current_position = temp_pos
+		attempts += 1
+
+	print("Row puzzle scrambled (attempts: %d)" % (attempts + 1))
+
+## Check if row puzzle is solved (all rows in correct positions)
+func _is_row_puzzle_solved(puzzle_state: RowTilePuzzleState) -> bool:
+	for row in puzzle_state.rows:
+		if row.current_position != row.correct_position:
+			return false
+	return true
 
 ## Create tiles from an image divided into a grid
 func create_tiles_from_image(texture: Texture2D, rows: int, columns: int) -> Array[Tile]:
