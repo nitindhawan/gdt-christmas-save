@@ -871,6 +871,10 @@ func _on_arrow_tapped(arrow_id: int) -> void:
 func _check_arrow_puzzle_solved() -> void:
 	var arrow_state = puzzle_state as ArrowPuzzleState
 
+	# Guard against multiple calls
+	if arrow_state.is_solved:
+		return
+
 	if arrow_state.is_puzzle_solved():
 		print("Arrow puzzle solved!")
 		arrow_state.is_solved = true
