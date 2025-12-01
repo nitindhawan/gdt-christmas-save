@@ -608,6 +608,7 @@ func _spawn_arrows() -> void:
 	background_image.custom_minimum_size = Vector2(puzzle_size, puzzle_size)
 	background_image.size = Vector2(puzzle_size, puzzle_size)
 	background_image.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	background_image.z_index = 0  # Background layer
 	puzzle_area.add_child(background_image)
 
 	# Create arrows container (overlay on top of background)

@@ -39,8 +39,10 @@ const ARROW_GRID_SPACING = 10 # Pixels between arrows
 const ARROW_GRID_EASY = Vector2i(4, 3) # 12 arrows
 const ARROW_GRID_HARD = Vector2i(6, 5) # 30 arrows
 
-# Arrow asset path
+# Arrow asset paths
 const ARROW_TEXTURE_PATH = "res://assets/ui/up_arrow.png"
+const EVIL_CLOUD_TEXTURE_PATH = "res://assets/ui/evil_clouds.png"
+const EVIL_CLOUD_GRID_SIZE = Vector2i(4, 4) # 4x4 grid = 16 faces
 
 # Audio settings
 const DEFAULT_MUSIC_VOLUME = 0.7
