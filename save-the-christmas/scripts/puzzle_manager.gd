@@ -92,8 +92,8 @@ func _generate_spiral_puzzle(level_id: int, difficulty: int, level_data: Diction
 	puzzle_state.is_solved = false
 
 	# Calculate max_radius based on container size, not image height
-	# Container is 1024×1024, use 480px to leave room for corner ring
-	var max_radius = 480.0
+	# Container is 1024×1024, max radius = 512px (half of container)
+	var max_radius = 512.0
 	puzzle_state.puzzle_radius = max_radius
 
 	print("Spiral puzzle: container_based max_radius=%.1f" % max_radius)

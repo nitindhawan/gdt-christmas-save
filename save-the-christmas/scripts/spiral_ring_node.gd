@@ -56,10 +56,10 @@ func _create_ring_mesh(inner_radius: float, outer_radius: float, texture_resourc
 	var tex_size = texture_resource.get_size()
 
 	# Calculate scale factor: texture space vs screen space
-	# Texture radius = image_height / 2, Screen radius = max_radius (480px)
+	# Texture radius = image_height / 2, Screen radius = max_radius (512px)
 	# Scale factor = texture_radius / screen_radius
 	var texture_radius = tex_size.y / 2.0  # Assuming square texture
-	var screen_max_radius = 480.0  # Matches puzzle_manager.gd max_radius
+	var screen_max_radius = 512.0  # Matches puzzle_manager.gd max_radius
 	var uv_scale = texture_radius / screen_max_radius
 
 	# Generate vertices and UVs (ONCE, not every frame!)
