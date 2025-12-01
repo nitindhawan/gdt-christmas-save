@@ -13,31 +13,31 @@ const MAX_STARS_PER_LEVEL = 3
 const DEFAULT_HINT_LIMIT = 3
 
 # Puzzle mechanics - Rectangle Jigsaw
-const TILE_SWAP_DURATION = 0.3  # seconds
+const TILE_SWAP_DURATION = 0.3 # seconds
 const TILE_SELECTION_SCALE = 1.05
 const HINT_ANIMATION_DURATION = 0.5
 
 # Puzzle mechanics - Spiral Twist
-const SPIRAL_RING_BORDER_WIDTH = 4  # pixels
-const SPIRAL_MERGE_ANGLE_THRESHOLD = 5.0  # degrees
-const SPIRAL_MERGE_VELOCITY_THRESHOLD = 10.0  # degrees per second
-const SPIRAL_ANGULAR_DECELERATION = 200.0  # degrees/s² (stops in 2-3 seconds)
-const SPIRAL_MAX_ANGULAR_VELOCITY = 720.0  # degrees per second
-const SPIRAL_MIN_VELOCITY_THRESHOLD = 1.0  # Stop completely below this
-const SPIRAL_ROTATION_SNAP_ANGLE = 1.0  # Snap to correct when within this angle
+const SPIRAL_RING_BORDER_WIDTH = 4 # pixels
+const SPIRAL_MERGE_ANGLE_THRESHOLD = 5.0 # degrees
+const SPIRAL_MERGE_VELOCITY_THRESHOLD = 10.0 # degrees per second
+const SPIRAL_ANGULAR_DECELERATION = 200.0 # degrees/s² (stops in 2-3 seconds)
+const SPIRAL_MAX_ANGULAR_VELOCITY = 720.0 # degrees per second
+const SPIRAL_MIN_VELOCITY_THRESHOLD = 1.0 # Stop completely below this
+const SPIRAL_ROTATION_SNAP_ANGLE = 1.0 # Snap to correct when within this angle
 
 # Spiral ring counts per difficulty
-const SPIRAL_RINGS_EASY = 3
-const SPIRAL_RINGS_HARD = 7
+const SPIRAL_RINGS_EASY = 5
+const SPIRAL_RINGS_HARD = 8
 
 # Puzzle mechanics - Arrow Puzzle
-const ARROW_BOUNCE_DURATION = 0.2  # Bounce-back animation duration (seconds)
-const ARROW_EXIT_DURATION = 0.15  # Fade-out on success (seconds)
-const ARROW_GRID_SPACING = 10  # Pixels between arrows
+const ARROW_BOUNCE_DURATION = 0.2 # Bounce-back animation duration (seconds)
+const ARROW_EXIT_DURATION = 0.15 # Fade-out on success (seconds)
+const ARROW_GRID_SPACING = 10 # Pixels between arrows
 
 # Arrow grid sizes per difficulty (columns, rows)
-const ARROW_GRID_EASY = Vector2i(5, 4)  # 20 arrows
-const ARROW_GRID_HARD = Vector2i(8, 7)  # 56 arrows
+const ARROW_GRID_EASY = Vector2i(4, 3) # 12 arrows
+const ARROW_GRID_HARD = Vector2i(6, 5) # 30 arrows
 
 # Arrow asset path
 const ARROW_TEXTURE_PATH = "res://assets/ui/up_arrow.png"
@@ -47,11 +47,11 @@ const DEFAULT_MUSIC_VOLUME = 0.7
 const DEFAULT_SOUND_VOLUME = 0.8
 
 # Visual effects flags
-const ENABLE_GAUSSIAN_BLUR = false  # Set to true to enable blur shader on popups
+const ENABLE_GAUSSIAN_BLUR = false # Set to true to enable blur shader on popups
 
 # Level image specifications
-const LEVEL_IMAGE_SIZE = 2048  # 2048×2048 pixels
-const THUMBNAIL_SIZE = 512  # 512×512 pixels
+const LEVEL_IMAGE_SIZE = 2048 # 2048×2048 pixels
+const THUMBNAIL_SIZE = 512 # 512×512 pixels
 
 # Enums
 enum Difficulty {
