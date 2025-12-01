@@ -8,7 +8,7 @@ const LEVELS_DATA_PATH = "res://data/levels.json"
 const SAVE_DATA_PATH = "user://save_data.cfg"
 
 # Game settings
-const TOTAL_LEVELS = 100
+const TOTAL_LEVELS = 25
 const MAX_STARS_PER_LEVEL = 3
 const DEFAULT_HINT_LIMIT = 3
 
@@ -50,8 +50,7 @@ const DEFAULT_SOUND_VOLUME = 0.8
 const ENABLE_GAUSSIAN_BLUR = false # Set to true to enable blur shader on popups
 
 # Level image specifications
-const LEVEL_IMAGE_SIZE = 2048 # 2048×2048 pixels
-const THUMBNAIL_SIZE = 512 # 512×512 pixels
+const LEVEL_IMAGE_SIZE = 1024 # 1024×1024 pixels
 
 # Enums
 enum Difficulty {
