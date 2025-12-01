@@ -8,13 +8,14 @@
 ---
 
 ## Game Objective
-Solve beautiful Christmas-themed image puzzles in two distinct modes. Complete levels across three difficulty settings to earn up to 3 stars per level.
+Solve beautiful Christmas-themed image puzzles in three distinct modes. Complete levels across three difficulty settings to earn up to 3 stars per level.
 
 ## Puzzle Types
 
-The game features two puzzle mechanics that alternate between levels:
-- **Odd-numbered levels (1, 3, 5, ...)**: Spiral Twist
-- **Even-numbered levels (2, 4, 6, ...)**: Rectangle Jigsaw
+The game features three puzzle mechanics that rotate through levels:
+- **Level % 3 == 1 (1, 4, 7, 10, ...)**: Spiral Twist
+- **Level % 3 == 2 (2, 5, 8, 11, ...)**: Rectangle Jigsaw
+- **Level % 3 == 0 (3, 6, 9, 12, ...)**: Arrow Puzzle
 
 ---
 
@@ -111,8 +112,8 @@ When two adjacent rings align (angle ≤5°, velocity ≤10°/s):
 - **Progressive locking**: Rings merge inward until all are part of the locked outermost ring
 
 #### Puzzle Solved Condition (IMPLEMENTED)
-- **Win condition check**: `spiral_state.is_puzzle_solved()` returns `active_ring_count <= 1`
-- **Actual implementation**: When `rings.size() == 1` (only locked outermost ring remains)
+- **Win condition check**: `spiral_state.is_puzzle_solved()` returns `active_ring_count == 0`
+- **Actual implementation**: When all inner rings have merged into the locked outermost ring
 - **Progression**: Inner rings merge with neighbors → eventually merge with outermost → become locked
 - Rings must be aligned (angle ≤5°) and have similar velocity (≤10°/s) to merge
 - Victory triggers (in _check_spiral_puzzle_solved):
@@ -121,12 +122,6 @@ When two adjacent rings align (angle ≤5°, velocity ≤10°/s):
   - Save progress (stars, rotation_count, hints_used) via _save_spiral_progress()
   - Navigate to LevelCompleteScreen after 1 second delay
 
-### Hint System (Spiral)
-- **Action**: Snaps one random incorrect ring to 0° (correct angle)
-- **Limitation**: 3 hints per level (configurable in levels.json)
-- **Selection**: Randomly picks from rings not yet at correct angle
-- **Effect**: Instant rotation to correct position (no animation)
-- **Cost**: Free in MVP
 
 ### Physics Constants (GameConstants)
 ```
@@ -187,12 +182,53 @@ Each level image is divided into a rectangular grid of tiles:
 - Tapping outside grid: Deselects currently selected tile
 - Rapid tapping: Debounced to prevent multiple simultaneous swaps
 
-### Hint System (Rectangle Jigsaw)
-- **Location**: Button at bottom of Gameplay Screen
-- **Action**: Automatically swaps one incorrectly placed tile to its correct position
-- **Limitation**: 3 hints per level (configurable in levels.json)
-- **Visual Feedback**: Sparkle/glow animation on hinted tile
-- **Cost**: Free in MVP (future: rewarded video ads for additional hints)
+---
+
+## Puzzle Type 3: Arrow Puzzle
+
+### Overview
+Tap arrows to move them in their indicated direction. Arrows exit the grid when reaching the boundary, or bounce back if blocked by another arrow.
+
+### Grid System
+- **Easy**: 5×4 grid (20 arrows) - Low complexity, ~2-3 minutes
+- **Normal**: 6×5 grid (30 arrows) - Medium complexity, ~4-6 minutes
+- **Hard**: 8×7 grid (56 arrows) - High complexity, ~7-10 minutes
+- **Background**: Full level image visible beneath arrows
+
+### Arrow Properties
+- Each arrow has a direction (UP, DOWN, LEFT, or RIGHT)
+- Arrows displayed with rotated arrow icon showing direction
+- Semi-transparent white background for visibility
+- Each arrow occupies one grid position
+
+### Direction Generation Algorithm
+To ensure solvability, all arrows in a puzzle use only **2 allowed directions**:
+- **Direction Sets** (randomly pick one per puzzle):
+  - 25% chance: LEFT or UP only
+  - 25% chance: LEFT or DOWN only
+  - 25% chance: RIGHT or UP only
+  - 25% chance: RIGHT or DOWN only
+- Each arrow randomly assigned one of the two allowed directions
+- Guarantees solvability: all arrows can exit in their respective directions
+
+### Gameplay Mechanics
+1. **Tap arrow**: Attempts to move arrow in its direction
+2. **Success path**: Arrow traces path to grid boundary → exits and disappears (0.15s fade)
+3. **Blocked path**: Arrow hits another arrow → bounces back to original position (0.2s animation) + error sound
+4. **Win condition**: All arrows have exited the grid (active_arrow_count == 0)
+5. **Strategy**: Tap edge arrows first, work inward to clear blocking arrows
+
+### Invalid Actions
+- Tapping arrow during animation: No effect (is_animating flag prevents double-tap)
+- Tapping exited arrow: No effect (arrow already removed)
+- Tapping outside grid: No effect
+
+---
+
+## Hint System (All Puzzle Types)
+- **Removed**: The hint system has been completely removed from the game
+- All levels have hint_limit set to 0
+- No hint buttons appear in gameplay screens
 
 ### Win Condition (Rectangle Jigsaw)
 - Puzzle is solved when ALL tiles are in their correct positions
@@ -203,7 +239,7 @@ Each level image is divided into a rectangular grid of tiles:
   3. Transition to Level Complete Screen after 1-second delay
 
 ### Win Condition (Spiral Twist)
-- Puzzle is solved when only 1 active ring remains (all merged)
+- Puzzle is solved when all inner rings have merged into the locked outermost ring (active_ring_count == 0)
 - All rings must be aligned within ±1° of correct angle (0°)
 - On win:
   1. Play "level_complete" sound effect
@@ -303,12 +339,16 @@ After L2 Easy:    Level 1 (2⭐⭐+Hard) | Level 2 Easy(1⭐) + Normal ✓ | Lev
 #### Rectangle Jigsaw
 - **Tile Select**: Soft click when first tile selected ("tile_pickup")
 - **Tile Swap**: Swap/whoosh sound during tile exchange ("tile_drop")
-- **Hint Used**: Special "magical" sound
 
 #### Spiral Twist
 - **Ring Touch**: Soft pickup sound on drag start ("tile_pickup")
 - **Ring Release**: Drop sound on drag end ("tile_drop")
 - **Ring Merge**: Special merge sound when rings lock together ("ring_merge")
+
+#### Arrow Puzzle
+- **Arrow Tap**: Soft tap sound on arrow selection
+- **Arrow Exit**: Success sound when arrow exits grid
+- **Arrow Blocked**: Error sound when movement blocked ("error")
 
 #### Common
 - **Level Complete**: Victory jingle (cheerful Christmas melody)
@@ -316,9 +356,9 @@ After L2 Easy:    Level 1 (2⭐⭐+Hard) | Level 2 Easy(1⭐) + Normal ✓ | Lev
 - **Background Music**: Looping Christmas instrumentals (toggleable, low volume)
 
 ### Haptic Triggers
-- **Tile Select / Ring Touch**: Light tap
-- **Tile Swap / Ring Merge**: Medium pulse
-- **Level Complete**: Success pattern (0.8 intensity for Spiral)
+- **Tile Select / Ring Touch / Arrow Tap**: Light tap
+- **Tile Swap / Ring Merge / Arrow Exit**: Medium pulse
+- **Level Complete**: Success pattern (0.8 intensity)
 - All haptics toggleable via Settings popup
 
 ---

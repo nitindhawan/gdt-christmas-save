@@ -9,9 +9,9 @@
 ---
 
 ## Game Concept
-Save the Christmas is a 2D mobile puzzle game featuring TWO distinct puzzle mechanics: Spiral Twist (rotating concentric rings) and Rectangle Jigsaw (tile swapping). Players progress through 100 levels, earning up to 3 stars per level based on difficulty (Easy, Normal, Hard). The game features a minimalistic premium design with a festive Christmas theme.
+Save the Christmas is a 2D mobile puzzle game featuring THREE distinct puzzle mechanics: Spiral Twist (rotating concentric rings), Rectangle Jigsaw (tile swapping), and Arrow Puzzle (directional movement). Players progress through 100 levels, earning up to 3 stars per level based on difficulty (Easy, Normal, Hard). The game features a minimalistic premium design with a festive Christmas theme.
 
-**Puzzle Types**: Odd levels = Spiral Twist, Even levels = Rectangle Jigsaw
+**Puzzle Types**: Level % 3 == 1: Spiral Twist, Level % 3 == 2: Rectangle Jigsaw, Level % 3 == 0: Arrow Puzzle
 **Platform**: Mobile (iOS/Android) - Portrait mode only
 **Target Resolution**: 1080×1920 (16:9 aspect ratio)
 **Godot Version**: 4.5.1
@@ -62,7 +62,7 @@ These 6 core systems are configured in Project Settings → AutoLoad:
 - **Total levels**: 100 (configured in levels.json, currently 3 defined)
 - **Dynamic generation**: LevelManager auto-generates levels beyond JSON using 3 base images cycled
 - Each level contains: level_id, name, image_path, thumbnail_path, puzzle_type, difficulty_configs
-- Puzzle types alternate: Odd levels (1,3,5...) = Spiral Twist, Even (2,4,6...) = Rectangle Jigsaw
+- Puzzle types rotate in 3-way pattern: Level % 3 == 1: Spiral Twist, Level % 3 == 2: Rectangle Jigsaw, Level % 3 == 0: Arrow Puzzle
 - LevelManager caches textures for performance (get_level_texture, get_thumbnail_texture)
 - See **DATA-SCHEMA.md** for complete levels.json structure
 - **Implementation**: `scripts/level_manager.gd` (227 lines)
@@ -86,8 +86,8 @@ These 6 core systems are configured in Project Settings → AutoLoad:
 - Ring merging: Adjacent rings merge when angle ≤5° and velocity ≤10°/s
 - **Merge behavior**: Keeps outer ring, expands inner_radius, removes inner ring from array, regenerates meshes
 - Merged rings continue rotating until they merge with the outermost locked ring
-- Win condition: rings.size() == 1 (only locked outermost ring remains)
-- Hint system: Snaps random incorrect ring to correct angle (0°)
+- Win condition: active_ring_count == 0 (all inner rings merged into locked outermost ring)
+- No hint system (removed from entire game)
 - **Rendering**: MeshInstance2D with pre-generated ArrayMesh (3-7 draw calls vs 768-1,792 in triangle-based approach)
 - See **GAME-RULES.md** for complete mechanics
 - **Implementation files**:
@@ -103,7 +103,7 @@ These 6 core systems are configured in Project Settings → AutoLoad:
 - Tiles in correct position become non-draggable (is_draggable = false)
 - Real-time validation after each swap via is_puzzle_solved()
 - Win condition: All tiles in correct positions
-- Hint system: Automatically swaps one incorrect tile to correct position (3 hints per level)
+- No hint system (removed from entire game)
 - See **GAME-RULES.md** for complete mechanics
 - **Implementation files**:
   - Core data: `tile.gd` (20 lines), `puzzle_state.gd` (63 lines)
@@ -111,9 +111,24 @@ These 6 core systems are configured in Project Settings → AutoLoad:
   - Generation: `puzzle_manager.gd` methods: _generate_rectangle_puzzle(), create_tiles_from_image(), scramble_tiles()
   - Gameplay: `gameplay_screen.gd` methods: _setup_puzzle_grid(), _spawn_tiles(), _on_tile_drag_ended()
 
+#### Puzzle Type 3: Arrow Puzzle (Levels divisible by 3) - FULLY IMPLEMENTED
+- Grid of arrows overlaid on background image: Easy (5×4=20), Normal (6×5=30), Hard (8×7=56)
+- Direction algorithm: 2-direction sets (LEFT+UP, LEFT+DOWN, RIGHT+UP, RIGHT+DOWN) guarantee solvability
+- Player interaction: Tap arrow to move it in its direction
+- Movement: Arrow exits grid (success, disappears) or hits another arrow (bounce back with 0.2s animation)
+- Real-time validation via is_puzzle_solved() when arrows exit
+- Win condition: All arrows have exited the grid (active_arrow_count == 0)
+- No hint system (removed from entire game)
+- See **GAME-RULES.md** for complete mechanics
+- **Implementation files**:
+  - Core data: `arrow.gd` (69 lines), `arrow_puzzle_state.gd` (146 lines)
+  - Visual: `arrow_node.gd` (107 lines), `arrow_node.tscn`
+  - Generation: `puzzle_manager.gd` methods: _generate_arrow_puzzle(), _create_arrows_for_grid()
+  - Gameplay: `gameplay_screen.gd` methods: _setup_arrow_puzzle(), _spawn_arrows(), _on_arrow_tapped()
+
 ### Audio System - IMPLEMENTED (placeholder audio paths)
 - Background music: Looping Christmas ambient tracks (toggleable via ProgressManager)
-- Sound effects: tile_pickup, tile_drop, tile_select, tile_swap, ring_merge, level_complete, button_click, hint_used
+- Sound effects: tile_pickup, tile_drop, tile_select, tile_swap, ring_merge, level_complete, button_click, error (for blocked arrow)
 - Haptic feedback on tile/ring interactions (toggleable, uses Input.vibrate_handheld on mobile)
 - All settings persist via ProgressManager to user://save_data.cfg
 - Audio files in OGG format, stored in assets/audio/ (paths defined in AudioManager.SFX_PATHS)
@@ -189,7 +204,7 @@ See **MILESTONES-AND-TASKS.md** for detailed implementation tasks and timeline.
 **Completed Implementation**:
 - All 6 AutoLoad singletons functional (GameConstants, GameManager, ProgressManager, LevelManager, AudioManager, PuzzleManager)
 - All core scenes implemented (LoadingScreen, LevelSelection, DifficultySelection, GameplayScreen, LevelCompleteScreen, SettingsPopup)
-- Both puzzle types fully functional (Spiral Twist and Rectangle Jigsaw)
+- All three puzzle types fully functional (Spiral Twist, Rectangle Jigsaw, and Arrow Puzzle)
 - Complete progression system with star tracking and level unlocking
 - Save/load system using ConfigFile (user://save_data.cfg)
 - Dynamic level generation supporting 100+ levels from 3 base images
@@ -197,6 +212,7 @@ See **MILESTONES-AND-TASKS.md** for detailed implementation tasks and timeline.
 **Working Features**:
 - Spiral Twist: Physics-based ring rotation with flick momentum and merging
 - Rectangle Jigsaw: Drag-and-drop tile swapping with validation
+- Arrow Puzzle: Tap-based directional movement with collision detection
 - Full scene navigation flow (Loading → LevelSelection → Difficulty/Gameplay → Complete)
 - Progress persistence (stars, unlocked levels, settings)
 - Settings popup (music, sound, vibrations toggles)

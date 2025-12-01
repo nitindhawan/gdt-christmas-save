@@ -7,17 +7,40 @@ signal settings_closed
 
 # UI Node references
 @onready var overlay = $Overlay
+@onready var title_label = $CenterContainer/ModalPanel/MarginContainer/VBoxContainer/Header/TitleLabel
+@onready var close_button = $CenterContainer/ModalPanel/MarginContainer/VBoxContainer/Header/CloseButton
+@onready var sound_label = $CenterContainer/ModalPanel/MarginContainer/VBoxContainer/ToggleSection/SoundToggle/Label
 @onready var sound_toggle = $CenterContainer/ModalPanel/MarginContainer/VBoxContainer/ToggleSection/SoundToggle/ToggleButton
+@onready var music_label = $CenterContainer/ModalPanel/MarginContainer/VBoxContainer/ToggleSection/MusicToggle/Label
 @onready var music_toggle = $CenterContainer/ModalPanel/MarginContainer/VBoxContainer/ToggleSection/MusicToggle/ToggleButton
+@onready var vibration_label = $CenterContainer/ModalPanel/MarginContainer/VBoxContainer/ToggleSection/VibrationToggle/Label
 @onready var vibration_toggle = $CenterContainer/ModalPanel/MarginContainer/VBoxContainer/ToggleSection/VibrationToggle/ToggleButton
-
-# Colors for toggle states
-const COLOR_ON = Color(0.2, 0.7, 0.3, 1.0)  # Green
-const COLOR_OFF = Color(0.4, 0.4, 0.4, 1.0)  # Gray
+@onready var feedback_button = $CenterContainer/ModalPanel/MarginContainer/VBoxContainer/ButtonSection/FeedbackButton
+@onready var remove_ads_button = $CenterContainer/ModalPanel/MarginContainer/VBoxContainer/ButtonSection/RemoveAdsButton
+@onready var privacy_button = $CenterContainer/ModalPanel/MarginContainer/VBoxContainer/FooterLinks/PrivacyButton
+@onready var separator_label = $CenterContainer/ModalPanel/MarginContainer/VBoxContainer/FooterLinks/Separator
+@onready var terms_button = $CenterContainer/ModalPanel/MarginContainer/VBoxContainer/FooterLinks/TermsButton
 
 func _ready() -> void:
+	_apply_theme()
 	_load_settings()
 	_update_all_toggle_visuals()
+
+func _apply_theme() -> void:
+	# Apply font sizes from ThemeManager
+	# Note: close_button is now a TextureButton, no font theme needed
+	ThemeManager.apply_xlarge(title_label, ThemeManager.COLOR_TEXT_SECONDARY)
+	ThemeManager.apply_large(sound_label, ThemeManager.COLOR_TEXT_SECONDARY)
+	ThemeManager.apply_large(sound_toggle)
+	ThemeManager.apply_large(music_label, ThemeManager.COLOR_TEXT_SECONDARY)
+	ThemeManager.apply_large(music_toggle)
+	ThemeManager.apply_large(vibration_label, ThemeManager.COLOR_TEXT_SECONDARY)
+	ThemeManager.apply_large(vibration_toggle)
+	ThemeManager.apply_large(feedback_button)
+	ThemeManager.apply_large(remove_ads_button)
+	ThemeManager.apply_large(privacy_button)
+	ThemeManager.apply_small(separator_label, Color(0.5, 0.5, 0.5, 1.0))
+	ThemeManager.apply_large(terms_button)
 
 ## Load current settings from ProgressManager
 func _load_settings() -> void:
@@ -34,38 +57,9 @@ func _update_all_toggle_visuals() -> void:
 
 ## Update a single toggle button's appearance
 func _update_toggle_visual(button: Button, is_on: bool) -> void:
-	if is_on:
-		button.text = "ON"
-		button.add_theme_color_override("font_color", Color.WHITE)
-		button.add_theme_color_override("font_pressed_color", Color.WHITE)
-		button.add_theme_color_override("font_hover_color", Color.WHITE)
-
-		# Create green StyleBox for ON state
-		var style_on = StyleBoxFlat.new()
-		style_on.bg_color = COLOR_ON
-		style_on.corner_radius_top_left = 16
-		style_on.corner_radius_top_right = 16
-		style_on.corner_radius_bottom_left = 16
-		style_on.corner_radius_bottom_right = 16
-		button.add_theme_stylebox_override("normal", style_on)
-		button.add_theme_stylebox_override("hover", style_on)
-		button.add_theme_stylebox_override("pressed", style_on)
-	else:
-		button.text = "OFF"
-		button.add_theme_color_override("font_color", Color.WHITE)
-		button.add_theme_color_override("font_pressed_color", Color.WHITE)
-		button.add_theme_color_override("font_hover_color", Color.WHITE)
-
-		# Create gray StyleBox for OFF state
-		var style_off = StyleBoxFlat.new()
-		style_off.bg_color = COLOR_OFF
-		style_off.corner_radius_top_left = 16
-		style_off.corner_radius_top_right = 16
-		style_off.corner_radius_bottom_left = 16
-		style_off.corner_radius_bottom_right = 16
-		button.add_theme_stylebox_override("normal", style_off)
-		button.add_theme_stylebox_override("hover", style_off)
-		button.add_theme_stylebox_override("pressed", style_off)
+	var color = ThemeManager.COLOR_TOGGLE_ON if is_on else ThemeManager.COLOR_TOGGLE_OFF
+	var text = "ON" if is_on else "OFF"
+	ThemeManager.apply_button_theme(button, color, text)
 
 ## Save current settings via ProgressManager
 func _save_settings() -> void:

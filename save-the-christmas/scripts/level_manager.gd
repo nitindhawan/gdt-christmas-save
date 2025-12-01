@@ -99,43 +99,32 @@ func _generate_dynamic_level(level_id: int) -> Dictionary:
 	# Generate difficulty configs based on puzzle type
 	var difficulty_configs = {}
 	if puzzle_type == "spiral_twist":
-		# Spiral puzzle configs
+		# Spiral puzzle configs (only Easy and Hard)
 		difficulty_configs = {
 			"easy": {
 				"ring_count": GameConstants.SPIRAL_RINGS_EASY
-			},
-			"normal": {
-				"ring_count": GameConstants.SPIRAL_RINGS_NORMAL
 			},
 			"hard": {
 				"ring_count": GameConstants.SPIRAL_RINGS_HARD
 			}
 		}
 	elif puzzle_type == "arrow_puzzle":
-		# Arrow puzzle configs
+		# Arrow puzzle configs (only Easy and Hard)
 		difficulty_configs = {
 			"easy": {
 				"grid_size": GameConstants.ARROW_GRID_EASY
-			},
-			"normal": {
-				"grid_size": GameConstants.ARROW_GRID_NORMAL
 			},
 			"hard": {
 				"grid_size": GameConstants.ARROW_GRID_HARD
 			}
 		}
 	else:
-		# Rectangle puzzle configs
+		# Rectangle puzzle configs (only Easy and Hard)
 		difficulty_configs = {
 			"easy": {
 				"rows": 2,
 				"columns": 3,
 				"tile_count": 6
-			},
-			"normal": {
-				"rows": 3,
-				"columns": 4,
-				"tile_count": 12
 			},
 			"hard": {
 				"rows": 5,

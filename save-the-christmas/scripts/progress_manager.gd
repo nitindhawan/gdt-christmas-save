@@ -1,11 +1,11 @@
 extends Node
 
 ## Progress Manager AutoLoad Singleton
-## Handles save/load system, star tracking, and level unlock logic
+## Handles save/load system and level unlock logic
 
 var current_level: int = 1
 var highest_level_unlocked: int = 1
-var stars: Dictionary = {}  # {level_id: {easy: bool, normal: bool, hard: bool}}
+var completions: Dictionary = {}  # {level_id: {easy: bool, hard: bool}}
 
 # Settings
 var sound_enabled: bool = true
@@ -42,13 +42,12 @@ func load_save_data() -> void:
 	current_level = _save_file.get_value("progress", "current_level", 1)
 	highest_level_unlocked = _save_file.get_value("progress", "highest_level_unlocked", 1)
 
-	# Load stars
-	stars.clear()
+	# Load completions
+	completions.clear()
 	for level_id in range(1, GameConstants.TOTAL_LEVELS + 1):
-		stars[level_id] = {
-			"easy": _save_file.get_value("stars", "level_%d_easy" % level_id, false),
-			"normal": _save_file.get_value("stars", "level_%d_normal" % level_id, false),
-			"hard": _save_file.get_value("stars", "level_%d_hard" % level_id, false)
+		completions[level_id] = {
+			"easy": _save_file.get_value("completions", "level_%d_easy" % level_id, false),
+			"hard": _save_file.get_value("completions", "level_%d_hard" % level_id, false)
 		}
 
 	# Load settings
@@ -69,9 +68,9 @@ func load_save_data() -> void:
 func _create_default_save() -> void:
 	current_level = 1
 	highest_level_unlocked = 1
-	stars.clear()
+	completions.clear()
 	for level_id in range(1, GameConstants.TOTAL_LEVELS + 1):
-		stars[level_id] = {"easy": false, "normal": false, "hard": false}
+		completions[level_id] = {"easy": false, "hard": false}
 
 	sound_enabled = true
 	music_enabled = true
@@ -95,11 +94,10 @@ func save_progress() -> void:
 	_save_file.set_value("progress", "current_level", current_level)
 	_save_file.set_value("progress", "highest_level_unlocked", highest_level_unlocked)
 
-	# Stars
-	for level_id in stars.keys():
-		_save_file.set_value("stars", "level_%d_easy" % level_id, stars[level_id]["easy"])
-		_save_file.set_value("stars", "level_%d_normal" % level_id, stars[level_id]["normal"])
-		_save_file.set_value("stars", "level_%d_hard" % level_id, stars[level_id]["hard"])
+	# Completions
+	for level_id in completions.keys():
+		_save_file.set_value("completions", "level_%d_easy" % level_id, completions[level_id]["easy"])
+		_save_file.set_value("completions", "level_%d_hard" % level_id, completions[level_id]["hard"])
 
 	# Settings
 	_save_file.set_value("settings", "sound_enabled", sound_enabled)
@@ -112,7 +110,6 @@ func save_progress() -> void:
 	_save_file.set_value("statistics", "total_playtime_seconds", total_playtime_seconds)
 	_save_file.set_value("statistics", "total_swaps_made", total_swaps_made)
 	_save_file.set_value("statistics", "total_hints_used", total_hints_used)
-	_save_file.set_value("statistics", "total_stars_earned", get_total_stars())
 
 	var err = _save_file.save(GameConstants.SAVE_DATA_PATH)
 	if err != OK:
@@ -126,61 +123,25 @@ func is_level_unlocked(level_id: int) -> bool:
 
 ## Check if a specific difficulty is unlocked for a level
 func is_difficulty_unlocked(level_id: int, difficulty: String) -> bool:
-	if not is_level_unlocked(level_id):
+	# Both difficulties always unlocked if level is unlocked
+	return is_level_unlocked(level_id)
+
+## Get completion status for a level and difficulty
+func get_completion(level_id: int, difficulty: String) -> bool:
+	if not completions.has(level_id):
 		return false
+	return completions[level_id].get(difficulty.to_lower(), false)
 
-	match difficulty.to_lower():
-		"easy":
-			return true  # Easy always unlocked if level unlocked
-		"normal":
-			return get_star(level_id, "easy")  # Unlocked after Easy completion
-		"hard":
-			return get_star(level_id, "normal")  # Unlocked after Normal completion
-		_:
-			return false
+## Set completion status for a level and difficulty
+func set_completion(level_id: int, difficulty: String, completed: bool) -> void:
+	if not completions.has(level_id):
+		completions[level_id] = {"easy": false, "hard": false}
 
-## Get star status for a level and difficulty
-func get_star(level_id: int, difficulty: String) -> bool:
-	if not stars.has(level_id):
-		return false
-	return stars[level_id].get(difficulty.to_lower(), false)
+	completions[level_id][difficulty.to_lower()] = completed
 
-## Set star status for a level and difficulty
-func set_star(level_id: int, difficulty: String, earned: bool) -> void:
-	if not stars.has(level_id):
-		stars[level_id] = {"easy": false, "normal": false, "hard": false}
-
-	stars[level_id][difficulty.to_lower()] = earned
-
-	# If earned, update higher star levels if completing a higher difficulty
-	if earned:
-		match difficulty.to_lower():
-			"hard":
-				stars[level_id]["normal"] = true
-				stars[level_id]["easy"] = true
-			"normal":
-				stars[level_id]["easy"] = true
-
-## Get star count for a specific level (0-3)
-func get_star_count(level_id: int) -> int:
-	if not stars.has(level_id):
-		return 0
-
-	var count = 0
-	if stars[level_id]["easy"]:
-		count += 1
-	if stars[level_id]["normal"]:
-		count += 1
-	if stars[level_id]["hard"]:
-		count += 1
-	return count
-
-## Get total stars earned across all levels
-func get_total_stars() -> int:
-	var total = 0
-	for level_id in stars.keys():
-		total += get_star_count(level_id)
-	return total
+	# If completing Hard, also mark Easy as complete
+	if completed and difficulty.to_lower() == "hard":
+		completions[level_id]["easy"] = true
 
 ## Unlock next level based on progression rules
 func unlock_next_level() -> void:

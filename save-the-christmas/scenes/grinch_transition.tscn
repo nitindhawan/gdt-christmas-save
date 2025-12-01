@@ -1,0 +1,174 @@
+[gd_scene load_steps=11 format=3 uid="uid://llbf04jmw7pk"]
+
+[ext_resource type="Script" uid="uid://vtw1jao2tt8o" path="res://scripts/grinch_transition.gd" id="1"]
+[ext_resource type="Texture2D" uid="uid://cu56fmw687nks" path="res://assets/ui/grinch.png" id="2_dddsg"]
+[ext_resource type="Texture2D" path="res://assets/ui/cloud.png" id="3_cloud"]
+
+[sub_resource type="Gradient" id="Gradient_smoke"]
+offsets = PackedFloat32Array(0, 0.5, 1)
+colors = PackedColorArray(0.1, 0.7, 0.1, 1, 0.1, 0.5, 0.1, 0.6, 0.1, 0.3, 0.1, 0)
+
+[sub_resource type="GradientTexture1D" id="GradientTexture1D_smoke"]
+gradient = SubResource("Gradient_smoke")
+
+[sub_resource type="Curve" id="Curve_smoke"]
+_data = [Vector2(0, 0.2), 0.0, 1.5, 0, 0, Vector2(0.5, 1), 0.0, 0.0, 0, 0, Vector2(1, 0.5), -0.5, 0.0, 0, 0]
+point_count = 3
+
+[sub_resource type="CurveTexture" id="CurveTexture_smoke"]
+curve = SubResource("Curve_smoke")
+
+[sub_resource type="ParticleProcessMaterial" id="ParticleProcessMaterial_smoke"]
+particle_flag_disable_z = true
+emission_shape = 3
+emission_box_extents = Vector3(100, 200, 1)
+direction = Vector3(1, -0.5, 0)
+spread = 30.0
+initial_velocity_min = 300.0
+initial_velocity_max = 500.0
+angular_velocity_min = -45.0
+angular_velocity_max = 45.0
+gravity = Vector3(0, -50, 0)
+scale_min = 0.5
+scale_max = 1.5
+scale_curve = SubResource("CurveTexture_smoke")
+color_ramp = SubResource("GradientTexture1D_smoke")
+
+[sub_resource type="Animation" id="Animation_grinch_smoke"]
+resource_name = "grinch_smoke"
+length = 3.5
+tracks/0/type = "value"
+tracks/0/imported = false
+tracks/0/enabled = true
+tracks/0/path = NodePath("GrinchPlaceholder:position")
+tracks/0/interp = 1
+tracks/0/loop_wrap = true
+tracks/0/keys = {
+"times": PackedFloat32Array(0, 0.26666668, 2.4, 3.4666667),
+"transitions": PackedFloat32Array(1, 1, 1, 1),
+"update": 0,
+"values": [Vector2(-800, 960), Vector2(-250, 960), Vector2(-250, 960), Vector2(-800, 960)]
+}
+tracks/1/type = "value"
+tracks/1/imported = false
+tracks/1/enabled = true
+tracks/1/path = NodePath("SmokeOverlay:modulate")
+tracks/1/interp = 1
+tracks/1/loop_wrap = true
+tracks/1/keys = {
+"times": PackedFloat32Array(0, 0.33333334, 2.4, 3.4666667),
+"transitions": PackedFloat32Array(1, 1, 1, 1),
+"update": 0,
+"values": [Color(0.1, 0.1, 0.15, 0), Color(0.1, 0.1, 0.15, 0), Color(0.1, 0.1, 0.15, 1), Color(0.1, 0.1, 0.15, 0)]
+}
+tracks/2/type = "value"
+tracks/2/imported = false
+tracks/2/enabled = true
+tracks/2/path = NodePath("GrinchPlaceholder/SmokeParticles:emitting")
+tracks/2/interp = 1
+tracks/2/loop_wrap = true
+tracks/2/keys = {
+"times": PackedFloat32Array(0, 0.26666668, 2.4),
+"transitions": PackedFloat32Array(1, 1, 1),
+"update": 1,
+"values": [false, true, false]
+}
+tracks/3/type = "value"
+tracks/3/imported = false
+tracks/3/enabled = true
+tracks/3/path = NodePath("GrinchPlaceholder/SmokeParticles:position")
+tracks/3/interp = 1
+tracks/3/loop_wrap = true
+tracks/3/keys = {
+"times": PackedFloat32Array(0, 0.26666668, 2.4, 3.4666667),
+"transitions": PackedFloat32Array(1, 1, 1, 1),
+"update": 0,
+"values": [Vector2(400, 400), Vector2(400, 400), Vector2(400, 400), Vector2(400, 400)]
+}
+tracks/4/type = "value"
+tracks/4/imported = false
+tracks/4/enabled = true
+tracks/4/path = NodePath("LevelBackground:modulate")
+tracks/4/interp = 1
+tracks/4/loop_wrap = true
+tracks/4/keys = {
+"times": PackedFloat32Array(0, 0.33333334, 2.4, 3.4666667),
+"transitions": PackedFloat32Array(1, 1, 1, 1),
+"update": 0,
+"values": [Color(1, 1, 1, 1), Color(1, 1, 1, 1), Color(1, 1, 1, 0), Color(1, 1, 1, 0)]
+}
+
+[sub_resource type="Animation" id="Animation_rjidp"]
+length = 0.001
+tracks/0/type = "value"
+tracks/0/imported = false
+tracks/0/enabled = true
+tracks/0/path = NodePath("SmokeOverlay:modulate")
+tracks/0/interp = 1
+tracks/0/loop_wrap = true
+tracks/0/keys = {
+"times": PackedFloat32Array(0),
+"transitions": PackedFloat32Array(1),
+"update": 0,
+"values": [Color(0.1, 0.1, 0.15, 1)]
+}
+
+[sub_resource type="AnimationLibrary" id="AnimationLibrary_1"]
+_data = {
+&"RESET": SubResource("Animation_rjidp"),
+&"grinch_smoke": SubResource("Animation_grinch_smoke")
+}
+
+[sub_resource type="NoiseTexture2D" id="NoiseTexture2D_dddsg"]
+
+[node name="GrinchTransition" type="Control"]
+layout_mode = 3
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+script = ExtResource("1")
+
+[node name="LevelBackground" type="TextureRect" parent="."]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+expand_mode = 1
+stretch_mode = 6
+
+[node name="AnimationPlayer" type="AnimationPlayer" parent="."]
+libraries = {
+&"": SubResource("AnimationLibrary_1")
+}
+
+[node name="GrinchPlaceholder" type="TextureRect" parent="."]
+z_index = 50
+layout_mode = 0
+offset_left = -800.0
+offset_top = 960.0
+offset_bottom = 1760.0
+texture = ExtResource("2_dddsg")
+
+[node name="SmokeParticles" type="GPUParticles2D" parent="GrinchPlaceholder"]
+z_index = 10
+position = Vector2(400, 400)
+amount = 150
+process_material = SubResource("ParticleProcessMaterial_smoke")
+texture = ExtResource("3_cloud")
+lifetime = 2.5
+preprocess = 0.5
+explosiveness = 0.1
+
+[node name="SmokeOverlay" type="TextureRect" parent="."]
+modulate = Color(0.1, 0.1, 0.15, 1)
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+texture = SubResource("NoiseTexture2D_dddsg")

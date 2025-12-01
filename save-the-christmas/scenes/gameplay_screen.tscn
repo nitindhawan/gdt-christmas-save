@@ -1,6 +1,7 @@
-[gd_scene load_steps=2 format=3 uid="uid://brm3gj0dq3x5v"]
+[gd_scene load_steps=3 format=3 uid="uid://brm3gj0dq3x5v"]
 
-[ext_resource type="Script" path="res://scripts/gameplay_screen.gd" id="1_1"]
+[ext_resource type="Script" uid="uid://cccd2v3ovqb8o" path="res://scripts/gameplay_screen.gd" id="1_1"]
+[ext_resource type="Texture2D" uid="uid://l00rfc1g60xy" path="res://assets/ui/settings_icon.png" id="2_settings"]
 
 [node name="GameplayScreen" type="Control"]
 layout_mode = 3
@@ -18,7 +19,18 @@ anchor_right = 1.0
 anchor_bottom = 1.0
 grow_horizontal = 2
 grow_vertical = 2
-color = Color(0.2, 0.05, 0.05, 1)
+color = Color(0.031, 0.11, 0.188, 1)
+
+[node name="SolvedImageBackground" type="TextureRect" parent="."]
+visible = false
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+expand_mode = 1
+stretch_mode = 6
 
 [node name="MarginContainer" type="MarginContainer" parent="."]
 layout_mode = 1
@@ -36,50 +48,22 @@ theme_override_constants/margin_bottom = 40
 layout_mode = 2
 theme_override_constants/separation = 20
 
-[node name="TopHUD" type="Panel" parent="MarginContainer/VBoxContainer"]
-custom_minimum_size = Vector2(0, 100)
+[node name="TopHUD" type="HBoxContainer" parent="MarginContainer/VBoxContainer"]
+custom_minimum_size = Vector2(0, 80)
 layout_mode = 2
+theme_override_constants/separation = 10
 
-[node name="MarginContainer" type="MarginContainer" parent="MarginContainer/VBoxContainer/TopHUD"]
-layout_mode = 1
-anchors_preset = 15
-anchor_right = 1.0
-anchor_bottom = 1.0
-grow_horizontal = 2
-grow_vertical = 2
-theme_override_constants/margin_left = 10
-theme_override_constants/margin_top = 10
-theme_override_constants/margin_right = 10
-theme_override_constants/margin_bottom = 10
-
-[node name="HBoxContainer" type="HBoxContainer" parent="MarginContainer/VBoxContainer/TopHUD/MarginContainer"]
-layout_mode = 2
-
-[node name="BackButton" type="Button" parent="MarginContainer/VBoxContainer/TopHUD/MarginContainer/HBoxContainer"]
-custom_minimum_size = Vector2(80, 80)
-layout_mode = 2
-theme_override_font_sizes/font_size = 36
-text = "◀"
-
-[node name="LevelLabel" type="Label" parent="MarginContainer/VBoxContainer/TopHUD/MarginContainer/HBoxContainer"]
+[node name="LevelLabel" type="Label" parent="MarginContainer/VBoxContainer/TopHUD"]
 layout_mode = 2
 size_flags_horizontal = 3
-theme_override_font_sizes/font_size = 32
-text = "Level 1 - Easy"
-horizontal_alignment = 1
 vertical_alignment = 1
 
-[node name="ShareButton" type="Button" parent="MarginContainer/VBoxContainer/TopHUD/MarginContainer/HBoxContainer"]
+[node name="SettingsButton" type="TextureButton" parent="MarginContainer/VBoxContainer/TopHUD"]
 custom_minimum_size = Vector2(80, 80)
 layout_mode = 2
-theme_override_font_sizes/font_size = 28
-text = "⤴"
-
-[node name="SettingsButton" type="Button" parent="MarginContainer/VBoxContainer/TopHUD/MarginContainer/HBoxContainer"]
-custom_minimum_size = Vector2(80, 80)
-layout_mode = 2
-theme_override_font_sizes/font_size = 32
-text = "⚙"
+texture_normal = ExtResource("2_settings")
+ignore_texture_size = true
+stretch_mode = 5
 
 [node name="PuzzleArea" type="CenterContainer" parent="MarginContainer/VBoxContainer"]
 layout_mode = 2
@@ -103,6 +87,4 @@ anchor_bottom = 1.0
 grow_horizontal = 2
 grow_vertical = 2
 
-[connection signal="pressed" from="MarginContainer/VBoxContainer/TopHUD/MarginContainer/HBoxContainer/BackButton" to="." method="_on_back_button_pressed"]
-[connection signal="pressed" from="MarginContainer/VBoxContainer/TopHUD/MarginContainer/HBoxContainer/ShareButton" to="." method="_on_share_button_pressed"]
-[connection signal="pressed" from="MarginContainer/VBoxContainer/TopHUD/MarginContainer/HBoxContainer/SettingsButton" to="." method="_on_settings_button_pressed"]
+[connection signal="pressed" from="MarginContainer/VBoxContainer/TopHUD/SettingsButton" to="." method="_on_settings_button_pressed"]
