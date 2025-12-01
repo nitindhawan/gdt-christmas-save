@@ -626,9 +626,12 @@ func _spawn_arrows() -> void:
 	var grid_width = arrow_state.grid_size.x * arrow_size.x + (arrow_state.grid_size.x - 1) * GameConstants.ARROW_GRID_SPACING
 	var grid_height = arrow_state.grid_size.y * arrow_size.y + (arrow_state.grid_size.y - 1) * GameConstants.ARROW_GRID_SPACING
 
-	# Center the grid in the puzzle area
-	var start_x = (arrows_container.size.x - grid_width) / 2.0
-	var start_y = (arrows_container.size.y - grid_height) / 2.0
+	# Center the grid in the puzzle area with 20px margin
+	var margin = 20.0
+	var usable_width = arrows_container.size.x - (margin * 2)
+	var usable_height = arrows_container.size.y - (margin * 2)
+	var start_x = margin + (usable_width - grid_width) / 2.0
+	var start_y = margin + (usable_height - grid_height) / 2.0
 
 	# Create arrow nodes
 	arrow_nodes.resize(arrow_state.arrows.size())
@@ -658,16 +661,24 @@ func _spawn_arrows() -> void:
 ## Calculate arrow size based on grid dimensions
 func _calculate_arrow_size(grid_size: Vector2i) -> Vector2:
 	# Use arrows_container size (which is the actual puzzle area size)
-	var available_width = arrows_container.size.x - 40 # Margins
-	var available_height = arrows_container.size.y - 40
+	# Use smaller margins to maximize arrow size
+	var margin = 20.0  # Small margin for edge padding
+	var available_width = arrows_container.size.x - (margin * 2)
+	var available_height = arrows_container.size.y - (margin * 2)
 
-	# Calculate size based on grid
-	var arrow_width = (available_width - (grid_size.x - 1) * GameConstants.ARROW_GRID_SPACING) / grid_size.x
-	var arrow_height = (available_height - (grid_size.y - 1) * GameConstants.ARROW_GRID_SPACING) / grid_size.y
+	# Calculate size based on grid, accounting for spacing between arrows
+	var total_spacing_x = (grid_size.x - 1) * GameConstants.ARROW_GRID_SPACING
+	var total_spacing_y = (grid_size.y - 1) * GameConstants.ARROW_GRID_SPACING
+
+	var arrow_width = (available_width - total_spacing_x) / grid_size.x
+	var arrow_height = (available_height - total_spacing_y) / grid_size.y
 
 	# Use the smaller dimension to keep arrows square
 	var arrow_size = min(arrow_width, arrow_height)
-	arrow_size = min(arrow_size, 120.0) # Max size cap
+
+	# Remove hard cap - let arrows scale up to fill space
+	# Only set a reasonable maximum to prevent issues with very small grids
+	arrow_size = min(arrow_size, 200.0)
 
 	return Vector2(arrow_size, arrow_size)
 
