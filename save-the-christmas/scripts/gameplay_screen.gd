@@ -359,7 +359,7 @@ func _setup_spiral_puzzle() -> void:
 	var puzzle_area = $MarginContainer/VBoxContainer/PuzzleArea
 
 	# Set minimum size for puzzle area to ensure it has dimensions
-	puzzle_area.custom_minimum_size = Vector2(900, 900)
+	puzzle_area.custom_minimum_size = Vector2(1024, 1024)
 	puzzle_area.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 
 	print("Spiral puzzle configured: %d rings" % puzzle_state.ring_count)
@@ -392,6 +392,7 @@ func _spawn_spiral_rings() -> void:
 	rings_container.name = "RingsContainer"
 	rings_container.custom_minimum_size = puzzle_area.size
 	rings_container.mouse_filter = Control.MOUSE_FILTER_STOP # Capture all input here
+	rings_container.clip_contents = false  # Don't clip children - allow corners to show
 	puzzle_area.add_child(rings_container)
 
 	# Connect input handling to this container
@@ -400,6 +401,7 @@ func _spawn_spiral_rings() -> void:
 	await get_tree().process_frame
 	print("Rings container size: %v, position: %v" % [rings_container.size, rings_container.position])
 
+	# No background sprite needed - corner ring will show the corners
 	# Pre-allocate array to correct size
 	ring_nodes.resize(spiral_state.rings.size())
 

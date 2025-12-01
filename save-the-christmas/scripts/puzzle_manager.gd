@@ -91,11 +91,18 @@ func _generate_spiral_puzzle(level_id: int, difficulty: int, level_data: Diction
 	puzzle_state.hints_used = 0
 	puzzle_state.is_solved = false
 
-	# Create rings from image
-	puzzle_state.rings = _create_rings_from_image(texture, ring_count, puzzle_state.puzzle_radius)
+	# Calculate max_radius based on container size, not image height
+	# Container is 1024×1024, use 480px to leave room for corner ring
+	var max_radius = 480.0
+	puzzle_state.puzzle_radius = max_radius
 
-	# Count non-merged rings (outermost is pre-merged)
-	puzzle_state.active_ring_count = ring_count - 1
+	print("Spiral puzzle: container_based max_radius=%.1f" % max_radius)
+
+	# Create rings from image (includes corner ring)
+	puzzle_state.rings = _create_rings_from_image(texture, ring_count, max_radius)
+
+	# Count non-merged rings (excludes corner ring which is always locked)
+	puzzle_state.active_ring_count = ring_count
 
 	# Scramble rings (randomize rotations)
 	_scramble_rings(puzzle_state)
@@ -118,10 +125,17 @@ func _get_default_ring_count(difficulty: int) -> int:
 func _create_rings_from_image(texture: Texture2D, ring_count: int, max_radius: float) -> Array[SpiralRing]:
 	var rings: Array[SpiralRing] = []
 
-	# Calculate ring width (equal bands)
-	var ring_width = max_radius / ring_count
+	# Calculate ring widths: central ring is 3x larger than normal rings
+	# Formula: max_radius = central_ring_width + (ring_count - 1) * normal_ring_width
+	# Where: central_ring_width = 3 * normal_ring_width
+	# So: max_radius = 3 * normal_ring_width + (ring_count - 1) * normal_ring_width
+	#     max_radius = (ring_count + 2) * normal_ring_width
+	var normal_ring_width = max_radius / (ring_count + 2)
+	var central_ring_width = normal_ring_width * 3
 
-	print("Creating %d rings with max_radius=%.1f, ring_width=%.1f" % [ring_count, max_radius, ring_width])
+	print("Creating %d rings with max_radius=%.1f, normal_ring_width=%.1f, central_ring_width=%.1f" % [
+		ring_count, max_radius, normal_ring_width, central_ring_width
+	])
 
 	for i in range(ring_count):
 		var ring = SpiralRing.new()
@@ -129,20 +143,38 @@ func _create_rings_from_image(texture: Texture2D, ring_count: int, max_radius: f
 		ring.correct_angle = 0.0  # All rings start at 0 degrees when correct
 		ring.current_angle = 0.0  # Will be randomized in scramble
 		ring.angular_velocity = 0.0
-		ring.inner_radius = i * ring_width
-		ring.outer_radius = (i + 1) * ring_width
 
-		# Outermost ring is static (locked from start)
-		if i == ring_count - 1:
-			ring.is_locked = true
-			ring.current_angle = 0.0
-			ring.angular_velocity = 0.0
+		# Calculate inner/outer radii based on position
+		if i == 0:
+			# Central ring (3x larger)
+			ring.inner_radius = 0.0
+			ring.outer_radius = central_ring_width
+		else:
+			# Outer rings (normal width)
+			ring.inner_radius = central_ring_width + (i - 1) * normal_ring_width
+			ring.outer_radius = central_ring_width + i * normal_ring_width
 
 		print("  Ring %d: inner_radius=%.1f, outer_radius=%.1f, is_locked=%s" % [
 			i, ring.inner_radius, ring.outer_radius, str(ring.is_locked)
 		])
 
 		rings.append(ring)
+
+	# Create special corner ring (static, shows rectangular corners)
+	var corner_ring = SpiralRing.new()
+	corner_ring.ring_index = ring_count  # After all puzzle rings
+	corner_ring.correct_angle = 0.0
+	corner_ring.current_angle = 0.0
+	corner_ring.angular_velocity = 0.0
+	corner_ring.inner_radius = max_radius  # Starts where puzzle ends
+	corner_ring.outer_radius = max_radius * sqrt(2.0)  # Half of square diagonal
+	corner_ring.is_locked = true  # Fixed, immovable
+
+	print("  Corner ring: inner_radius=%.1f, outer_radius=%.1f, is_locked=true" % [
+		corner_ring.inner_radius, corner_ring.outer_radius
+	])
+
+	rings.append(corner_ring)
 
 	return rings
 

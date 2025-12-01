@@ -55,6 +55,13 @@ func _create_ring_mesh(inner_radius: float, outer_radius: float, texture_resourc
 	var tex_center = texture_resource.get_size() / 2.0
 	var tex_size = texture_resource.get_size()
 
+	# Calculate scale factor: texture space vs screen space
+	# Texture radius = image_height / 2, Screen radius = max_radius (480px)
+	# Scale factor = texture_radius / screen_radius
+	var texture_radius = tex_size.y / 2.0  # Assuming square texture
+	var screen_max_radius = 480.0  # Matches puzzle_manager.gd max_radius
+	var uv_scale = texture_radius / screen_max_radius
+
 	# Generate vertices and UVs (ONCE, not every frame!)
 	for i in range(segments):
 		var angle = (i / float(segments)) * TAU
@@ -66,9 +73,11 @@ func _create_ring_mesh(inner_radius: float, outer_radius: float, texture_resourc
 		# Inner vertex
 		vertices.append(Vector2(cos_a, sin_a) * inner_radius)
 
-		# UV coordinates (texture space, NO rotation - baked in)
-		var uv_outer = (Vector2(cos_a, sin_a) * outer_radius + tex_center) / tex_size
-		var uv_inner = (Vector2(cos_a, sin_a) * inner_radius + tex_center) / tex_size
+		# UV coordinates (texture space, scaled from screen space)
+		var uv_outer_radius = outer_radius * uv_scale
+		var uv_inner_radius = inner_radius * uv_scale
+		var uv_outer = (Vector2(cos_a, sin_a) * uv_outer_radius + tex_center) / tex_size
+		var uv_inner = (Vector2(cos_a, sin_a) * uv_inner_radius + tex_center) / tex_size
 		uvs.append(uv_outer)
 		uvs.append(uv_inner)
 
@@ -94,7 +103,7 @@ func _create_ring_mesh(inner_radius: float, outer_radius: float, texture_resourc
 
 ## Create border rings (Line2D children)
 func _create_border_rings() -> void:
-	# Outer border
+	# Outer border (white for unlocked rings, dark gray for locked corner ring)
 	var outer_border = Line2D.new()
 	outer_border.width = GameConstants.SPIRAL_RING_BORDER_WIDTH
 	outer_border.default_color = Color.WHITE if not ring_data.is_locked else Color.DARK_GRAY
