@@ -74,13 +74,23 @@ func _on_difficulty_chosen(difficulty: int) -> void:
 	print("Difficulty chosen: ", difficulty)
 	current_difficulty = difficulty
 	GameManager.current_difficulty = difficulty
+
 	current_state = GameplayState.GRINCH_TRANSITION
 	_start_grinch_transition()
 
 ## Start grinch transition animation
 func _start_grinch_transition() -> void:
 	print("Starting grinch transition")
+
+	# Load level texture
+	source_texture = LevelManager.get_level_texture(current_level_id)
+	if source_texture == null:
+		push_error("Failed to load level texture for level %d" % current_level_id)
+		return
+
+	# Create and setup transition
 	var transition = GRINCH_TRANSITION_SCENE.instantiate()
+	transition.set_level_texture(source_texture)
 	transition.transition_complete.connect(_on_transition_complete)
 	add_child(transition)
 	transition.play_transition()
@@ -649,7 +659,7 @@ func _spawn_arrows() -> void:
 ## Calculate arrow size based on grid dimensions
 func _calculate_arrow_size(grid_size: Vector2i) -> Vector2:
 	# Use arrows_container size (which is the actual puzzle area size)
-	var available_width = arrows_container.size.x - 40  # Margins
+	var available_width = arrows_container.size.x - 40 # Margins
 	var available_height = arrows_container.size.y - 40
 
 	# Calculate size based on grid
@@ -658,7 +668,7 @@ func _calculate_arrow_size(grid_size: Vector2i) -> Vector2:
 
 	# Use the smaller dimension to keep arrows square
 	var arrow_size = min(arrow_width, arrow_height)
-	arrow_size = min(arrow_size, 120.0)  # Max size cap
+	arrow_size = min(arrow_size, 120.0) # Max size cap
 
 	return Vector2(arrow_size, arrow_size)
 
