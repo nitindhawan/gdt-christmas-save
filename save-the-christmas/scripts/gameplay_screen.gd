@@ -334,9 +334,7 @@ func _process(delta: float) -> void:
 	if spiral_state.check_and_merge_rings():
 		print("Rings merged! Active rings: %d" % spiral_state.active_ring_count)
 
-		# Play merge sound
-		if AudioManager:
-			AudioManager.play_sfx("ring_merge")
+		# SFX already played in check_and_merge_rings(), no need to duplicate
 
 		_refresh_spiral_visuals()
 
@@ -345,8 +343,8 @@ func _process(delta: float) -> void:
 			if ring_node != null:
 				ring_node.regenerate_mesh()
 
-		# Check if puzzle solved
-		if spiral_state.is_puzzle_solved():
+		# Check if puzzle solved after merge completes (only if not already solved)
+		if not spiral_state.is_solved and spiral_state.is_puzzle_solved():
 			_check_spiral_puzzle_solved()
 
 	# Update visual display

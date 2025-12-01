@@ -17,8 +17,8 @@ var puzzle_radius: float = 450.0  # Maximum radius of puzzle in pixels
 
 ## Check if puzzle is solved (all rings merged)
 func is_puzzle_solved() -> bool:
-	# Puzzle is solved when only 1 active ring remains (all merged)
-	return active_ring_count <= 1
+	# Puzzle is solved when all inner rings have merged into the locked outer ring
+	return active_ring_count == 0
 
 ## Update physics for all rings
 func update_physics(delta: float) -> void:

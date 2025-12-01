@@ -138,7 +138,7 @@ These must be configured in Project Settings → AutoLoad:
 
 **SpiralPuzzleState** (`scripts/spiral_puzzle_state.gd`): Runtime spiral puzzle state
 - Tracks rings, active_ring_count, rotation_count, hints_used
-- Method: `is_puzzle_solved()` returns true when active_ring_count ≤ 1
+- Method: `is_puzzle_solved()` returns true when active_ring_count == 0
 - Method: `update_physics(delta)` updates all ring rotations each frame
 - Method: `check_and_merge_rings()` detects and performs merges
 
@@ -236,7 +236,7 @@ The game features THREE puzzle types that rotate through levels:
 - Physics-based: angular velocity (max 720°/s), deceleration (200°/s²)
 - Rings merge when aligned (angle ≤5°, velocity ≤10°/s)
 - **Merged rings continue rotating** until they merge with the outermost ring
-- Win condition: All rings merged into the outermost ring (active_ring_count ≤ 1)
+- Win condition: All rings merged into the outermost ring (active_ring_count == 0)
 
 ### Rectangle Jigsaw Puzzle Type
 - Image divided into rectangular grid
@@ -499,7 +499,7 @@ Check adjacent rings each frame in `check_and_merge_rings()`:
   4. **Remove inner ring**: `rings.remove_at(i)`
   5. Decrease active_ring_count
 - **Result**: Rings array shrinks as merging progresses
-- **Win condition**: `rings.size() == 1` (only locked outermost ring remains)
+- **Win condition**: `active_ring_count == 0` (all inner rings merged into locked outermost ring)
 
 ### Rectangle Jigsaw Tile Generation
 - Use AtlasTexture to split source image into tile regions

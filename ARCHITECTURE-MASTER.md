@@ -86,7 +86,7 @@ These 6 core systems are configured in Project Settings → AutoLoad:
 - Ring merging: Adjacent rings merge when angle ≤5° and velocity ≤10°/s
 - **Merge behavior**: Keeps outer ring, expands inner_radius, removes inner ring from array, regenerates meshes
 - Merged rings continue rotating until they merge with the outermost locked ring
-- Win condition: rings.size() == 1 (only locked outermost ring remains)
+- Win condition: active_ring_count == 0 (all inner rings merged into locked outermost ring)
 - No hint system (removed from entire game)
 - **Rendering**: MeshInstance2D with pre-generated ArrayMesh (3-7 draw calls vs 768-1,792 in triangle-based approach)
 - See **GAME-RULES.md** for complete mechanics

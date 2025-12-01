@@ -112,8 +112,8 @@ When two adjacent rings align (angle ≤5°, velocity ≤10°/s):
 - **Progressive locking**: Rings merge inward until all are part of the locked outermost ring
 
 #### Puzzle Solved Condition (IMPLEMENTED)
-- **Win condition check**: `spiral_state.is_puzzle_solved()` returns `active_ring_count <= 1`
-- **Actual implementation**: When `rings.size() == 1` (only locked outermost ring remains)
+- **Win condition check**: `spiral_state.is_puzzle_solved()` returns `active_ring_count == 0`
+- **Actual implementation**: When all inner rings have merged into the locked outermost ring
 - **Progression**: Inner rings merge with neighbors → eventually merge with outermost → become locked
 - Rings must be aligned (angle ≤5°) and have similar velocity (≤10°/s) to merge
 - Victory triggers (in _check_spiral_puzzle_solved):
@@ -239,7 +239,7 @@ To ensure solvability, all arrows in a puzzle use only **2 allowed directions**:
   3. Transition to Level Complete Screen after 1-second delay
 
 ### Win Condition (Spiral Twist)
-- Puzzle is solved when only 1 active ring remains (all merged)
+- Puzzle is solved when all inner rings have merged into the locked outermost ring (active_ring_count == 0)
 - All rings must be aligned within ±1° of correct angle (0°)
 - On win:
   1. Play "level_complete" sound effect

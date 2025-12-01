@@ -558,8 +558,8 @@ var puzzle_radius: float = 450.0  # Max radius (450.0 pixels)
 
 ## KEY IMPLEMENTATION: Spiral puzzle validation
 func is_puzzle_solved() -> bool:
-    """Puzzle solved when ≤1 active ring remains (only locked outermost)"""
-    return active_ring_count <= 1
+    """Puzzle solved when all inner rings merged into locked outermost ring"""
+    return active_ring_count == 0
 
 func update_physics(delta: float) -> void:
     """Update all rings' rotations each frame"""
