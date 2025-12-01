@@ -14,6 +14,7 @@ const SFX_PATHS = {
 	"tile_swap": "res://assets/audio/match1.wav",
 	"tile_drop": "res://assets/audio/match1.wav",
 	"ring_merge": "res://assets/audio/match2.wav",
+	"ring_drag_start": "res://assets/audio/click.wav",
 	"level_complete": "res://assets/audio/level_complete.wav",
 	"hint_used": "res://assets/audio/match1.wav",
 	# Legacy paths (kept for compatibility)

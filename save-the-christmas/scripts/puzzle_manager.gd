@@ -109,8 +109,6 @@ func _get_default_ring_count(difficulty: int) -> int:
 	match difficulty:
 		GameConstants.Difficulty.EASY:
 			return GameConstants.SPIRAL_RINGS_EASY
-		GameConstants.Difficulty.NORMAL:
-			return GameConstants.SPIRAL_RINGS_NORMAL
 		GameConstants.Difficulty.HARD:
 			return GameConstants.SPIRAL_RINGS_HARD
 		_:
@@ -250,8 +248,6 @@ func _get_default_arrow_grid_size(difficulty: int) -> Vector2i:
 	match difficulty:
 		GameConstants.Difficulty.EASY:
 			return GameConstants.ARROW_GRID_EASY
-		GameConstants.Difficulty.NORMAL:
-			return GameConstants.ARROW_GRID_NORMAL
 		GameConstants.Difficulty.HARD:
 			return GameConstants.ARROW_GRID_HARD
 		_:

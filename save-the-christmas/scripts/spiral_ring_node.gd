@@ -188,9 +188,9 @@ func _start_drag(touch_pos: Vector2) -> void:
 	_last_touch_angles.append(_drag_start_angle)
 	_last_touch_times.append(Time.get_ticks_msec() / 1000.0)
 
-	# Play pickup sound
+	# Play ring drag start sound
 	if AudioManager:
-		AudioManager.play_sfx("tile_pickup")
+		AudioManager.play_sfx("ring_drag_start")
 
 ## Update drag rotation
 func _update_drag(touch_pos: Vector2) -> void:
@@ -237,9 +237,9 @@ func _end_drag() -> void:
 		# Just a tap or slow drag, stop ring
 		emit_signal("ring_flicked", 0.0)
 
-	# Play drop sound
+	# Play ring drag stop sound (not mapped, silent for now)
 	if AudioManager:
-		AudioManager.play_sfx("tile_drop")
+		AudioManager.play_sfx("ring_drag_stop")
 
 	queue_redraw()
 

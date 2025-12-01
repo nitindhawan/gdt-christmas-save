@@ -8,10 +8,22 @@ const SPIRAL_RING_NODE_SCENE = preload("res://scenes/spiral_ring_node.tscn")
 const ARROW_NODE_SCENE = preload("res://scenes/arrow_node.tscn")
 const SETTINGS_POPUP_SCENE = preload("res://scenes/settings_popup.tscn")
 const EXIT_DIALOG_SCENE = preload("res://scenes/exit_confirmation_dialog.tscn")
+const CHOOSE_DIFFICULTY_POPUP_SCENE = preload("res://scenes/choose_difficulty_popup.tscn")
+const GRINCH_TRANSITION_SCENE = preload("res://scenes/grinch_transition.tscn")
 const SpiralPuzzleState = preload("res://scripts/spiral_puzzle_state.gd")
 const ArrowPuzzleState = preload("res://scripts/arrow_puzzle_state.gd")
 
+# Gameplay state machine
+enum GameplayState {
+	CHOOSE_DIFFICULTY,
+	GRINCH_TRANSITION,
+	INITIALIZING_PUZZLE,
+	ACTIVE_PUZZLE,
+	PUZZLE_COMPLETE
+}
+
 # Game state
+var current_state: GameplayState = GameplayState.CHOOSE_DIFFICULTY
 var current_level_id: int = 1
 var current_difficulty: int = GameConstants.Difficulty.EASY
 var puzzle_state: Resource # Can be PuzzleState, SpiralPuzzleState, or ArrowPuzzleState
@@ -27,23 +39,72 @@ var is_arrow_puzzle: bool = false
 var puzzle_center: Vector2 = Vector2(540, 960) # Center of 1080x1920 screen
 
 # UI references
-@onready var level_label = $MarginContainer/VBoxContainer/TopHUD/MarginContainer/HBoxContainer/LevelLabel
+@onready var level_label = $MarginContainer/VBoxContainer/TopHUD/LevelLabel
 @onready var puzzle_grid = $MarginContainer/VBoxContainer/PuzzleArea/PuzzleGrid
+@onready var settings_button = $MarginContainer/VBoxContainer/TopHUD/SettingsButton
 
 func _ready() -> void:
-	# Get level and difficulty from GameManager
-	current_level_id = GameManager.get_current_level()
-	current_difficulty = GameManager.get_current_difficulty()
+	# Apply theme
+	_apply_theme()
 
+	# Get level from GameManager
+	current_level_id = GameManager.get_current_level()
+
+	# Set level label immediately so it shows during difficulty popup
+	level_label.text = "Puzzle %d" % current_level_id
+
+	# Start with difficulty selection
+	current_state = GameplayState.CHOOSE_DIFFICULTY
+	_show_difficulty_popup()
+
+func _apply_theme() -> void:
+	# Apply font sizes from ThemeManager
+	# level_label: MEDIUM (32px)
+	ThemeManager.apply_medium(level_label)
+
+## Show difficulty selection popup
+func _show_difficulty_popup() -> void:
+	print("Showing difficulty popup")
+	var popup = CHOOSE_DIFFICULTY_POPUP_SCENE.instantiate()
+	popup.difficulty_chosen.connect(_on_difficulty_chosen)
+	add_child(popup)
+
+## Handle difficulty selection
+func _on_difficulty_chosen(difficulty: int) -> void:
+	print("Difficulty chosen: ", difficulty)
+	current_difficulty = difficulty
+	GameManager.current_difficulty = difficulty
+
+	current_state = GameplayState.GRINCH_TRANSITION
+	_start_grinch_transition()
+
+## Start grinch transition animation
+func _start_grinch_transition() -> void:
+	print("Starting grinch transition")
+
+	# Load level texture
+	source_texture = LevelManager.get_level_texture(current_level_id)
+	if source_texture == null:
+		push_error("Failed to load level texture for level %d" % current_level_id)
+		return
+
+	# Create and setup transition
+	var transition = GRINCH_TRANSITION_SCENE.instantiate()
+	transition.set_level_texture(source_texture)
+	transition.transition_complete.connect(_on_transition_complete)
+	add_child(transition)
+	transition.play_transition()
+
+## Handle transition complete
+func _on_transition_complete() -> void:
+	print("Transition complete, initializing puzzle")
+	current_state = GameplayState.INITIALIZING_PUZZLE
 	_initialize_gameplay()
+	current_state = GameplayState.ACTIVE_PUZZLE
 
 ## Initialize gameplay with current level and difficulty
 func _initialize_gameplay() -> void:
 	print("Initializing gameplay: Level %d, Difficulty %d" % [current_level_id, current_difficulty])
-
-	# Update UI label
-	var difficulty_str = GameConstants.difficulty_to_string(current_difficulty)
-	level_label.text = "Level %d - %s" % [current_level_id, difficulty_str.capitalize()]
 
 	# Load source texture
 	source_texture = LevelManager.get_level_texture(current_level_id)
@@ -214,15 +275,17 @@ func _handle_puzzle_completion() -> void:
 func _save_progress() -> void:
 	var difficulty_str = GameConstants.difficulty_to_string(current_difficulty)
 
-	# Set star for this level and difficulty
-	ProgressManager.set_star(current_level_id, difficulty_str, true)
+	# Mark as completed (replaces set_star)
+	ProgressManager.set_completion(current_level_id, difficulty_str, true)
 
 	# Unlock next level if completing Easy
 	if current_difficulty == GameConstants.Difficulty.EASY:
 		ProgressManager.unlock_next_level()
 
-	# Update current level
-	ProgressManager.current_level = current_level_id
+	# Update current level tracker
+	if current_level_id == ProgressManager.current_level:
+		var next_level = mini(current_level_id + 1, GameConstants.TOTAL_LEVELS)
+		ProgressManager.current_level = next_level
 
 	# Update statistics
 	ProgressManager.total_swaps_made += puzzle_state.swap_count
@@ -243,28 +306,6 @@ func _refresh_tile_positions() -> void:
 	# Re-spawn tiles in new positions
 	_spawn_tiles()
 
-## Handle back button
-func _on_back_button_pressed() -> void:
-	if AudioManager:
-		AudioManager.play_sfx("button_click")
-
-	# Show custom exit confirmation dialog
-	var dialog = EXIT_DIALOG_SCENE.instantiate()
-	dialog.exit_confirmed.connect(_on_exit_confirmed)
-	add_child(dialog)
-
-## Handle exit confirmed from dialog
-func _on_exit_confirmed() -> void:
-	GameManager.navigate_to_level_selection()
-
-## Handle share button
-func _on_share_button_pressed() -> void:
-	if AudioManager:
-		AudioManager.play_sfx("button_click")
-
-	print("Share button pressed")
-	# TODO: Implement screenshot + native share
-	# For MVP, placeholder
 
 ## Handle settings button
 func _on_settings_button_pressed() -> void:
@@ -293,9 +334,7 @@ func _process(delta: float) -> void:
 	if spiral_state.check_and_merge_rings():
 		print("Rings merged! Active rings: %d" % spiral_state.active_ring_count)
 
-		# Play merge sound
-		if AudioManager:
-			AudioManager.play_sfx("ring_merge")
+		# SFX already played in check_and_merge_rings(), no need to duplicate
 
 		_refresh_spiral_visuals()
 
@@ -304,8 +343,8 @@ func _process(delta: float) -> void:
 			if ring_node != null:
 				ring_node.regenerate_mesh()
 
-		# Check if puzzle solved
-		if spiral_state.is_puzzle_solved():
+		# Check if puzzle solved after merge completes (only if not already solved)
+		if not spiral_state.is_solved and spiral_state.is_puzzle_solved():
 			_check_spiral_puzzle_solved()
 
 	# Update visual display
@@ -444,7 +483,7 @@ func _on_rings_container_input(event: InputEvent) -> void:
 					if ring_index >= 0:
 						spiral_state.set_ring_velocity(ring_index, angular_velocity)
 					if AudioManager:
-						AudioManager.play_sfx("tile_drop")
+						AudioManager.play_sfx("ring_drag_stop")
 					_dragging_ring_node = null
 
 	# Handle mouse motion during drag
@@ -499,15 +538,17 @@ func _save_spiral_progress() -> void:
 	var spiral_state = puzzle_state as SpiralPuzzleState
 	var difficulty_str = GameConstants.difficulty_to_string(current_difficulty)
 
-	# Set star for this level and difficulty
-	ProgressManager.set_star(current_level_id, difficulty_str, true)
+	# Mark as completed (replaces set_star)
+	ProgressManager.set_completion(current_level_id, difficulty_str, true)
 
 	# Unlock next level if completing Easy
 	if current_difficulty == GameConstants.Difficulty.EASY:
 		ProgressManager.unlock_next_level()
 
-	# Update current level
-	ProgressManager.current_level = current_level_id
+	# Update current level tracker
+	if current_level_id == ProgressManager.current_level:
+		var next_level = mini(current_level_id + 1, GameConstants.TOTAL_LEVELS)
+		ProgressManager.current_level = next_level
 
 	# Update statistics
 	ProgressManager.total_swaps_made += spiral_state.rotation_count
@@ -530,9 +571,8 @@ func _setup_arrow_puzzle() -> void:
 	# Get puzzle area control
 	var puzzle_area = $MarginContainer/VBoxContainer/PuzzleArea
 
-	# Set minimum size for puzzle area
-	puzzle_area.custom_minimum_size = Vector2(900, 900)
-	puzzle_area.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	# Don't force a fixed size - let it expand naturally
+	# PuzzleArea already has size_flags_vertical = 3 to expand and fill available space
 
 	var arrow_state = puzzle_state as ArrowPuzzleState
 	print("Arrow puzzle configured: %dx%d grid = %d arrows" % [
@@ -551,27 +591,30 @@ func _spawn_arrows() -> void:
 	# Get puzzle area control
 	var puzzle_area = $MarginContainer/VBoxContainer/PuzzleArea
 
-	# Wait for layout
+	# Wait for layout to complete so puzzle_area has its actual size
 	await get_tree().process_frame
 
-	# Ensure puzzle area has size
-	if puzzle_area.size.x == 0 or puzzle_area.size.y == 0:
-		puzzle_area.size = Vector2(900, 900)
+	# Determine available size for puzzle (square aspect)
+	var available_width = puzzle_area.size.x
+	var available_height = puzzle_area.size.y
+	var puzzle_size = min(available_width, available_height)
 
 	# Create background image (full level image visible)
 	background_image = TextureRect.new()
 	background_image.name = "BackgroundImage"
 	background_image.texture = source_texture
-	background_image.expand_mode = TextureRect.EXPAND_FIT_WIDTH_PROPORTIONAL
+	background_image.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
 	background_image.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_CENTERED
-	background_image.custom_minimum_size = puzzle_area.size
+	background_image.custom_minimum_size = Vector2(puzzle_size, puzzle_size)
+	background_image.size = Vector2(puzzle_size, puzzle_size)
 	background_image.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	puzzle_area.add_child(background_image)
 
 	# Create arrows container (overlay on top of background)
 	arrows_container = Control.new()
 	arrows_container.name = "ArrowsContainer"
-	arrows_container.custom_minimum_size = puzzle_area.size
+	arrows_container.custom_minimum_size = Vector2(puzzle_size, puzzle_size)
+	arrows_container.size = Vector2(puzzle_size, puzzle_size)
 	arrows_container.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	puzzle_area.add_child(arrows_container)
 
@@ -613,9 +656,9 @@ func _spawn_arrows() -> void:
 
 ## Calculate arrow size based on grid dimensions
 func _calculate_arrow_size(grid_size: Vector2i) -> Vector2:
-	var puzzle_area = $MarginContainer/VBoxContainer/PuzzleArea
-	var available_width = puzzle_area.size.x - 40  # Margins
-	var available_height = puzzle_area.size.y - 40
+	# Use arrows_container size (which is the actual puzzle area size)
+	var available_width = arrows_container.size.x - 40 # Margins
+	var available_height = arrows_container.size.y - 40
 
 	# Calculate size based on grid
 	var arrow_width = (available_width - (grid_size.x - 1) * GameConstants.ARROW_GRID_SPACING) / grid_size.x
@@ -623,7 +666,7 @@ func _calculate_arrow_size(grid_size: Vector2i) -> Vector2:
 
 	# Use the smaller dimension to keep arrows square
 	var arrow_size = min(arrow_width, arrow_height)
-	arrow_size = min(arrow_size, 120.0)  # Max size cap
+	arrow_size = min(arrow_size, 120.0) # Max size cap
 
 	return Vector2(arrow_size, arrow_size)
 
@@ -673,15 +716,17 @@ func _save_arrow_progress() -> void:
 	var arrow_state = puzzle_state as ArrowPuzzleState
 	var difficulty_str = GameConstants.difficulty_to_string(current_difficulty)
 
-	# Set star for this level and difficulty
-	ProgressManager.set_star(current_level_id, difficulty_str, true)
+	# Mark as completed (replaces set_star)
+	ProgressManager.set_completion(current_level_id, difficulty_str, true)
 
 	# Unlock next level if completing Easy
 	if current_difficulty == GameConstants.Difficulty.EASY:
 		ProgressManager.unlock_next_level()
 
-	# Update current level
-	ProgressManager.current_level = current_level_id
+	# Update current level tracker
+	if current_level_id == ProgressManager.current_level:
+		var next_level = mini(current_level_id + 1, GameConstants.TOTAL_LEVELS)
+		ProgressManager.current_level = next_level
 
 	# Update statistics
 	ProgressManager.total_swaps_made += arrow_state.tap_count

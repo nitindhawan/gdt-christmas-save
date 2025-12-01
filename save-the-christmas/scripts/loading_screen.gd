@@ -10,8 +10,15 @@ var loading_progress: float = 0.0
 var loading_complete: bool = false
 
 func _ready() -> void:
+	# Apply theme
+	_apply_theme()
+
 	# Start loading process
 	_start_loading()
+
+func _apply_theme() -> void:
+	# Apply font sizes from ThemeManager
+	ThemeManager.apply_medium(loading_label)
 
 func _process(delta: float) -> void:
 	if not loading_complete:
@@ -40,26 +47,9 @@ func _start_loading() -> void:
 func _on_loading_complete() -> void:
 	print("Loading complete!")
 
-	# Navigate based on current level
-	# TODO: When gameplay screen is implemented, uncomment first-time player logic
-	# For now, always show level selection
-	await get_tree().create_timer(0.5).timeout  # Small delay for visual feedback
+	# Small delay for visual feedback
+	await get_tree().create_timer(0.5).timeout
 
-	# Always navigate to level selection (gameplay screen not implemented yet)
-	GameManager.navigate_to_level_selection()
-
-	# Original logic (restore when gameplay screen is ready):
-	# if ProgressManager.current_level == 1 and not _has_any_stars():
-	# 	# First time player - go directly to Level 1 Easy
-	# 	GameManager.navigate_to_gameplay(1, GameConstants.Difficulty.EASY)
-	# else:
-	# 	# Returning player - show level selection
-	# 	GameManager.navigate_to_level_selection()
-
-## Check if player has earned any stars (not first time playing)
-func _has_any_stars() -> bool:
-	for level_id in ProgressManager.stars.keys():
-		var level_stars = ProgressManager.stars[level_id]
-		if level_stars.get("easy", false) or level_stars.get("normal", false) or level_stars.get("hard", false):
-			return true
-	return false
+	# Always navigate to gameplay with current level
+	var current_level = ProgressManager.current_level
+	GameManager.navigate_to_gameplay_new_flow(current_level)

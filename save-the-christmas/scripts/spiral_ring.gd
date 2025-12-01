@@ -23,10 +23,6 @@ func can_merge_with(other_ring: SpiralRing) -> bool:
 	if is_locked and other_ring.is_locked:
 		return false
 
-	# Check if rings are adjacent (ring indices differ by 1)
-	if abs(ring_index - other_ring.ring_index) != 1:
-		return false
-
 	# Check angle difference
 	var angle_diff = abs(_normalize_angle(current_angle - other_ring.current_angle))
 	if angle_diff > GameConstants.SPIRAL_MERGE_ANGLE_THRESHOLD:

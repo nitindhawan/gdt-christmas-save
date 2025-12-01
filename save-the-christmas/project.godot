@@ -14,11 +14,12 @@ config/name="Save the Christmas"
 run/main_scene="res://scenes/loading_screen.tscn"
 config/features=PackedStringArray("4.5", "Mobile")
 boot_splash/image="uid://yv2laatx7uf1"
-config/icon="res://icon.svg"
+config/icon="res://game_icon.png"
 
 [autoload]
 
 GameConstants="*res://scripts/game_constants.gd"
+ThemeManager="*res://scripts/theme_manager.gd"
 GameManager="*res://scripts/game_manager.gd"
 ProgressManager="*res://scripts/progress_manager.gd"
 LevelManager="*res://scripts/level_manager.gd"

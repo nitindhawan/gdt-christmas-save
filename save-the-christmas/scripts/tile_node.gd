@@ -54,16 +54,9 @@ func update_draggable_status() -> void:
 ## Update visual appearance based on draggable status
 func _update_border_visual() -> void:
 	if is_draggable:
-		# 4px dark grey border for draggable tiles
+		# Apply draggable border theme
 		border.visible = true
-		var stylebox = StyleBoxFlat.new()
-		stylebox.border_color = Color(0.3, 0.3, 0.3, 1.0)  # Dark grey
-		stylebox.border_width_left = 4
-		stylebox.border_width_top = 4
-		stylebox.border_width_right = 4
-		stylebox.border_width_bottom = 4
-		stylebox.bg_color = Color(0, 0, 0, 0)  # Transparent background
-		border.add_theme_stylebox_override("panel", stylebox)
+		ThemeManager.apply_tile_border_theme(border, true)
 	else:
 		# No border for correct tiles
 		border.visible = false
@@ -72,7 +65,7 @@ func _update_border_visual() -> void:
 func set_hover_target(is_target: bool) -> void:
 	is_hovered = is_target
 	if is_target:
-		_animate_scale(0.95)  # Shrink slightly
+		_animate_scale(ThemeManager.SCALE_PRESSED)  # Shrink slightly
 	else:
 		_animate_scale(1.0)  # Return to normal
 
@@ -82,9 +75,9 @@ func _animate_scale(target_scale: float) -> void:
 		tween.kill()
 
 	tween = create_tween()
-	tween.set_ease(Tween.EASE_OUT)
-	tween.set_trans(Tween.TRANS_CUBIC)
-	tween.tween_property(self, "scale", Vector2(target_scale, target_scale), 0.1)
+	tween.set_ease(ThemeManager.EASE_TILE)
+	tween.set_trans(ThemeManager.TRANS_TILE)
+	tween.tween_property(self, "scale", Vector2(target_scale, target_scale), ThemeManager.ANIM_INSTANT)
 
 ## Handle input for drag-and-drop
 func _on_touch_area_gui_input(event: InputEvent) -> void:
@@ -112,7 +105,7 @@ func _start_drag(click_position: Vector2) -> void:
 	z_index = 100
 
 	# Scale up slightly
-	_animate_scale(1.1)
+	_animate_scale(ThemeManager.SCALE_DRAG)
 
 	# Play sound
 	if AudioManager:

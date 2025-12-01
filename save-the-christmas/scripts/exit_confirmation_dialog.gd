@@ -8,6 +8,8 @@ signal stay_pressed
 
 # UI Node references
 @onready var overlay = $Overlay
+@onready var title_label = $CenterContainer/ModalPanel/MarginContainer/VBoxContainer/TitleLabel
+@onready var message_label = $CenterContainer/ModalPanel/MarginContainer/VBoxContainer/MessageLabel
 @onready var exit_button = $CenterContainer/ModalPanel/MarginContainer/VBoxContainer/ButtonContainer/ExitButton
 @onready var stay_button = $CenterContainer/ModalPanel/MarginContainer/VBoxContainer/ButtonContainer/StayButton
 
@@ -18,7 +20,19 @@ const COLOR_GREEN = Color(0.09, 0.36, 0.2, 1.0)  # #165B33
 const COLOR_GREEN_PRESSED = Color(0.07, 0.3, 0.17, 1.0)  # Darker green
 
 func _ready() -> void:
+	_apply_theme()
 	_style_buttons()
+
+func _apply_theme() -> void:
+	# Apply font sizes from ThemeManager
+	# title_label: 80 → 80 (XLARGE) ✓
+	# message_label: 56 → 64 (LARGE)
+	# exit_button: 60 → 64 (LARGE)
+	# stay_button: 60 → 64 (LARGE)
+	ThemeManager.apply_xlarge(title_label, ThemeManager.COLOR_TEXT_SECONDARY)
+	ThemeManager.apply_large(message_label, ThemeManager.COLOR_TEXT_SECONDARY)
+	ThemeManager.apply_large(exit_button)
+	ThemeManager.apply_large(stay_button)
 
 ## Style the exit and stay buttons
 func _style_buttons() -> void:
