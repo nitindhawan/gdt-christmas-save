@@ -91,14 +91,15 @@ func _generate_spiral_puzzle(level_id: int, difficulty: int, level_data: Diction
 	puzzle_state.hints_used = 0
 	puzzle_state.is_solved = false
 
-	# Calculate max_radius based on container size, not image height
-	# Container is 1024×1024, max radius = 512px (half of container)
+	# max_radius will be set dynamically by gameplay_screen based on available height
+	# For now, use a default that will be overwritten
 	var max_radius = 512.0
 	puzzle_state.puzzle_radius = max_radius
 
-	print("Spiral puzzle: container_based max_radius=%.1f" % max_radius)
+	print("Spiral puzzle: initial max_radius=%.1f (will be updated dynamically)" % max_radius)
 
 	# Create rings from image (includes corner ring)
+	# Note: Rings will be regenerated in gameplay_screen with actual max_radius
 	puzzle_state.rings = _create_rings_from_image(texture, ring_count, max_radius)
 
 	# Count non-merged rings (excludes corner ring which is always locked)

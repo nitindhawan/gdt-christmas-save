@@ -12,6 +12,7 @@ signal ring_tapped()
 @export var ring_data: SpiralRing = null
 @export var source_texture: Texture2D = null
 @export var puzzle_center: Vector2 = Vector2.ZERO
+@export var puzzle_max_radius: float = 512.0  # Dynamic max radius from puzzle state
 
 var _is_dragging: bool = false
 var _drag_start_angle: float = 0.0
@@ -56,10 +57,10 @@ func _create_ring_mesh(inner_radius: float, outer_radius: float, texture_resourc
 	var tex_size = texture_resource.get_size()
 
 	# Calculate scale factor: texture space vs screen space
-	# Texture radius = image_height / 2, Screen radius = max_radius (512px)
+	# Texture radius = image_height / 2, Screen radius = puzzle_max_radius (dynamic)
 	# Scale factor = texture_radius / screen_radius
 	var texture_radius = tex_size.y / 2.0  # Assuming square texture
-	var screen_max_radius = 512.0  # Matches puzzle_manager.gd max_radius
+	var screen_max_radius = puzzle_max_radius  # Dynamic value from puzzle state
 	var uv_scale = texture_radius / screen_max_radius
 
 	# Generate vertices and UVs (ONCE, not every frame!)

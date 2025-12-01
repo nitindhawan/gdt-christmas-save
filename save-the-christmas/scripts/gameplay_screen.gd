@@ -39,9 +39,9 @@ var is_arrow_puzzle: bool = false
 var puzzle_center: Vector2 = Vector2(540, 960) # Center of 1080x1920 screen
 
 # UI references
-@onready var level_label = $MarginContainer/VBoxContainer/TopHUD/LevelLabel
+@onready var level_label = $TopHUD/MarginContainer/HBoxContainer/LevelLabel
 @onready var puzzle_grid = $MarginContainer/VBoxContainer/PuzzleArea/PuzzleGrid
-@onready var settings_button = $MarginContainer/VBoxContainer/TopHUD/SettingsButton
+@onready var settings_button = $TopHUD/MarginContainer/HBoxContainer/SettingsButton
 
 func _ready() -> void:
 	# Apply theme
@@ -358,11 +358,48 @@ func _setup_spiral_puzzle() -> void:
 	# Get puzzle area control
 	var puzzle_area = $MarginContainer/VBoxContainer/PuzzleArea
 
-	# Set minimum size for puzzle area to ensure it has dimensions
-	puzzle_area.custom_minimum_size = Vector2(1024, 1024)
+	# Calculate dynamic puzzle size based on screen height
+	var viewport_size = get_viewport_rect().size
+	var top_hud = $TopHUD
+	var bottom_hud = $BottomHUD
+	var vbox = $MarginContainer/VBoxContainer
+
+	# Available height = screen height - TopHUD - BottomHUD - VBox separation
+	var top_hud_height = top_hud.custom_minimum_size.y # 80px
+	var bottom_hud_height = bottom_hud.custom_minimum_size.y # 180px
+	var vbox_separation = vbox.get_theme_constant("separation") # 20px between elements
+
+	# Total vertical space taken by HUDs and separations (2 separations: TopHUD-Puzzle, Puzzle-BottomHUD)
+	var used_height = top_hud_height + bottom_hud_height + (vbox_separation * 2)
+	var available_height = viewport_size.y - used_height
+
+	# Use square size based on available height (width will match height for square puzzle)
+	var puzzle_size = available_height # and not min(available_height, viewport_size.x)
+
+	puzzle_area.custom_minimum_size = Vector2(puzzle_size, puzzle_size)
 	puzzle_area.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 
-	print("Spiral puzzle configured: %d rings" % puzzle_state.ring_count)
+	# Store puzzle size for dynamic max_radius calculation
+	var dynamic_max_radius = puzzle_size / 2.0
+
+	# Regenerate rings with the correct max_radius
+	var spiral_state = puzzle_state as SpiralPuzzleState
+	spiral_state.puzzle_radius = dynamic_max_radius
+
+	# Get the texture and ring count to regenerate rings
+	var texture = source_texture
+	var ring_count = spiral_state.ring_count
+
+	# Regenerate rings with dynamic max_radius
+	spiral_state.rings = PuzzleManager._create_rings_from_image(texture, ring_count, dynamic_max_radius)
+	spiral_state.active_ring_count = ring_count # Reset active ring count
+
+	# Scramble rings after regeneration
+	PuzzleManager._scramble_rings(spiral_state)
+
+	print("Spiral puzzle configured: viewport=%v, available_height=%.1f, puzzle_size=%.1f, max_radius=%.1f" % [
+		viewport_size, available_height, puzzle_size, dynamic_max_radius
+	])
 
 ## Spawn spiral ring nodes
 func _spawn_spiral_rings() -> void:
@@ -392,7 +429,8 @@ func _spawn_spiral_rings() -> void:
 	rings_container.name = "RingsContainer"
 	rings_container.custom_minimum_size = puzzle_area.size
 	rings_container.mouse_filter = Control.MOUSE_FILTER_STOP # Capture all input here
-	rings_container.clip_contents = false  # Don't clip children - allow corners to show
+	rings_container.clip_contents = false # Don't clip children - allow corners to show
+	rings_container.z_index = 0 # Keep puzzle elements below HUD
 	puzzle_area.add_child(rings_container)
 
 	# Connect input handling to this container
@@ -413,6 +451,7 @@ func _spawn_spiral_rings() -> void:
 		# Setup ring node BEFORE adding to tree
 		ring_node.ring_data = ring
 		ring_node.source_texture = source_texture
+		ring_node.puzzle_max_radius = spiral_state.puzzle_radius # Pass dynamic max_radius
 
 		# Debug: Print ring initialization
 		print("Ring %d: is_locked=%s, radii=%.1f-%.1f" % [
@@ -610,7 +649,7 @@ func _spawn_arrows() -> void:
 	background_image.custom_minimum_size = Vector2(puzzle_size, puzzle_size)
 	background_image.size = Vector2(puzzle_size, puzzle_size)
 	background_image.mouse_filter = Control.MOUSE_FILTER_IGNORE
-	background_image.z_index = 0  # Background layer
+	background_image.z_index = 0 # Background layer
 	puzzle_area.add_child(background_image)
 
 	# Create arrows container (overlay on top of background)
@@ -664,7 +703,7 @@ func _spawn_arrows() -> void:
 func _calculate_arrow_size(grid_size: Vector2i) -> Vector2:
 	# Use arrows_container size (which is the actual puzzle area size)
 	# Use smaller margins to maximize arrow size
-	var margin = 20.0  # Small margin for edge padding
+	var margin = 20.0 # Small margin for edge padding
 	var available_width = arrows_container.size.x - (margin * 2)
 	var available_height = arrows_container.size.y - (margin * 2)
 
