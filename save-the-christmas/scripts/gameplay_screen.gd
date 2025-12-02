@@ -171,10 +171,6 @@ func _setup_puzzle_grid() -> void:
 	# Calculate zoom factor based on available height (no margins)
 	var zoom_factor = available_height / GameConstants.PUZZLE_TEXTURE_HEIGHT
 
-	print("=== TILE PUZZLE DEBUG ===")
-	print("Available area: %.1f x %.1f" % [available_width, available_height])
-	print("Puzzle Texture (const): %d x %d" % [GameConstants.PUZZLE_TEXTURE_WIDTH, GameConstants.PUZZLE_TEXTURE_HEIGHT])
-	print("Zoom factor: %.3f" % zoom_factor)
 
 	# Create tiles container (GridContainer) - fills entire available area
 	var tiles_container = GridContainer.new()
@@ -188,13 +184,10 @@ func _setup_puzzle_grid() -> void:
 	tiles_container.size = Vector2(available_width, available_height)
 
 	puzzle_area.add_child(tiles_container)
-	print("Tiles container: pos=%v, size=%v, z_index=%d (inside clip, inherits z=2)" % [tiles_container.position, tiles_container.size, tiles_container.z_index])
 
 	# Store reference for spawning tiles
 	puzzle_grid = tiles_container
 
-	print("Grid: %d rows x %d columns" % [grid_size.x, grid_size.y])
-	print("=========================")
 
 ## Spawn tile nodes in the grid
 func _spawn_tiles() -> void:
@@ -214,14 +207,6 @@ func _spawn_tiles() -> void:
 
 	# Calculate tile size based on difficulty and available space
 	var tile_size = _calculate_tile_size()
-
-	print("=== TILE SPAWNING DEBUG ===")
-	print("Viewport: %v" % viewport_size)
-	print("Available area: %.1f x %.1f" % [available_width, available_height])
-	print("Puzzle texture constant: %d x %d" % [GameConstants.PUZZLE_TEXTURE_WIDTH, GameConstants.PUZZLE_TEXTURE_HEIGHT])
-	print("Zoom factor: %.3f" % zoom_factor)
-	print("Calculated tile size (screen): %v" % tile_size)
-	print("Grid: %d rows x %d columns" % [puzzle_state.grid_size.x, puzzle_state.grid_size.y])
 
 	# Create tile nodes in grid order (by current position)
 	# We need to place tiles based on their current position
@@ -247,10 +232,6 @@ func _spawn_tiles() -> void:
 			tile_node.drag_ended.connect(_on_tile_drag_ended)
 
 			tile_nodes.append(tile_node)
-
-	print("Spawned %d tiles (grid: %dx%d)" % [tile_nodes.size(), grid_size.x, grid_size.y])
-	print("Total tile area: %.1f x %.1f" % [tile_size.x * grid_size.y, tile_size.y * grid_size.x])
-	print("===========================")
 
 ## Calculate appropriate tile size based on difficulty
 func _calculate_tile_size() -> Vector2:
@@ -323,7 +304,6 @@ func _spawn_row_tiles() -> void:
 
 		tile_nodes.append(tile_node)
 
-	print("Spawned %d row tiles with zoom_factor=%.3f" % [tile_nodes.size(), zoom_factor])
 
 ## Calculate row tile size for row puzzle
 func _calculate_row_tile_size() -> Vector2:
@@ -574,9 +554,9 @@ func _setup_spiral_puzzle() -> void:
 	# Scramble rings after regeneration
 	PuzzleManager._scramble_rings(spiral_state)
 
-	print("Spiral puzzle configured: viewport=%v, available_height=%.1f, puzzle_size=%.1f, max_radius=%.1f" % [
-		viewport_size, available_height, puzzle_size, dynamic_max_radius
-	])
+	# print("Spiral puzzle configured: viewport=%v, available_height=%.1f, puzzle_size=%.1f, max_radius=%.1f" % [
+	# 	viewport_size, available_height, puzzle_size, dynamic_max_radius
+	# ])
 
 ## Spawn spiral ring nodes
 func _spawn_spiral_rings() -> void:
@@ -594,12 +574,12 @@ func _spawn_spiral_rings() -> void:
 	puzzle_area.reset_size()
 	await get_tree().process_frame
 
-	print("Puzzle area size after layout: %v" % puzzle_area.size)
+	# print("Puzzle area size after layout: %v" % puzzle_area.size)
 
 	# If still no size, set it manually
 	if puzzle_area.size.x == 0 or puzzle_area.size.y == 0:
 		puzzle_area.size = Vector2(900, 900)
-		print("Forced puzzle area size to: %v" % puzzle_area.size)
+		# print("Forced puzzle area size to: %v" % puzzle_area.size)
 
 	# Create a Control container for rings that handles ALL input
 	rings_container = Control.new()
@@ -614,7 +594,6 @@ func _spawn_spiral_rings() -> void:
 	rings_container.gui_input.connect(_on_rings_container_input)
 
 	await get_tree().process_frame
-	print("Rings container size: %v, position: %v" % [rings_container.size, rings_container.position])
 
 	# No background sprite needed - corner ring will show the corners
 	# Pre-allocate array to correct size
@@ -629,11 +608,6 @@ func _spawn_spiral_rings() -> void:
 		ring_node.ring_data = ring
 		ring_node.source_texture = source_texture
 		ring_node.puzzle_max_radius = spiral_state.puzzle_radius # Pass dynamic max_radius
-
-		# Debug: Print ring initialization
-		print("Ring %d: is_locked=%s, radii=%.1f-%.1f" % [
-			i, ring.is_locked, ring.inner_radius, ring.outer_radius
-		])
 
 		# Add to rings container
 		rings_container.add_child(ring_node)
@@ -809,9 +783,9 @@ func _setup_arrow_puzzle() -> void:
 	puzzle_area.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 
 	var arrow_state = puzzle_state as ArrowPuzzleState
-	print("Arrow puzzle configured: viewport=%v, available_height=%.1f, available_width=%.1f, margin=%d, %dx%d grid = %d arrows" % [
-		viewport_size, available_height, available_width, margin, arrow_state.grid_size.x, arrow_state.grid_size.y, arrow_state.arrows.size()
-	])
+	# print("Arrow puzzle configured: viewport=%v, available_height=%.1f, available_width=%.1f, margin=%d, %dx%d grid = %d arrows" % [
+	# 	viewport_size, available_height, available_width, margin, arrow_state.grid_size.x, arrow_state.grid_size.y, arrow_state.arrows.size()
+	# ])
 
 ## Spawn arrow nodes in a grid layout
 func _spawn_arrows() -> void:

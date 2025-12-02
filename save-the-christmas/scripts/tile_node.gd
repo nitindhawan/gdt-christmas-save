@@ -45,15 +45,6 @@ func setup(tile: Tile, index: int, source_texture: Texture2D, zoom_factor: float
 	# stretch_mode=6 (STRETCH_KEEP_ASPECT_COVERED) scales to cover container maintaining aspect ratio
 	# clip_contents=true clips overflow on edges
 
-	# Debug: Print tile setup details
-	if index < 3:  # Only print first 3 tiles to avoid spam
-		print("TileNode[%d] setup: pos=(%d,%d), region=(%.1f, %.1f, %.1f, %.1f), zoom=%.3f, container_size=%v" % [
-			index, tile.correct_position.x, tile.correct_position.y,
-			tile.texture_region.position.x, tile.texture_region.position.y,
-			tile.texture_region.size.x, tile.texture_region.size.y,
-			zoom_factor, custom_minimum_size
-		])
-
 	# Check if tile is in correct position
 	is_draggable = !tile.is_correct()
 

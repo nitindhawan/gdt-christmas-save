@@ -54,8 +54,6 @@ func _generate_tile_puzzle(level_id: int, difficulty: int, level_data: Dictionar
 	var available_width = GameConstants.get_available_width()
 	var available_height = GameConstants.get_available_height()
 
-	print("PuzzleManager: Using available area %.1fx%.1f for tile region calculation" % [available_width, available_height])
-
 	# Create puzzle state
 	var puzzle_state = PuzzleState.new()
 	puzzle_state.level_id = level_id
@@ -69,8 +67,6 @@ func _generate_tile_puzzle(level_id: int, difficulty: int, level_data: Dictionar
 
 	# Scramble tiles
 	scramble_tiles(puzzle_state)
-
-	print("Generated tile puzzle: Level %d, %s, Grid %dx%d, Tiles: %d" % [level_id, difficulty_str, rows, columns, puzzle_state.tiles.size()])
 
 	return puzzle_state
 
@@ -106,8 +102,6 @@ func _generate_spiral_puzzle(level_id: int, difficulty: int, level_data: Diction
 	var max_radius = 512.0
 	puzzle_state.puzzle_radius = max_radius
 
-	print("Spiral puzzle: initial max_radius=%.1f (will be updated dynamically)" % max_radius)
-
 	# Create rings from image (includes corner ring)
 	# Note: Rings will be regenerated in gameplay_screen with actual max_radius
 	puzzle_state.rings = _create_rings_from_image(texture, ring_count, max_radius)
@@ -117,8 +111,6 @@ func _generate_spiral_puzzle(level_id: int, difficulty: int, level_data: Diction
 
 	# Scramble rings (randomize rotations)
 	_scramble_rings(puzzle_state)
-
-	print("Generated spiral puzzle: Level %d, %s, Rings: %d" % [level_id, difficulty_str, ring_count])
 
 	return puzzle_state
 
@@ -144,10 +136,6 @@ func _create_rings_from_image(texture: Texture2D, ring_count: int, max_radius: f
 	var normal_ring_width = max_radius / (ring_count + 2)
 	var central_ring_width = normal_ring_width * 3
 
-	print("Creating %d rings with max_radius=%.1f, normal_ring_width=%.1f, central_ring_width=%.1f" % [
-		ring_count, max_radius, normal_ring_width, central_ring_width
-	])
-
 	for i in range(ring_count):
 		var ring = SpiralRing.new()
 		ring.ring_index = i
@@ -165,10 +153,6 @@ func _create_rings_from_image(texture: Texture2D, ring_count: int, max_radius: f
 			ring.inner_radius = central_ring_width + (i - 1) * normal_ring_width
 			ring.outer_radius = central_ring_width + i * normal_ring_width
 
-		print("  Ring %d: inner_radius=%.1f, outer_radius=%.1f, is_locked=%s" % [
-			i, ring.inner_radius, ring.outer_radius, str(ring.is_locked)
-		])
-
 		rings.append(ring)
 
 	# Create special corner ring (static, shows rectangular corners)
@@ -180,10 +164,6 @@ func _create_rings_from_image(texture: Texture2D, ring_count: int, max_radius: f
 	corner_ring.inner_radius = max_radius  # Starts where puzzle ends
 	corner_ring.outer_radius = max_radius * sqrt(2.0)  # Half of square diagonal
 	corner_ring.is_locked = true  # Fixed, immovable
-
-	print("  Corner ring: inner_radius=%.1f, outer_radius=%.1f, is_locked=true" % [
-		corner_ring.inner_radius, corner_ring.outer_radius
-	])
 
 	rings.append(corner_ring)
 
@@ -220,8 +200,6 @@ func _scramble_rings(puzzle_state: SpiralPuzzleState) -> void:
 			if not ring.is_locked:
 				max_angle_diff = max(max_angle_diff, abs(ring.current_angle))
 		attempts += 1
-
-	print("Spiral puzzle scrambled (attempts: %d, max angle: %.1f)" % [attempts + 1, max_angle_diff])
 
 ## Generate an arrow puzzle
 func _generate_arrow_puzzle(level_id: int, difficulty: int, level_data: Dictionary) -> ArrowPuzzleState:
@@ -278,11 +256,6 @@ func _generate_arrow_puzzle(level_id: int, difficulty: int, level_data: Dictiona
 	# Create arrows for the grid
 	puzzle_state.arrows = _create_arrows_for_grid(grid_size, puzzle_state.direction_set)
 	puzzle_state.active_arrow_count = puzzle_state.arrows.size()
-
-	print("Generated arrow puzzle: Level %d, %s, Grid %dx%d, Arrows: %d, Directions: %s" % [
-		level_id, difficulty_str, grid_size.x, grid_size.y,
-		puzzle_state.arrows.size(), puzzle_state.get_direction_set_name()
-	])
 
 	return puzzle_state
 
@@ -348,8 +321,6 @@ func _generate_row_tile_puzzle(level_id: int, difficulty: int, level_data: Dicti
 	# Scramble rows
 	_scramble_rows(puzzle_state)
 
-	print("Generated row tile puzzle: Level %d, %s, Rows: %d" % [level_id, difficulty_str, row_count])
-
 	return puzzle_state
 
 ## Get default row count based on difficulty
@@ -408,8 +379,6 @@ func _scramble_rows(puzzle_state: RowTilePuzzleState) -> void:
 			rows[j].current_position = temp_pos
 		attempts += 1
 
-	print("Row puzzle scrambled (attempts: %d)" % (attempts + 1))
-
 ## Check if row puzzle is solved (all rows in correct positions)
 func _is_row_puzzle_solved(puzzle_state: RowTilePuzzleState) -> bool:
 	for row in puzzle_state.rows:
@@ -453,28 +422,12 @@ func create_tiles_from_image(texture: Texture2D, rows: int, columns: int, availa
 	var visible_texture_y_end = texture_height
 	var visible_texture_height = visible_texture_y_end - visible_texture_y_start
 
-	print("=== TILE TEXTURE REGION CALCULATION ===")
-	print("Texture size: %.1f x %.1f" % [texture_width, texture_height])
-	print("Available area: %.1f x %.1f" % [available_width, available_height])
-	print("Zoom factor: %.3f" % zoom_factor)
-	print("Zoomed texture: %.1f x %.1f" % [zoomed_texture_width, zoomed_texture_height])
-	print("Horizontal clip (screen): %.1f" % horizontal_clip_screen)
-	print("Horizontal clip (texture): %.1f" % horizontal_clip_texture)
-	print("Visible texture region: (%.1f, %.1f) to (%.1f, %.1f)" % [
-		visible_texture_x_start, visible_texture_y_start,
-		visible_texture_x_end, visible_texture_y_end
-	])
-	print("Visible texture size: %.1f x %.1f" % [visible_texture_width, visible_texture_height])
-
 	# Calculate tile size from visible portion
 	var tile_texture_width = visible_texture_width / columns
 	var tile_texture_height = visible_texture_height / rows
 
-	print("Tile texture size: %.1f x %.1f" % [tile_texture_width, tile_texture_height])
-
 	# Create tiles from visible texture region only
 	var tile_id = 0
-	print("\n--- Creating Tiles ---")
 	for row in range(rows):
 		for col in range(columns):
 			var tile = Tile.new()
@@ -487,17 +440,8 @@ func create_tiles_from_image(texture: Texture2D, rows: int, columns: int, availa
 			var region_y = visible_texture_y_start + (row * tile_texture_height)
 			tile.texture_region = Rect2(region_x, region_y, tile_texture_width, tile_texture_height)
 
-			print("  Tile[%d] at (%d,%d): region=(%.1f, %.1f, %.1f, %.1f)" % [
-				tile_id, row, col,
-				tile.texture_region.position.x, tile.texture_region.position.y,
-				tile.texture_region.size.x, tile.texture_region.size.y
-			])
-
 			tiles.append(tile)
 			tile_id += 1
-
-	print("Created %d tiles" % tiles.size())
-	print("=======================================")
 
 	return tiles
 
@@ -525,8 +469,6 @@ func scramble_tiles(puzzle_state: PuzzleState) -> void:
 			tiles[i].current_position = tiles[j].current_position
 			tiles[j].current_position = temp_pos
 		attempts += 1
-
-	print("Puzzle scrambled (attempts: %d)" % (attempts + 1))
 
 ## Check if puzzle is solved (all tiles in correct positions)
 func is_puzzle_solved(puzzle_state: PuzzleState) -> bool:
