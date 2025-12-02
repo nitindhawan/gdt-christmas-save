@@ -60,6 +60,10 @@ const LEVEL_IMAGE_SIZE = 1024 # 1024×1024 pixels
 const PUZZLE_TEXTURE_WIDTH = 1024 # Width of puzzle textures (should match actual asset dimensions)
 const PUZZLE_TEXTURE_HEIGHT = 1024 # Height of puzzle textures (should match actual asset dimensions)
 
+# Base viewport resolution (from project settings)
+const BASE_RESOLUTION_WIDTH = 1080 # Base viewport width
+const BASE_RESOLUTION_HEIGHT = 1920 # Base viewport height
+
 # HUD specifications (configurable heights)
 const TOP_HUD_HEIGHT = 80 # Height of top HUD in pixels
 const BOTTOM_HUD_HEIGHT = 180 # Height of bottom HUD in pixels

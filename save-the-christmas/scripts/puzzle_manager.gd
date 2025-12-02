@@ -50,12 +50,23 @@ func _generate_tile_puzzle(level_id: int, difficulty: int, level_data: Dictionar
 		push_error("Failed to load level image for level %d" % level_id)
 		return null
 
+	# Calculate available dimensions for texture region calculation
+	# This matches the calculation in gameplay_screen._calculate_tile_size()
+	# Use base resolution from GameConstants (matches project settings)
+	var viewport_width = GameConstants.BASE_RESOLUTION_WIDTH
+	var viewport_height = GameConstants.BASE_RESOLUTION_HEIGHT
+	var used_height = GameConstants.TOP_HUD_HEIGHT + GameConstants.BOTTOM_HUD_HEIGHT + (20 * 2) # vbox_separation = 20
+	var available_height = viewport_height - used_height
+	var available_width = viewport_width
+
+	print("PuzzleManager: Using base resolution %dx%d for tile region calculation" % [viewport_width, viewport_height])
+
 	# Create puzzle state
 	var puzzle_state = PuzzleState.new()
 	puzzle_state.level_id = level_id
 	puzzle_state.difficulty = GameConstants.difficulty_to_string(difficulty)
 	puzzle_state.grid_size = Vector2i(rows, columns)
-	puzzle_state.tiles = create_tiles_from_image(texture, rows, columns)
+	puzzle_state.tiles = create_tiles_from_image(texture, rows, columns, available_width, available_height)
 	puzzle_state.selected_tile_index = -1
 	puzzle_state.swap_count = 0
 	puzzle_state.hints_used = 0
@@ -412,14 +423,63 @@ func _is_row_puzzle_solved(puzzle_state: RowTilePuzzleState) -> bool:
 	return true
 
 ## Create tiles from an image divided into a grid
-func create_tiles_from_image(texture: Texture2D, rows: int, columns: int) -> Array[Tile]:
+func create_tiles_from_image(texture: Texture2D, rows: int, columns: int, available_width: float = 0.0, available_height: float = 0.0) -> Array[Tile]:
 	var tiles: Array[Tile] = []
 
-	var image_size = texture.get_size()
-	var tile_width = image_size.x / columns
-	var tile_height = image_size.y / rows
+	# Get texture dimensions
+	var texture_width = texture.get_size().x
+	var texture_height = texture.get_size().y
 
+	# If available dimensions not provided, use texture dimensions (no clipping)
+	if available_width <= 0.0:
+		available_width = texture_width
+	if available_height <= 0.0:
+		available_height = texture_height
+
+	# Calculate zoom factor (based on height fitting)
+	var zoom_factor = available_height / texture_height
+
+	# Calculate zoomed texture dimensions
+	var zoomed_texture_width = texture_width * zoom_factor
+	var zoomed_texture_height = texture_height * zoom_factor  # This equals available_height
+
+	# Calculate how much gets clipped horizontally (in screen coordinates)
+	var horizontal_clip_screen = (zoomed_texture_width - available_width) / 2.0
+
+	# Convert clip amount back to texture coordinates
+	var horizontal_clip_texture = horizontal_clip_screen / zoom_factor
+
+	# Calculate visible texture region (in original texture coordinates)
+	var visible_texture_x_start = horizontal_clip_texture
+	var visible_texture_x_end = texture_width - horizontal_clip_texture
+	var visible_texture_width = visible_texture_x_end - visible_texture_x_start
+
+	var visible_texture_y_start = 0.0
+	var visible_texture_y_end = texture_height
+	var visible_texture_height = visible_texture_y_end - visible_texture_y_start
+
+	print("=== TILE TEXTURE REGION CALCULATION ===")
+	print("Texture size: %.1f x %.1f" % [texture_width, texture_height])
+	print("Available area: %.1f x %.1f" % [available_width, available_height])
+	print("Zoom factor: %.3f" % zoom_factor)
+	print("Zoomed texture: %.1f x %.1f" % [zoomed_texture_width, zoomed_texture_height])
+	print("Horizontal clip (screen): %.1f" % horizontal_clip_screen)
+	print("Horizontal clip (texture): %.1f" % horizontal_clip_texture)
+	print("Visible texture region: (%.1f, %.1f) to (%.1f, %.1f)" % [
+		visible_texture_x_start, visible_texture_y_start,
+		visible_texture_x_end, visible_texture_y_end
+	])
+	print("Visible texture size: %.1f x %.1f" % [visible_texture_width, visible_texture_height])
+
+	# Calculate tile size from visible portion
+	var tile_texture_width = visible_texture_width / columns
+	var tile_texture_height = visible_texture_height / rows
+
+	print("Tile texture size: %.1f x %.1f" % [tile_texture_width, tile_texture_height])
+
+	# Create tiles from visible texture region only
 	var tile_id = 0
+	print("\n--- Creating Tiles ---")
 	for row in range(rows):
 		for col in range(columns):
 			var tile = Tile.new()
@@ -427,13 +487,22 @@ func create_tiles_from_image(texture: Texture2D, rows: int, columns: int) -> Arr
 			tile.correct_position = Vector2i(row, col)
 			tile.current_position = Vector2i(row, col)  # Start in correct position
 
-			# Define texture region for this tile
-			var region_x = col * tile_width
-			var region_y = row * tile_height
-			tile.texture_region = Rect2(region_x, region_y, tile_width, tile_height)
+			# Define texture region for this tile (from visible portion)
+			var region_x = visible_texture_x_start + (col * tile_texture_width)
+			var region_y = visible_texture_y_start + (row * tile_texture_height)
+			tile.texture_region = Rect2(region_x, region_y, tile_texture_width, tile_texture_height)
+
+			print("  Tile[%d] at (%d,%d): region=(%.1f, %.1f, %.1f, %.1f)" % [
+				tile_id, row, col,
+				tile.texture_region.position.x, tile.texture_region.position.y,
+				tile.texture_region.size.x, tile.texture_region.size.y
+			])
 
 			tiles.append(tile)
 			tile_id += 1
+
+	print("Created %d tiles" % tiles.size())
+	print("=======================================")
 
 	return tiles
 

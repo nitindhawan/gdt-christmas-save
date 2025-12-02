@@ -29,7 +29,7 @@ var hover_target: Control = null
 var tween: Tween
 
 ## Setup the tile with data and texture
-func setup(tile: Tile, index: int, source_texture: Texture2D) -> void:
+func setup(tile: Tile, index: int, source_texture: Texture2D, zoom_factor: float = 1.0) -> void:
 	tile_data = tile
 	tile_index = index
 
@@ -39,6 +39,20 @@ func setup(tile: Tile, index: int, source_texture: Texture2D) -> void:
 	atlas_texture.region = tile.texture_region
 
 	tile_texture.texture = atlas_texture
+
+	# Note: TextureRect stretch modes are set in scene (expand_mode=1, stretch_mode=6)
+	# expand_mode=1 (EXPAND_IGNORE_SIZE) ignores texture size, uses container size
+	# stretch_mode=6 (STRETCH_KEEP_ASPECT_COVERED) scales to cover container maintaining aspect ratio
+	# clip_contents=true clips overflow on edges
+
+	# Debug: Print tile setup details
+	if index < 3:  # Only print first 3 tiles to avoid spam
+		print("TileNode[%d] setup: pos=(%d,%d), region=(%.1f, %.1f, %.1f, %.1f), zoom=%.3f, container_size=%v" % [
+			index, tile.correct_position.x, tile.correct_position.y,
+			tile.texture_region.position.x, tile.texture_region.position.y,
+			tile.texture_region.size.x, tile.texture_region.size.y,
+			zoom_factor, custom_minimum_size
+		])
 
 	# Check if tile is in correct position
 	is_draggable = !tile.is_correct()

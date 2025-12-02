@@ -8,6 +8,7 @@ anchors_preset = 0
 script = ExtResource("1_1")
 
 [node name="TileTexture" type="TextureRect" parent="."]
+clip_contents = true
 layout_mode = 1
 anchors_preset = 15
 anchor_right = 1.0
@@ -15,7 +16,7 @@ anchor_bottom = 1.0
 grow_horizontal = 2
 grow_vertical = 2
 expand_mode = 1
-stretch_mode = 5
+stretch_mode = 6
 
 [node name="Border" type="Panel" parent="."]
 visible = false

@@ -40,7 +40,6 @@ var is_spiral_puzzle: bool = false
 var is_arrow_puzzle: bool = false
 var is_row_tile_puzzle: bool = false
 var puzzle_center: Vector2 = Vector2(540, 960) # Center of 1080x1920 screen
-var overlay_mask: ColorRect = null # Tile puzzle overlay mask reference
 
 # UI references
 @onready var level_label = $TopHUD/MarginContainer/HBoxContainer/LevelLabel
@@ -151,7 +150,7 @@ func _initialize_gameplay() -> void:
 func _setup_puzzle_grid() -> void:
 	var grid_size = puzzle_state.grid_size
 
-	# Hide the default puzzle grid - we'll create custom layers
+	# Hide the default puzzle grid - we'll use a custom GridContainer
 	puzzle_grid.visible = false
 
 	# Get puzzle area control
@@ -169,134 +168,26 @@ func _setup_puzzle_grid() -> void:
 	# Set puzzle area to full available size
 	puzzle_area.custom_minimum_size = Vector2(available_width, available_height)
 
-	# Calculate zoom factor
+	# Calculate zoom factor based on available height (no margins)
 	var zoom_factor = available_height / GameConstants.PUZZLE_TEXTURE_HEIGHT
-	var puzzle_width = GameConstants.PUZZLE_TEXTURE_WIDTH * zoom_factor
-	var puzzle_height = available_height
-
-	# Layer 1: Background image (full puzzle image at available size)
-	var background_image = TextureRect.new()
-	background_image.name = "TileBackgroundImage"
-	background_image.texture = source_texture
-	background_image.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
-	background_image.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_CENTERED
-	background_image.custom_minimum_size = Vector2(puzzle_width, puzzle_height)
-	background_image.size = Vector2(puzzle_width, puzzle_height)
-	background_image.mouse_filter = Control.MOUSE_FILTER_IGNORE
-	background_image.z_index = 0
-	puzzle_area.add_child(background_image)
-	print("Background image: z_index=%d" % background_image.z_index)
-
-	# Calculate margin - borders need to be positioned within the AVAILABLE area (screen bounds)
-	var margin = GameConstants.TILE_PUZZLE_MARGIN
-
-	# The active puzzle area (within margins) - where tiles will be placed
-	var active_puzzle_width = available_width - (margin * 2)
-	var active_puzzle_height = available_height - (margin * 2)
 
 	print("=== TILE PUZZLE DEBUG ===")
 	print("Available area: %.1f x %.1f" % [available_width, available_height])
 	print("Puzzle Texture (const): %d x %d" % [GameConstants.PUZZLE_TEXTURE_WIDTH, GameConstants.PUZZLE_TEXTURE_HEIGHT])
 	print("Zoom factor: %.3f" % zoom_factor)
-	print("Puzzle size (zoomed): %.1f x %.1f" % [puzzle_width, puzzle_height])
-	print("Margin: %d px" % margin)
-	print("Active puzzle area: %.1f x %.1f" % [active_puzzle_width, active_puzzle_height])
 
-	# Layer 2: Border panels to create margin effect (4 panels: top, bottom, left, right)
-	# TEMPORARILY DISABLED FOR TESTING
-	# These need to cover the AVAILABLE area edges, not follow the oversized puzzle
-	#var border_color = Color("#081c30") # Same as gameplay screen background
-	#
-	## Top border panel (full width of available area)
-	#var top_border = ColorRect.new()
-	#top_border.name = "TopBorder"
-	#top_border.color = border_color
-	#top_border.position = Vector2(0, 0)
-	#top_border.size = Vector2(available_width, margin)
-	#top_border.mouse_filter = Control.MOUSE_FILTER_IGNORE
-	#top_border.z_index = 1
-	#puzzle_area.add_child(top_border)
-	#print("Top border: pos=%v, size=%v, z_index=%d" % [top_border.position, top_border.size, top_border.z_index])
-	#
-	## Bottom border panel (full width of available area)
-	#var bottom_border = ColorRect.new()
-	#bottom_border.name = "BottomBorder"
-	#bottom_border.color = border_color
-	#bottom_border.position = Vector2(0, available_height - margin)
-	#bottom_border.size = Vector2(available_width, margin)
-	#bottom_border.mouse_filter = Control.MOUSE_FILTER_IGNORE
-	#bottom_border.z_index = 1
-	#puzzle_area.add_child(bottom_border)
-	#print("Bottom border: pos=%v, size=%v, z_index=%d" % [bottom_border.position, bottom_border.size, bottom_border.z_index])
-	#
-	## Left border panel (full height of available area)
-	#var left_border = ColorRect.new()
-	#left_border.name = "LeftBorder"
-	#left_border.color = border_color
-	#left_border.position = Vector2(0, 0)
-	#left_border.size = Vector2(margin, available_height)
-	#left_border.mouse_filter = Control.MOUSE_FILTER_IGNORE
-	#left_border.z_index = 1
-	#puzzle_area.add_child(left_border)
-	#print("Left border: pos=%v, size=%v, z_index=%d" % [left_border.position, left_border.size, left_border.z_index])
-	#
-	## Right border panel (full height of available area)
-	#var right_border = ColorRect.new()
-	#right_border.name = "RightBorder"
-	#right_border.color = border_color
-	#right_border.position = Vector2(available_width - margin, 0)
-	#right_border.size = Vector2(margin, available_height)
-	#right_border.mouse_filter = Control.MOUSE_FILTER_IGNORE
-	#right_border.z_index = 1
-	#puzzle_area.add_child(right_border)
-	#print("Right border: pos=%v, size=%v, z_index=%d" % [right_border.position, right_border.size, right_border.z_index])
-
-	# Layer 3: Overlay mask (create dynamically to avoid CenterContainer layout issues)
-	overlay_mask = ColorRect.new()
-	overlay_mask.name = "TilePuzzleOverlayMask"
-	overlay_mask.visible = true
-	overlay_mask.color = Color.RED # TESTING: Red color to see if visible
-	overlay_mask.position = Vector2(margin, margin)
-	overlay_mask.size = Vector2(active_puzzle_width, active_puzzle_height)
-	overlay_mask.mouse_filter = Control.MOUSE_FILTER_IGNORE
-	overlay_mask.z_index = 1
-	overlay_mask.layout_mode = 0 # CRITICAL: Use "Position & Size" mode to prevent CenterContainer override
-	puzzle_area.add_child(overlay_mask)
-	print("Overlay mask created dynamically")
-	print("  pos=(%f, %f), size=(%f, %f), z_index=%d, color=(%f, %f, %f, %f), visible=%s" % [
-		overlay_mask.position.x, overlay_mask.position.y,
-		overlay_mask.size.x, overlay_mask.size.y,
-		overlay_mask.z_index,
-		overlay_mask.color.r, overlay_mask.color.g, overlay_mask.color.b, overlay_mask.color.a,
-		overlay_mask.visible
-	])
-
-	# Layer 4: Clipping container to enforce active puzzle area boundaries
-	var clip_container = Control.new()
-	clip_container.name = "ClipContainer"
-	clip_container.position = Vector2(margin, margin)
-	clip_container.custom_minimum_size = Vector2(active_puzzle_width, active_puzzle_height)
-	clip_container.size = Vector2(active_puzzle_width, active_puzzle_height)
-	clip_container.clip_contents = true # Enable clipping to active puzzle area
-	clip_container.mouse_filter = Control.MOUSE_FILTER_IGNORE
-	clip_container.z_index = 2
-	puzzle_area.add_child(clip_container)
-	print("Clip container: pos=%v, size=%v, z_index=%d" % [clip_container.position, clip_container.size, clip_container.z_index])
-
-	# Layer 5: Tiles container (inside clip container, fits exactly in active puzzle area)
+	# Create tiles container (GridContainer) - fills entire available area
 	var tiles_container = GridContainer.new()
 	tiles_container.name = "TilesContainer"
 	tiles_container.columns = grid_size.y
 	tiles_container.add_theme_constant_override("h_separation", 0)
 	tiles_container.add_theme_constant_override("v_separation", 0)
 	tiles_container.mouse_filter = Control.MOUSE_FILTER_IGNORE
-
-	# Tiles fill the entire active puzzle area
 	tiles_container.position = Vector2(0, 0)
-	tiles_container.custom_minimum_size = Vector2(active_puzzle_width, active_puzzle_height)
-	tiles_container.size = Vector2(active_puzzle_width, active_puzzle_height)
+	tiles_container.custom_minimum_size = Vector2(available_width, available_height)
+	tiles_container.size = Vector2(available_width, available_height)
 
-	clip_container.add_child(tiles_container)
+	puzzle_area.add_child(tiles_container)
 	print("Tiles container: pos=%v, size=%v, z_index=%d (inside clip, inherits z=2)" % [tiles_container.position, tiles_container.size, tiles_container.z_index])
 
 	# Store reference for spawning tiles
@@ -312,11 +203,25 @@ func _spawn_tiles() -> void:
 		child.queue_free()
 	tile_nodes.clear()
 
+	# Calculate zoom factor for texture scaling
+	var viewport_size = get_viewport_rect().size
+	var vbox = $MarginContainer/VBoxContainer
+	var vbox_separation = vbox.get_theme_constant("separation")
+	var used_height = GameConstants.TOP_HUD_HEIGHT + GameConstants.BOTTOM_HUD_HEIGHT + (vbox_separation * 2)
+	var available_height = viewport_size.y - used_height
+	var available_width = viewport_size.x
+	var zoom_factor = available_height / GameConstants.PUZZLE_TEXTURE_HEIGHT
+
 	# Calculate tile size based on difficulty and available space
 	var tile_size = _calculate_tile_size()
 
 	print("=== TILE SPAWNING DEBUG ===")
-	print("Calculated tile size: %v" % tile_size)
+	print("Viewport: %v" % viewport_size)
+	print("Available area: %.1f x %.1f" % [available_width, available_height])
+	print("Puzzle texture constant: %d x %d" % [GameConstants.PUZZLE_TEXTURE_WIDTH, GameConstants.PUZZLE_TEXTURE_HEIGHT])
+	print("Zoom factor: %.3f" % zoom_factor)
+	print("Calculated tile size (screen): %v" % tile_size)
+	print("Grid: %d rows x %d columns" % [puzzle_state.grid_size.x, puzzle_state.grid_size.y])
 
 	# Create tile nodes in grid order (by current position)
 	# We need to place tiles based on their current position
@@ -337,8 +242,8 @@ func _spawn_tiles() -> void:
 			# Add to tree first so @onready variables are initialized
 			puzzle_grid.add_child(tile_node)
 
-			# Now setup the tile
-			tile_node.setup(tile, tile_index, source_texture)
+			# Now setup the tile with zoom factor
+			tile_node.setup(tile, tile_index, source_texture, zoom_factor)
 			tile_node.drag_ended.connect(_on_tile_drag_ended)
 
 			tile_nodes.append(tile_node)
@@ -353,7 +258,7 @@ func _calculate_tile_size() -> Vector2:
 	var rows = grid_size.x
 	var columns = grid_size.y
 
-	# Calculate available area (screen minus HUDs)
+	# Calculate available area (screen minus HUDs, no margins)
 	var viewport_size = get_viewport_rect().size
 	var vbox = $MarginContainer/VBoxContainer
 	var vbox_separation = vbox.get_theme_constant("separation")
@@ -362,14 +267,9 @@ func _calculate_tile_size() -> Vector2:
 	var available_height = viewport_size.y - used_height
 	var available_width = viewport_size.x
 
-	# Calculate active puzzle area (available area minus margins)
-	var margin = GameConstants.TILE_PUZZLE_MARGIN
-	var active_puzzle_width = available_width - (margin * 2)
-	var active_puzzle_height = available_height - (margin * 2)
-
-	# Calculate tile size to fit within active puzzle area
-	var tile_width = active_puzzle_width / columns
-	var tile_height = active_puzzle_height / rows
+	# Calculate tile size to fill entire available area
+	var tile_width = available_width / columns
+	var tile_height = available_height / rows
 
 	return Vector2(tile_width, tile_height)
 
@@ -493,9 +393,6 @@ func _check_row_puzzle_solved() -> void:
 	if puzzle_state.is_puzzle_solved():
 		print("Row tile puzzle solved!")
 		puzzle_state.is_solved = true
-		# Hide overlay mask when puzzle solved
-		if overlay_mask != null:
-			overlay_mask.visible = false
 		_save_progress()
 		await _handle_puzzle_completion()
 
@@ -532,9 +429,6 @@ func _check_puzzle_solved() -> void:
 	if PuzzleManager.is_puzzle_solved(puzzle_state):
 		print("Tile puzzle solved!")
 		puzzle_state.is_solved = true
-		# Hide overlay mask when puzzle solved
-		if overlay_mask != null:
-			overlay_mask.visible = false
 		_save_progress()
 		await _handle_puzzle_completion()
 
