@@ -50,16 +50,11 @@ func _generate_tile_puzzle(level_id: int, difficulty: int, level_data: Dictionar
 		push_error("Failed to load level image for level %d" % level_id)
 		return null
 
-	# Calculate available dimensions for texture region calculation
-	# This matches the calculation in gameplay_screen._calculate_tile_size()
-	# Use base resolution from GameConstants (matches project settings)
-	var viewport_width = GameConstants.BASE_RESOLUTION_WIDTH
-	var viewport_height = GameConstants.BASE_RESOLUTION_HEIGHT
-	var used_height = GameConstants.TOP_HUD_HEIGHT + GameConstants.BOTTOM_HUD_HEIGHT + (20 * 2) # vbox_separation = 20
-	var available_height = viewport_height - used_height
-	var available_width = viewport_width
+	# Get actual viewport dimensions from GameConstants (set during loading)
+	var available_width = GameConstants.get_available_width()
+	var available_height = GameConstants.get_available_height()
 
-	print("PuzzleManager: Using base resolution %dx%d for tile region calculation" % [viewport_width, viewport_height])
+	print("PuzzleManager: Using available area %.1fx%.1f for tile region calculation" % [available_width, available_height])
 
 	# Create puzzle state
 	var puzzle_state = PuzzleState.new()

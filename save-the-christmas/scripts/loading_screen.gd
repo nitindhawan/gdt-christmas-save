@@ -32,6 +32,10 @@ func _process(delta: float) -> void:
 			_on_loading_complete()
 
 func _start_loading() -> void:
+	# Initialize viewport dimensions in GameConstants
+	var viewport_size = get_viewport_rect().size
+	GameConstants.initialize_viewport_dimensions(viewport_size)
+
 	# Load levels data
 	var levels_loaded = LevelManager.load_levels()
 	if not levels_loaded:

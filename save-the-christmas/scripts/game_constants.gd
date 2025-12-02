@@ -60,9 +60,16 @@ const LEVEL_IMAGE_SIZE = 1024 # 1024×1024 pixels
 const PUZZLE_TEXTURE_WIDTH = 1024 # Width of puzzle textures (should match actual asset dimensions)
 const PUZZLE_TEXTURE_HEIGHT = 1024 # Height of puzzle textures (should match actual asset dimensions)
 
-# Base viewport resolution (from project settings)
+# Base viewport resolution (from project settings - defaults)
 const BASE_RESOLUTION_WIDTH = 1080 # Base viewport width
 const BASE_RESOLUTION_HEIGHT = 1920 # Base viewport height
+
+# Actual viewport dimensions (set at runtime during loading)
+# These will be initialized to base resolution and updated by loading_screen
+var actual_viewport_width: float = BASE_RESOLUTION_WIDTH
+var actual_viewport_height: float = BASE_RESOLUTION_HEIGHT
+var actual_available_width: float = 0.0  # Available width (viewport - margins if any)
+var actual_available_height: float = 0.0  # Available height (viewport - HUD heights)
 
 # HUD specifications (configurable heights)
 const TOP_HUD_HEIGHT = 80 # Height of top HUD in pixels
@@ -105,3 +112,34 @@ static func string_to_difficulty(diff_str: String) -> Difficulty:
 			return Difficulty.HARD
 		_:
 			return Difficulty.EASY
+
+## Initialize actual viewport dimensions from a viewport node
+## Should be called once during loading screen
+func initialize_viewport_dimensions(viewport_rect_size: Vector2) -> void:
+	actual_viewport_width = viewport_rect_size.x
+	actual_viewport_height = viewport_rect_size.y
+
+	# Calculate available dimensions (viewport minus HUD areas)
+	# Assume standard vbox_separation = 20
+	var used_height = TOP_HUD_HEIGHT + BOTTOM_HUD_HEIGHT + (20 * 2)
+	actual_available_height = actual_viewport_height - used_height
+	actual_available_width = actual_viewport_width
+
+	print("GameConstants: Viewport initialized to %.1fx%.1f" % [actual_viewport_width, actual_viewport_height])
+	print("GameConstants: Available area set to %.1fx%.1f" % [actual_available_width, actual_available_height])
+
+## Get actual viewport width (set during loading)
+func get_viewport_width() -> float:
+	return actual_viewport_width
+
+## Get actual viewport height (set during loading)
+func get_viewport_height() -> float:
+	return actual_viewport_height
+
+## Get available width for puzzles (viewport width minus any margins)
+func get_available_width() -> float:
+	return actual_available_width
+
+## Get available height for puzzles (viewport height minus HUD heights)
+func get_available_height() -> float:
+	return actual_available_height
