@@ -664,12 +664,14 @@ func _on_rings_container_input(event: InputEvent) -> void:
 						# Found the clicked ring
 						_dragging_ring_node = ring_nodes[i]
 						_dragging_ring_node.start_drag_external(event_pos)
+						spiral_state.is_dragging = true
 						print("Started dragging Ring %d at distance %.1f" % [i, distance])
 						break
 			else:
 				# Release
 				if _dragging_ring_node != null:
 					var angular_velocity = _dragging_ring_node.end_drag_external()
+					spiral_state.is_dragging = false
 					var ring_data = _dragging_ring_node.ring_data
 					var ring_index = spiral_state.rings.find(ring_data)
 					if ring_index >= 0:

@@ -19,16 +19,16 @@ const HINT_ANIMATION_DURATION = 0.5
 
 # Puzzle mechanics - Spiral Twist
 const SPIRAL_RING_BORDER_WIDTH = 4 # pixels
-const SPIRAL_MERGE_ANGLE_THRESHOLD = 5.0 # degrees
-const SPIRAL_MERGE_VELOCITY_THRESHOLD = 10.0 # degrees per second
+const SPIRAL_MERGE_ANGLE_THRESHOLD = 2.0 # degrees
+const SPIRAL_MERGE_VELOCITY_THRESHOLD = 1.0 # degrees per second
 const SPIRAL_ANGULAR_DECELERATION = 200.0 # degrees/s² (stops in 2-3 seconds)
 const SPIRAL_MAX_ANGULAR_VELOCITY = 720.0 # degrees per second
 const SPIRAL_MIN_VELOCITY_THRESHOLD = 1.0 # Stop completely below this
 const SPIRAL_ROTATION_SNAP_ANGLE = 1.0 # Snap to correct when within this angle
 
 # Spiral ring counts per difficulty
-const SPIRAL_RINGS_EASY = 5
-const SPIRAL_RINGS_HARD = 8
+const SPIRAL_RINGS_EASY = 6
+const SPIRAL_RINGS_HARD = 9
 
 # Puzzle mechanics - Arrow Puzzle
 const ARROW_BOUNCE_DURATION = 0.2 # Bounce-back animation duration (seconds)
@@ -68,8 +68,8 @@ const BASE_RESOLUTION_HEIGHT = 1920 # Base viewport height
 # These will be initialized to base resolution and updated by loading_screen
 var actual_viewport_width: float = BASE_RESOLUTION_WIDTH
 var actual_viewport_height: float = BASE_RESOLUTION_HEIGHT
-var actual_available_width: float = 0.0  # Available width (viewport - margins if any)
-var actual_available_height: float = 0.0  # Available height (viewport - HUD heights)
+var actual_available_width: float = 0.0 # Available width (viewport - margins if any)
+var actual_available_height: float = 0.0 # Available height (viewport - HUD heights)
 
 # HUD specifications (configurable heights)
 const TOP_HUD_HEIGHT = 80 # Height of top HUD in pixels

@@ -14,6 +14,7 @@ var rotation_count: int = 0  # Number of rotations made
 var hints_used: int = 0  # Hints used this session
 var is_solved: bool = false
 var puzzle_radius: float  # Maximum radius of puzzle in pixels (calculated dynamically)
+var is_dragging: bool = false  # Track if player is currently dragging a ring
 
 ## Check if puzzle is solved (all rings merged)
 func is_puzzle_solved() -> bool:
@@ -34,6 +35,10 @@ func update_physics(delta: float) -> void:
 func check_and_merge_rings() -> bool:
 	var any_merged = false
 
+	# Don't merge while player is dragging
+	if is_dragging:
+		return false
+
 	# Check adjacent rings for merge conditions
 	# Note: We iterate and break on first merge to avoid index issues
 	for i in range(rings.size() - 1):
@@ -44,6 +49,16 @@ func check_and_merge_rings() -> bool:
 			continue
 
 		if inner_ring.can_merge_with(outer_ring):
+			# Debug: Print merge threshold values
+			var angle_diff = abs(inner_ring._normalize_angle(inner_ring.current_angle - outer_ring.current_angle))
+			var velocity_diff = abs(inner_ring.angular_velocity - outer_ring.angular_velocity)
+			print("RING MERGE: Angular diff = %.2f°, Velocity diff = %.2f°/s (Inner vel=%.2f°/s, Outer vel=%.2f°/s)" % [
+				angle_diff,
+				velocity_diff,
+				inner_ring.angular_velocity,
+				outer_ring.angular_velocity
+			])
+
 			# Keep outer ring (i+1), expand it inward to encompass inner ring
 			outer_ring.inner_radius = inner_ring.inner_radius
 
