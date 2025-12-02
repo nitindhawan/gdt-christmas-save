@@ -36,8 +36,8 @@ const ARROW_EXIT_DURATION = 0.15 # Fade-out on success (seconds)
 const ARROW_GRID_SPACING = 10 # Pixels between arrows
 
 # Arrow grid sizes per difficulty (columns, rows)
-const ARROW_GRID_EASY = Vector2i(4, 3) # 12 arrows
-const ARROW_GRID_HARD = Vector2i(6, 5) # 30 arrows
+const ARROW_GRID_EASY = Vector2i(3, 4) # 12 arrows
+const ARROW_GRID_HARD = Vector2i(5, 6) # 30 arrows
 
 # Arrow asset paths
 const ARROW_TEXTURE_PATH = "res://assets/ui/up_arrow.png"
