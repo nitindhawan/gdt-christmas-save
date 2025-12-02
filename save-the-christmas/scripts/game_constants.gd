@@ -57,6 +57,17 @@ const ENABLE_GAUSSIAN_BLUR = false # Set to true to enable blur shader on popups
 
 # Level image specifications
 const LEVEL_IMAGE_SIZE = 1024 # 1024×1024 pixels
+const PUZZLE_TEXTURE_WIDTH = 1024 # Width of puzzle textures (should match actual asset dimensions)
+const PUZZLE_TEXTURE_HEIGHT = 1024 # Height of puzzle textures (should match actual asset dimensions)
+
+# HUD specifications (configurable heights)
+const TOP_HUD_HEIGHT = 80 # Height of top HUD in pixels
+const BOTTOM_HUD_HEIGHT = 180 # Height of bottom HUD in pixels
+
+# Puzzle area margins (per puzzle type)
+const TILE_PUZZLE_MARGIN = 30 # Margin for tile puzzle from each side (top/left/right/bottom)
+const ARROW_PUZZLE_MARGIN = 30 # Margin for arrow puzzle from each side (top/left/right/bottom)
+const ROW_TILE_PUZZLE_MARGIN = 0 # Row tile puzzle uses entire available area
 
 # Enums
 enum Difficulty {

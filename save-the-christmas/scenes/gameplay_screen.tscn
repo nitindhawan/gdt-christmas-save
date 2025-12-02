@@ -58,9 +58,13 @@ custom_minimum_size = Vector2(0, 80)
 layout_mode = 2
 
 [node name="PuzzleArea" type="CenterContainer" parent="MarginContainer/VBoxContainer"]
+z_index = 10
 layout_mode = 2
 size_flags_vertical = 3
-z_index = 10
+
+[node name="TilePuzzleOverlayMask" type="ColorRect" parent="MarginContainer/VBoxContainer/PuzzleArea"]
+layout_mode = 2
+color = Color(1, 0, 0, 1)
 
 [node name="PuzzleGrid" type="GridContainer" parent="MarginContainer/VBoxContainer/PuzzleArea"]
 layout_mode = 2
@@ -73,6 +77,7 @@ custom_minimum_size = Vector2(0, 180)
 layout_mode = 2
 
 [node name="TopHUD" type="Panel" parent="."]
+z_index = 20
 custom_minimum_size = Vector2(0, 80)
 layout_mode = 1
 anchors_preset = 10
@@ -80,7 +85,6 @@ anchor_right = 1.0
 offset_bottom = 80.0
 grow_horizontal = 2
 theme_override_styles/panel = SubResource("StyleBoxFlat_hud")
-z_index = 20
 
 [node name="MarginContainer" type="MarginContainer" parent="TopHUD"]
 layout_mode = 1
@@ -109,6 +113,7 @@ ignore_texture_size = true
 stretch_mode = 5
 
 [node name="BottomHUD" type="Panel" parent="."]
+z_index = 20
 custom_minimum_size = Vector2(0, 180)
 layout_mode = 1
 anchors_preset = 12
@@ -119,7 +124,6 @@ offset_top = -180.0
 grow_horizontal = 2
 grow_vertical = 0
 theme_override_styles/panel = SubResource("StyleBoxFlat_hud")
-z_index = 20
 
 [node name="CenterContainer" type="CenterContainer" parent="BottomHUD"]
 layout_mode = 1
