@@ -17,6 +17,7 @@ anchor_right = 1.0
 anchor_bottom = 1.0
 grow_horizontal = 2
 grow_vertical = 2
+z_index = 40
 script = ExtResource("1_1")
 
 [node name="Overlay" type="ColorRect" parent="."]
@@ -164,6 +165,14 @@ size_flags_horizontal = 4
 theme_override_font_sizes/font_size = 64
 text = "Remove Ads"
 
+[node name="ResetProgressButton" type="Button" parent="CenterContainer/ModalPanel/MarginContainer/VBoxContainer/ButtonSection"]
+custom_minimum_size = Vector2(720, 110)
+layout_mode = 2
+size_flags_horizontal = 4
+theme_override_colors/font_color = Color(0.8, 0.2, 0.2, 1)
+theme_override_font_sizes/font_size = 64
+text = "Reset Progress"
+
 [node name="FooterLinks" type="HBoxContainer" parent="CenterContainer/ModalPanel/MarginContainer/VBoxContainer"]
 custom_minimum_size = Vector2(0, 100)
 layout_mode = 2
@@ -195,5 +204,6 @@ flat = true
 [connection signal="pressed" from="CenterContainer/ModalPanel/MarginContainer/VBoxContainer/ToggleSection/VibrationToggle/ToggleButton" to="." method="_on_vibration_toggle_pressed"]
 [connection signal="pressed" from="CenterContainer/ModalPanel/MarginContainer/VBoxContainer/ButtonSection/FeedbackButton" to="." method="_on_feedback_button_pressed"]
 [connection signal="pressed" from="CenterContainer/ModalPanel/MarginContainer/VBoxContainer/ButtonSection/RemoveAdsButton" to="." method="_on_remove_ads_button_pressed"]
+[connection signal="pressed" from="CenterContainer/ModalPanel/MarginContainer/VBoxContainer/ButtonSection/ResetProgressButton" to="." method="_on_reset_progress_button_pressed"]
 [connection signal="pressed" from="CenterContainer/ModalPanel/MarginContainer/VBoxContainer/FooterLinks/PrivacyButton" to="." method="_on_privacy_button_pressed"]
 [connection signal="pressed" from="CenterContainer/ModalPanel/MarginContainer/VBoxContainer/FooterLinks/TermsButton" to="." method="_on_terms_button_pressed"]

@@ -4,6 +4,7 @@ extends Control
 ## Main puzzle gameplay with tile swapping mechanics
 
 const TILE_NODE_SCENE = preload("res://scenes/tile_node.tscn")
+const ROW_TILE_NODE_SCENE = preload("res://scenes/row_tile_node.tscn")
 const SPIRAL_RING_NODE_SCENE = preload("res://scenes/spiral_ring_node.tscn")
 const ARROW_NODE_SCENE = preload("res://scenes/arrow_node.tscn")
 const SETTINGS_POPUP_SCENE = preload("res://scenes/settings_popup.tscn")
@@ -12,6 +13,7 @@ const CHOOSE_DIFFICULTY_POPUP_SCENE = preload("res://scenes/choose_difficulty_po
 const GRINCH_TRANSITION_SCENE = preload("res://scenes/grinch_transition.tscn")
 const SpiralPuzzleState = preload("res://scripts/spiral_puzzle_state.gd")
 const ArrowPuzzleState = preload("res://scripts/arrow_puzzle_state.gd")
+const RowTilePuzzleState = preload("res://scripts/row_tile_puzzle_state.gd")
 
 # Gameplay state machine
 enum GameplayState {
@@ -36,12 +38,13 @@ var background_image: TextureRect = null # Background image for arrow puzzle
 var source_texture: Texture2D
 var is_spiral_puzzle: bool = false
 var is_arrow_puzzle: bool = false
+var is_row_tile_puzzle: bool = false
 var puzzle_center: Vector2 = Vector2(540, 960) # Center of 1080x1920 screen
 
 # UI references
-@onready var level_label = $MarginContainer/VBoxContainer/TopHUD/LevelLabel
+@onready var level_label = $TopHUD/MarginContainer/HBoxContainer/LevelLabel
 @onready var puzzle_grid = $MarginContainer/VBoxContainer/PuzzleArea/PuzzleGrid
-@onready var settings_button = $MarginContainer/VBoxContainer/TopHUD/SettingsButton
+@onready var settings_button = $TopHUD/MarginContainer/HBoxContainer/SettingsButton
 
 func _ready() -> void:
 	# Apply theme
@@ -121,6 +124,7 @@ func _initialize_gameplay() -> void:
 	# Determine puzzle type
 	is_spiral_puzzle = puzzle_state is SpiralPuzzleState
 	is_arrow_puzzle = puzzle_state is ArrowPuzzleState
+	is_row_tile_puzzle = puzzle_state is RowTilePuzzleState
 
 	if is_spiral_puzzle:
 		# Setup spiral puzzle
@@ -130,20 +134,60 @@ func _initialize_gameplay() -> void:
 		# Setup arrow puzzle
 		_setup_arrow_puzzle()
 		_spawn_arrows()
+	elif is_row_tile_puzzle:
+		# Setup row tile puzzle
+		_setup_row_tile_puzzle()
+		_spawn_row_tiles()
 	else:
-		# Setup rectangle puzzle
+		# Setup tile puzzle
 		_setup_puzzle_grid()
 		_spawn_tiles()
 
-	var puzzle_type_name = "Spiral" if is_spiral_puzzle else ("Arrow" if is_arrow_puzzle else "Rectangle")
+	var puzzle_type_name = "Spiral" if is_spiral_puzzle else ("Arrow" if is_arrow_puzzle else ("Row Tile" if is_row_tile_puzzle else "Tile"))
 	print("Gameplay initialized successfully (%s puzzle)" % puzzle_type_name)
 
 ## Setup puzzle grid layout based on difficulty
 func _setup_puzzle_grid() -> void:
 	var grid_size = puzzle_state.grid_size
-	puzzle_grid.columns = grid_size.y # columns
 
-	print("Grid configured: %d rows x %d columns" % [grid_size.x, grid_size.y])
+	# Hide the default puzzle grid - we'll use a custom GridContainer
+	puzzle_grid.visible = false
+
+	# Get puzzle area control
+	var puzzle_area = $MarginContainer/VBoxContainer/PuzzleArea
+
+	# Calculate available dimensions
+	var viewport_size = get_viewport_rect().size
+	var vbox = $MarginContainer/VBoxContainer
+	var vbox_separation = vbox.get_theme_constant("separation")
+
+	var used_height = GameConstants.TOP_HUD_HEIGHT + GameConstants.BOTTOM_HUD_HEIGHT + (vbox_separation * 2)
+	var available_height = viewport_size.y - used_height
+	var available_width = viewport_size.x
+
+	# Set puzzle area to full available size
+	puzzle_area.custom_minimum_size = Vector2(available_width, available_height)
+
+	# Calculate zoom factor based on available height (no margins)
+	var zoom_factor = available_height / GameConstants.PUZZLE_TEXTURE_HEIGHT
+
+
+	# Create tiles container (GridContainer) - fills entire available area
+	var tiles_container = GridContainer.new()
+	tiles_container.name = "TilesContainer"
+	tiles_container.columns = grid_size.y
+	tiles_container.add_theme_constant_override("h_separation", 0)
+	tiles_container.add_theme_constant_override("v_separation", 0)
+	tiles_container.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	tiles_container.position = Vector2(0, 0)
+	tiles_container.custom_minimum_size = Vector2(available_width, available_height)
+	tiles_container.size = Vector2(available_width, available_height)
+
+	puzzle_area.add_child(tiles_container)
+
+	# Store reference for spawning tiles
+	puzzle_grid = tiles_container
+
 
 ## Spawn tile nodes in the grid
 func _spawn_tiles() -> void:
@@ -151,6 +195,15 @@ func _spawn_tiles() -> void:
 	for child in puzzle_grid.get_children():
 		child.queue_free()
 	tile_nodes.clear()
+
+	# Calculate zoom factor for texture scaling
+	var viewport_size = get_viewport_rect().size
+	var vbox = $MarginContainer/VBoxContainer
+	var vbox_separation = vbox.get_theme_constant("separation")
+	var used_height = GameConstants.TOP_HUD_HEIGHT + GameConstants.BOTTOM_HUD_HEIGHT + (vbox_separation * 2)
+	var available_height = viewport_size.y - used_height
+	var available_width = viewport_size.x
+	var zoom_factor = available_height / GameConstants.PUZZLE_TEXTURE_HEIGHT
 
 	# Calculate tile size based on difficulty and available space
 	var tile_size = _calculate_tile_size()
@@ -174,13 +227,11 @@ func _spawn_tiles() -> void:
 			# Add to tree first so @onready variables are initialized
 			puzzle_grid.add_child(tile_node)
 
-			# Now setup the tile
-			tile_node.setup(tile, tile_index, source_texture)
+			# Now setup the tile with zoom factor
+			tile_node.setup(tile, tile_index, source_texture, zoom_factor)
 			tile_node.drag_ended.connect(_on_tile_drag_ended)
 
 			tile_nodes.append(tile_node)
-
-	print("Spawned %d tiles" % tile_nodes.size())
 
 ## Calculate appropriate tile size based on difficulty
 func _calculate_tile_size() -> Vector2:
@@ -188,32 +239,142 @@ func _calculate_tile_size() -> Vector2:
 	var rows = grid_size.x
 	var columns = grid_size.y
 
-	# Get the actual image size to maintain aspect ratio
-	var image_size = source_texture.get_size()
-	var image_aspect = image_size.x / image_size.y
+	# Calculate available area (screen minus HUDs, no margins)
+	var viewport_size = get_viewport_rect().size
+	var vbox = $MarginContainer/VBoxContainer
+	var vbox_separation = vbox.get_theme_constant("separation")
 
-	# Calculate tile dimensions based on image aspect ratio
-	var tile_width_from_image = image_size.x / columns
-	var tile_height_from_image = image_size.y / rows
+	var used_height = GameConstants.TOP_HUD_HEIGHT + GameConstants.BOTTOM_HUD_HEIGHT + (vbox_separation * 2)
+	var available_height = viewport_size.y - used_height
+	var available_width = viewport_size.x
 
-	# Available space (approximate, accounting for margins and HUD)
-	var available_width = 900.0
-	var available_height = 1500.0
-
-	# Calculate maximum size that fits while maintaining aspect ratio
-	var max_width = available_width / columns
-	var max_height = available_height / rows
-
-	# Use the limiting dimension
-	var scale_by_width = max_width / tile_width_from_image
-	var scale_by_height = max_height / tile_height_from_image
-	var scale = min(scale_by_width, scale_by_height)
-
-	# Calculate final tile size maintaining image aspect ratio
-	var tile_width = tile_width_from_image * scale
-	var tile_height = tile_height_from_image * scale
+	# Calculate tile size to fill entire available area
+	var tile_width = available_width / columns
+	var tile_height = available_height / rows
 
 	return Vector2(tile_width, tile_height)
+
+## Setup row tile puzzle layout
+func _setup_row_tile_puzzle() -> void:
+	# Row tiles are arranged vertically, 1 column
+	puzzle_grid.columns = 1
+	print("Row tile puzzle configured: %d rows" % puzzle_state.row_count)
+
+## Spawn row tile nodes
+func _spawn_row_tiles() -> void:
+	# Clear existing tiles
+	for child in puzzle_grid.get_children():
+		child.queue_free()
+	tile_nodes.clear()
+
+	# Calculate zoom factor for texture scaling
+	var viewport_size = get_viewport_rect().size
+	var vbox = $MarginContainer/VBoxContainer
+	var vbox_separation = vbox.get_theme_constant("separation")
+	var used_height = GameConstants.TOP_HUD_HEIGHT + GameConstants.BOTTOM_HUD_HEIGHT + (vbox_separation * 2)
+	var available_height = viewport_size.y - used_height
+	var zoom_factor = available_height / GameConstants.PUZZLE_TEXTURE_HEIGHT
+
+	# Calculate row tile size
+	var row_tile_size = _calculate_row_tile_size()
+
+	# Create row tile nodes in order by current position
+	for i in range(puzzle_state.row_count):
+		# Find which row should be in position i
+		var row_data = null
+		for row in puzzle_state.rows:
+			if row.current_position == i:
+				row_data = row
+				break
+
+		if row_data == null:
+			push_error("No row found at position %d" % i)
+			continue
+
+		# Create row tile node for this row
+		var tile_node = ROW_TILE_NODE_SCENE.instantiate()
+		tile_node.custom_minimum_size = row_tile_size
+
+		# Add to tree first
+		puzzle_grid.add_child(tile_node)
+
+		# Setup the row tile with row data and zoom factor
+		tile_node.setup_row_tile(row_data, row_data.row_id, source_texture, zoom_factor)
+		tile_node.drag_ended.connect(_on_row_tile_drag_ended)
+
+		tile_nodes.append(tile_node)
+
+
+## Calculate row tile size for row puzzle
+func _calculate_row_tile_size() -> Vector2:
+	# Calculate dynamic available height and width
+	var viewport_size = get_viewport_rect().size
+	var vbox = $MarginContainer/VBoxContainer
+	var vbox_separation = vbox.get_theme_constant("separation") # 20px between elements
+
+	# Total vertical space taken by HUDs and separations (2 separations: TopHUD-Puzzle, Puzzle-BottomHUD)
+	var used_height = GameConstants.TOP_HUD_HEIGHT + GameConstants.BOTTOM_HUD_HEIGHT + (vbox_separation * 2)
+	var available_height = viewport_size.y - used_height
+	var available_width = viewport_size.x
+
+	# Row tile puzzle uses entire available area (no margins)
+	# No margin subtraction here (margin = 0)
+
+	# Use puzzle texture dimensions from constants
+	var puzzle_texture_width = GameConstants.PUZZLE_TEXTURE_WIDTH
+	var puzzle_texture_height = GameConstants.PUZZLE_TEXTURE_HEIGHT
+
+	# Calculate zoom factor based on available height (disregard width)
+	var zoom_factor = available_height / puzzle_texture_height
+
+	# Calculate row height from puzzle texture
+	var row_height_from_texture = puzzle_texture_height / puzzle_state.row_count
+
+	# Apply zoom factor
+	var final_height = row_height_from_texture * zoom_factor
+
+	# Width uses entire available width
+	return Vector2(available_width, final_height)
+
+## Handle row tile drag ended
+func _on_row_tile_drag_ended(dragged_tile_node, target_tile_node) -> void:
+	if target_tile_node == null:
+		print("Row tile dropped on empty space")
+		_refresh_row_tile_positions()
+		return
+
+	# Get the row indices
+	var row1_index = dragged_tile_node.tile_index
+	var row2_index = target_tile_node.tile_index
+
+	print("Swapping row tiles %d and %d" % [row1_index, row2_index])
+
+	# Swap in puzzle state
+	puzzle_state.swap_rows(row1_index, row2_index)
+
+	# Play swap sound
+	if AudioManager:
+		AudioManager.play_sfx("tile_swap")
+
+	# Refresh the grid
+	_refresh_row_tile_positions()
+
+	# Check if puzzle solved
+	await get_tree().create_timer(0.1).timeout
+	_check_row_puzzle_solved()
+
+## Refresh row tile positions after swap
+func _refresh_row_tile_positions() -> void:
+	# Re-spawn all row tiles to reflect new positions
+	_spawn_row_tiles()
+
+## Check if row puzzle is solved
+func _check_row_puzzle_solved() -> void:
+	if puzzle_state.is_puzzle_solved():
+		print("Row tile puzzle solved!")
+		puzzle_state.is_solved = true
+		_save_progress()
+		await _handle_puzzle_completion()
 
 ## Handle tile drag ended (swap if dropped on another tile)
 func _on_tile_drag_ended(dragged_tile_node, target_tile_node) -> void:
@@ -246,7 +407,7 @@ func _on_tile_drag_ended(dragged_tile_node, target_tile_node) -> void:
 ## Check if puzzle is solved
 func _check_puzzle_solved() -> void:
 	if PuzzleManager.is_puzzle_solved(puzzle_state):
-		print("Rectangle puzzle solved!")
+		print("Tile puzzle solved!")
 		puzzle_state.is_solved = true
 		_save_progress()
 		await _handle_puzzle_completion()
@@ -289,7 +450,9 @@ func _save_progress() -> void:
 
 	# Update statistics
 	ProgressManager.total_swaps_made += puzzle_state.swap_count
-	ProgressManager.total_hints_used += puzzle_state.hints_used
+	# Hints are deprecated, but keep compatibility if property exists
+	if "hints_used" in puzzle_state:
+		ProgressManager.total_hints_used += puzzle_state.hints_used
 
 	# Save to disk
 	ProgressManager.save_progress()
@@ -352,17 +515,48 @@ func _process(delta: float) -> void:
 
 ## Setup spiral puzzle container
 func _setup_spiral_puzzle() -> void:
-	# Hide rectangle grid
+	# Hide tile grid
 	puzzle_grid.visible = false
 
 	# Get puzzle area control
 	var puzzle_area = $MarginContainer/VBoxContainer/PuzzleArea
 
-	# Set minimum size for puzzle area to ensure it has dimensions
-	puzzle_area.custom_minimum_size = Vector2(900, 900)
+	# Calculate dynamic puzzle size based on screen height
+	var viewport_size = get_viewport_rect().size
+	var vbox = $MarginContainer/VBoxContainer
+	var vbox_separation = vbox.get_theme_constant("separation") # 20px between elements
+
+	# Total vertical space taken by HUDs and separations (2 separations: TopHUD-Puzzle, Puzzle-BottomHUD)
+	var used_height = GameConstants.TOP_HUD_HEIGHT + GameConstants.BOTTOM_HUD_HEIGHT + (vbox_separation * 2)
+	var available_height = viewport_size.y - used_height
+
+	# Use square size based on available height (width will match height for square puzzle)
+	var puzzle_size = available_height # and not min(available_height, viewport_size.x)
+
+	puzzle_area.custom_minimum_size = Vector2(puzzle_size, puzzle_size)
 	puzzle_area.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 
-	print("Spiral puzzle configured: %d rings" % puzzle_state.ring_count)
+	# Store puzzle size for dynamic max_radius calculation
+	var dynamic_max_radius = puzzle_size / 2.0
+
+	# Regenerate rings with the correct max_radius
+	var spiral_state = puzzle_state as SpiralPuzzleState
+	spiral_state.puzzle_radius = dynamic_max_radius
+
+	# Get the texture and ring count to regenerate rings
+	var texture = source_texture
+	var ring_count = spiral_state.ring_count
+
+	# Regenerate rings with dynamic max_radius
+	spiral_state.rings = PuzzleManager._create_rings_from_image(texture, ring_count, dynamic_max_radius)
+	spiral_state.active_ring_count = ring_count # Reset active ring count
+
+	# Scramble rings after regeneration
+	PuzzleManager._scramble_rings(spiral_state)
+
+	# print("Spiral puzzle configured: viewport=%v, available_height=%.1f, puzzle_size=%.1f, max_radius=%.1f" % [
+	# 	viewport_size, available_height, puzzle_size, dynamic_max_radius
+	# ])
 
 ## Spawn spiral ring nodes
 func _spawn_spiral_rings() -> void:
@@ -380,26 +574,28 @@ func _spawn_spiral_rings() -> void:
 	puzzle_area.reset_size()
 	await get_tree().process_frame
 
-	print("Puzzle area size after layout: %v" % puzzle_area.size)
+	# print("Puzzle area size after layout: %v" % puzzle_area.size)
 
 	# If still no size, set it manually
 	if puzzle_area.size.x == 0 or puzzle_area.size.y == 0:
 		puzzle_area.size = Vector2(900, 900)
-		print("Forced puzzle area size to: %v" % puzzle_area.size)
+		# print("Forced puzzle area size to: %v" % puzzle_area.size)
 
 	# Create a Control container for rings that handles ALL input
 	rings_container = Control.new()
 	rings_container.name = "RingsContainer"
 	rings_container.custom_minimum_size = puzzle_area.size
 	rings_container.mouse_filter = Control.MOUSE_FILTER_STOP # Capture all input here
+	rings_container.clip_contents = false # Don't clip children - allow corners to show
+	rings_container.z_index = 0 # Keep puzzle elements below HUD
 	puzzle_area.add_child(rings_container)
 
 	# Connect input handling to this container
 	rings_container.gui_input.connect(_on_rings_container_input)
 
 	await get_tree().process_frame
-	print("Rings container size: %v, position: %v" % [rings_container.size, rings_container.position])
 
+	# No background sprite needed - corner ring will show the corners
 	# Pre-allocate array to correct size
 	ring_nodes.resize(spiral_state.rings.size())
 
@@ -411,11 +607,7 @@ func _spawn_spiral_rings() -> void:
 		# Setup ring node BEFORE adding to tree
 		ring_node.ring_data = ring
 		ring_node.source_texture = source_texture
-
-		# Debug: Print ring initialization
-		print("Ring %d: is_locked=%s, radii=%.1f-%.1f" % [
-			i, ring.is_locked, ring.inner_radius, ring.outer_radius
-		])
+		ring_node.puzzle_max_radius = spiral_state.puzzle_radius # Pass dynamic max_radius
 
 		# Add to rings container
 		rings_container.add_child(ring_node)
@@ -565,19 +757,35 @@ func _save_spiral_progress() -> void:
 
 ## Setup arrow puzzle with background image and arrows container
 func _setup_arrow_puzzle() -> void:
-	# Hide rectangle grid
+	# Hide tile grid
 	puzzle_grid.visible = false
 
 	# Get puzzle area control
 	var puzzle_area = $MarginContainer/VBoxContainer/PuzzleArea
 
-	# Don't force a fixed size - let it expand naturally
-	# PuzzleArea already has size_flags_vertical = 3 to expand and fill available space
+	# Calculate dynamic puzzle size based on screen height
+	var viewport_size = get_viewport_rect().size
+	var vbox = $MarginContainer/VBoxContainer
+	var vbox_separation = vbox.get_theme_constant("separation") # 20px between elements
+
+	# Total vertical space taken by HUDs and separations (2 separations: TopHUD-Puzzle, Puzzle-BottomHUD)
+	var used_height = GameConstants.TOP_HUD_HEIGHT + GameConstants.BOTTOM_HUD_HEIGHT + (vbox_separation * 2)
+	var available_height = viewport_size.y - used_height
+	var available_width = viewport_size.x
+
+	# Apply margins for arrow puzzle (30px from each side)
+	var margin = GameConstants.ARROW_PUZZLE_MARGIN
+	available_height -= (margin * 2) # Top and bottom margins
+	available_width -= (margin * 2) # Left and right margins
+
+	# Set puzzle area to use available height with margins
+	puzzle_area.custom_minimum_size = Vector2(available_width, available_height)
+	puzzle_area.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 
 	var arrow_state = puzzle_state as ArrowPuzzleState
-	print("Arrow puzzle configured: %dx%d grid = %d arrows" % [
-		arrow_state.grid_size.x, arrow_state.grid_size.y, arrow_state.arrows.size()
-	])
+	# print("Arrow puzzle configured: viewport=%v, available_height=%.1f, available_width=%.1f, margin=%d, %dx%d grid = %d arrows" % [
+	# 	viewport_size, available_height, available_width, margin, arrow_state.grid_size.x, arrow_state.grid_size.y, arrow_state.arrows.size()
+	# ])
 
 ## Spawn arrow nodes in a grid layout
 func _spawn_arrows() -> void:
@@ -594,27 +802,35 @@ func _spawn_arrows() -> void:
 	# Wait for layout to complete so puzzle_area has its actual size
 	await get_tree().process_frame
 
-	# Determine available size for puzzle (square aspect)
+	# Use the actual available size (already set in _setup_arrow_puzzle)
 	var available_width = puzzle_area.size.x
 	var available_height = puzzle_area.size.y
-	var puzzle_size = min(available_width, available_height)
 
-	# Create background image (full level image visible)
+	# Calculate zoom factor based on available height (disregard width)
+	var puzzle_texture_height = GameConstants.PUZZLE_TEXTURE_HEIGHT
+	var zoom_factor = available_height / puzzle_texture_height
+
+	# Calculate actual puzzle dimensions (may overflow width, which is okay)
+	var puzzle_width = GameConstants.PUZZLE_TEXTURE_WIDTH * zoom_factor
+	var puzzle_height = available_height # Fills available height
+
+	# Create background image (zoomed to fill height, may overflow width)
 	background_image = TextureRect.new()
 	background_image.name = "BackgroundImage"
 	background_image.texture = source_texture
 	background_image.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
 	background_image.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_CENTERED
-	background_image.custom_minimum_size = Vector2(puzzle_size, puzzle_size)
-	background_image.size = Vector2(puzzle_size, puzzle_size)
+	background_image.custom_minimum_size = Vector2(puzzle_width, puzzle_height)
+	background_image.size = Vector2(puzzle_width, puzzle_height)
 	background_image.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	background_image.z_index = 0 # Background layer
 	puzzle_area.add_child(background_image)
 
 	# Create arrows container (overlay on top of background)
 	arrows_container = Control.new()
 	arrows_container.name = "ArrowsContainer"
-	arrows_container.custom_minimum_size = Vector2(puzzle_size, puzzle_size)
-	arrows_container.size = Vector2(puzzle_size, puzzle_size)
+	arrows_container.custom_minimum_size = Vector2(puzzle_width, puzzle_height)
+	arrows_container.size = Vector2(puzzle_width, puzzle_height)
 	arrows_container.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	puzzle_area.add_child(arrows_container)
 
@@ -625,9 +841,12 @@ func _spawn_arrows() -> void:
 	var grid_width = arrow_state.grid_size.x * arrow_size.x + (arrow_state.grid_size.x - 1) * GameConstants.ARROW_GRID_SPACING
 	var grid_height = arrow_state.grid_size.y * arrow_size.y + (arrow_state.grid_size.y - 1) * GameConstants.ARROW_GRID_SPACING
 
-	# Center the grid in the puzzle area
-	var start_x = (arrows_container.size.x - grid_width) / 2.0
-	var start_y = (arrows_container.size.y - grid_height) / 2.0
+	# Center the grid in the puzzle area with 20px margin
+	var margin = 20.0
+	var usable_width = arrows_container.size.x - (margin * 2)
+	var usable_height = arrows_container.size.y - (margin * 2)
+	var start_x = margin + (usable_width - grid_width) / 2.0
+	var start_y = margin + (usable_height - grid_height) / 2.0
 
 	# Create arrow nodes
 	arrow_nodes.resize(arrow_state.arrows.size())
@@ -657,16 +876,24 @@ func _spawn_arrows() -> void:
 ## Calculate arrow size based on grid dimensions
 func _calculate_arrow_size(grid_size: Vector2i) -> Vector2:
 	# Use arrows_container size (which is the actual puzzle area size)
-	var available_width = arrows_container.size.x - 40 # Margins
-	var available_height = arrows_container.size.y - 40
+	# Use smaller margins to maximize arrow size
+	var margin = 20.0 # Small margin for edge padding
+	var available_width = arrows_container.size.x - (margin * 2)
+	var available_height = arrows_container.size.y - (margin * 2)
 
-	# Calculate size based on grid
-	var arrow_width = (available_width - (grid_size.x - 1) * GameConstants.ARROW_GRID_SPACING) / grid_size.x
-	var arrow_height = (available_height - (grid_size.y - 1) * GameConstants.ARROW_GRID_SPACING) / grid_size.y
+	# Calculate size based on grid, accounting for spacing between arrows
+	var total_spacing_x = (grid_size.x - 1) * GameConstants.ARROW_GRID_SPACING
+	var total_spacing_y = (grid_size.y - 1) * GameConstants.ARROW_GRID_SPACING
+
+	var arrow_width = (available_width - total_spacing_x) / grid_size.x
+	var arrow_height = (available_height - total_spacing_y) / grid_size.y
 
 	# Use the smaller dimension to keep arrows square
 	var arrow_size = min(arrow_width, arrow_height)
-	arrow_size = min(arrow_size, 120.0) # Max size cap
+
+	# Remove hard cap - let arrows scale up to fill space
+	# Only set a reasonable maximum to prevent issues with very small grids
+	arrow_size = min(arrow_size, 200.0)
 
 	return Vector2(arrow_size, arrow_size)
 
@@ -703,6 +930,10 @@ func _on_arrow_tapped(arrow_id: int) -> void:
 ## Check if arrow puzzle is solved
 func _check_arrow_puzzle_solved() -> void:
 	var arrow_state = puzzle_state as ArrowPuzzleState
+
+	# Guard against multiple calls
+	if arrow_state.is_solved:
+		return
 
 	if arrow_state.is_puzzle_solved():
 		print("Arrow puzzle solved!")

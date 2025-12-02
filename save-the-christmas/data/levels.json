@@ -27,7 +27,7 @@
       "name": "Santa's Workshop",
       "image_path": "res://assets/levels/level_02.png",
       "thumbnail_path": "res://assets/levels/thumbnails/level_02_thumb.png",
-      "puzzle_type": "rectangle_jigsaw",
+      "puzzle_type": "tile_puzzle",
       "difficulty_configs": {
         "easy": {
           "rows": 2,
@@ -67,6 +67,26 @@
       },
       "hint_limit": 0,
       "tags": ["snow", "winter", "outdoor"]
+    },
+    {
+      "level_id": 4,
+      "name": "Festive Decorations",
+      "image_path": "res://assets/levels/level_04.png",
+      "thumbnail_path": "res://assets/levels/thumbnails/level_04_thumb.png",
+      "puzzle_type": "row_tile_puzzle",
+      "difficulty_configs": {
+        "easy": {
+          "row_count": 8
+        },
+        "normal": {
+          "row_count": 12
+        },
+        "hard": {
+          "row_count": 16
+        }
+      },
+      "hint_limit": 0,
+      "tags": ["decorations", "festive", "indoor"]
     }
   ]
 }

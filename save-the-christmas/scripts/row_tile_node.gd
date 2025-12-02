@@ -1,14 +1,14 @@
 extends Control
 
-## TileNode - Visual representation of a puzzle tile
-## Handles display, drag-and-drop interaction
+## RowTileNode - Visual representation of a row tile (horizontal strip)
+## Handles display and VERTICAL-ONLY drag-and-drop interaction
 
-signal drag_started(tile_node)
-signal drag_ended(tile_node, target_tile_node)
-signal hover_changed(tile_node, is_hovering, target_tile_node)
+signal drag_started(row_tile_node)
+signal drag_ended(row_tile_node, target_row_tile_node)
+signal hover_changed(row_tile_node, is_hovering, target_row_tile_node)
 
-# Tile data (can be Tile or RowTile)
-var tile_data  # Untyped to support both Tile and RowTile
+# Row tile data
+var tile_data  # RowTile instance
 var tile_index: int = -1
 var is_draggable: bool = true
 var is_being_dragged: bool = false
@@ -28,32 +28,9 @@ var hover_target: Control = null
 # Animation
 var tween: Tween
 
-## Setup the tile with data and texture
-func setup(tile: Tile, index: int, source_texture: Texture2D, zoom_factor: float = 1.0) -> void:
-	tile_data = tile
-	tile_index = index
-
-	# Create AtlasTexture for the tile region
-	var atlas_texture = AtlasTexture.new()
-	atlas_texture.atlas = source_texture
-	atlas_texture.region = tile.texture_region
-
-	tile_texture.texture = atlas_texture
-
-	# Note: TextureRect stretch modes are set in scene (expand_mode=1, stretch_mode=6)
-	# expand_mode=1 (EXPAND_IGNORE_SIZE) ignores texture size, uses container size
-	# stretch_mode=6 (STRETCH_KEEP_ASPECT_COVERED) scales to cover container maintaining aspect ratio
-	# clip_contents=true clips overflow on edges
-
-	# Check if tile is in correct position
-	is_draggable = !tile.is_correct()
-
-	# Configure visual appearance
-	_update_border_visual()
-
-## Setup the tile for row tile puzzle (similar to setup but for RowTile)
-func setup_row_tile(row_data, index: int, source_texture: Texture2D) -> void:
-	tile_data = row_data  # Store as tile_data for compatibility
+## Setup the row tile with data and texture
+func setup_row_tile(row_data, index: int, source_texture: Texture2D, zoom_factor: float = 1.0) -> void:
+	tile_data = row_data
 	tile_index = index
 
 	# Create AtlasTexture for the row region
@@ -63,13 +40,18 @@ func setup_row_tile(row_data, index: int, source_texture: Texture2D) -> void:
 
 	tile_texture.texture = atlas_texture
 
+	# Note: TextureRect stretch modes are set in scene (expand_mode=1, stretch_mode=6)
+	# expand_mode=1 (EXPAND_IGNORE_SIZE) ignores texture size, uses container size
+	# stretch_mode=6 (STRETCH_KEEP_ASPECT_COVERED) scales to cover container maintaining aspect ratio
+	# clip_contents=true clips overflow on left/right edges
+
 	# Row tiles are always draggable until in correct position
 	is_draggable = !row_data.is_correct()
 
 	# Configure visual appearance
 	_update_border_visual()
 
-## Update draggable status (call when tile position changes)
+## Update draggable status (call when row position changes)
 func update_draggable_status() -> void:
 	is_draggable = !tile_data.is_correct()
 	_update_border_visual()
@@ -81,10 +63,10 @@ func _update_border_visual() -> void:
 		border.visible = true
 		ThemeManager.apply_tile_border_theme(border, true)
 	else:
-		# No border for correct tiles
+		# No border for correct rows
 		border.visible = false
 
-## Set hover state (shrink when another tile hovers over this)
+## Set hover state (shrink when another row hovers over this)
 func set_hover_target(is_target: bool) -> void:
 	is_hovered = is_target
 	if is_target:
@@ -102,10 +84,10 @@ func _animate_scale(target_scale: float) -> void:
 	tween.set_trans(ThemeManager.TRANS_TILE)
 	tween.tween_property(self, "scale", Vector2(target_scale, target_scale), ThemeManager.ANIM_INSTANT)
 
-## Handle input for drag-and-drop
+## Handle input for VERTICAL-ONLY drag-and-drop
 func _on_touch_area_gui_input(event: InputEvent) -> void:
 	if !is_draggable:
-		return  # Non-draggable tiles don't respond to input
+		return  # Non-draggable rows don't respond to input
 
 	if event is InputEventMouseButton:
 		if event.button_index == MOUSE_BUTTON_LEFT:
@@ -117,7 +99,7 @@ func _on_touch_area_gui_input(event: InputEvent) -> void:
 		if is_being_dragged:
 			_update_drag(event.position)
 
-## Start dragging this tile
+## Start dragging this row tile
 func _start_drag(click_position: Vector2) -> void:
 	is_being_dragged = true
 	drag_offset = click_position
@@ -140,18 +122,19 @@ func _start_drag(click_position: Vector2) -> void:
 
 	drag_started.emit(self)
 
-## Update drag position
+## Update drag position - VERTICAL ONLY (horizontal locked)
 func _update_drag(mouse_position: Vector2) -> void:
 	if !is_being_dragged:
 		return
 
-	# Move tile to follow mouse/touch
-	global_position = get_global_mouse_position() - drag_offset
+	# CRITICAL: Only allow vertical movement, lock horizontal position
+	var new_y = get_global_mouse_position().y - drag_offset.y
+	global_position = Vector2(original_position.x, new_y)
 
-	# Check if hovering over another tile
+	# Check if hovering over another row tile
 	_check_hover_target()
 
-## Check which tile we're hovering over
+## Check which row tile we're hovering over (vertical detection only)
 func _check_hover_target() -> void:
 	var new_target = null
 	var mouse_pos = get_global_mouse_position()
@@ -161,12 +144,15 @@ func _check_hover_target() -> void:
 	if grid:
 		for child in grid.get_children():
 			if child != self and child is Control:
-				# Only consider tiles that are draggable (not in correct position)
+				# Only consider rows that are draggable (not in correct position)
 				if "is_draggable" in child and !child.is_draggable:
 					continue
 
-				var rect = Rect2(child.global_position, child.size)
-				if rect.has_point(mouse_pos):
+				# Check vertical overlap only (horizontal is locked)
+				var child_rect = Rect2(child.global_position, child.size)
+
+				# More lenient vertical detection - check if mouse Y is within row bounds
+				if mouse_pos.y >= child_rect.position.y and mouse_pos.y <= child_rect.position.y + child_rect.size.y:
 					new_target = child
 					break
 

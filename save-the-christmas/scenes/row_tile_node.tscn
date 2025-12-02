@@ -1,8 +1,8 @@
-[gd_scene load_steps=2 format=3 uid="uid://cn5l8wv2yd37h"]
+[gd_scene load_steps=2 format=3 uid="uid://bqw5x8m3fn7yk"]
 
-[ext_resource type="Script" path="res://scripts/tile_node.gd" id="1_1"]
+[ext_resource type="Script" uid="uid://1j6ee6w21jlk" path="res://scripts/row_tile_node.gd" id="1_1"]
 
-[node name="TileNode" type="Control"]
+[node name="RowTileNode" type="Control"]
 layout_mode = 3
 anchors_preset = 0
 script = ExtResource("1_1")

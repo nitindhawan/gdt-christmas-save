@@ -8,10 +8,10 @@ extends Node
 # ============================================================================
 
 # 4 essential font sizes for the entire game
-const FONT_SIZE_XLARGE = 80   # Titles, large icons
-const FONT_SIZE_LARGE = 64    # Section headers, main buttons, labels
-const FONT_SIZE_MEDIUM = 32   # Normal text, smaller buttons
-const FONT_SIZE_SMALL = 24    # Small text, badges
+const FONT_SIZE_XLARGE = 80 # Titles, large icons
+const FONT_SIZE_LARGE = 64 # Section headers, main buttons, labels
+const FONT_SIZE_MEDIUM = 32 # Normal text, smaller buttons
+const FONT_SIZE_SMALL = 24 # Small text, badges
 
 # ============================================================================
 # COLOR SYSTEM (Semantic Colors)
@@ -24,29 +24,29 @@ const FONT_SIZE_SMALL = 24    # Small text, badges
 # - Deep Night Blue (#081C30): Night sky, modal backdrops
 
 # === PRIMARY PALETTE ===
-const COLOR_PRIMARY = Color(0.043, 0.4, 0.137, 1.0)          # #0B6623 Forest Green
-const COLOR_PRIMARY_DARK = Color(0.03, 0.28, 0.096, 1.0)     # Darker variant
-const COLOR_PRIMARY_LIGHT = Color(0.06, 0.52, 0.18, 1.0)     # Lighter variant
+const COLOR_PRIMARY = Color(0.043, 0.4, 0.137, 1.0) # #0B6623 Forest Green
+const COLOR_PRIMARY_DARK = Color(0.03, 0.28, 0.096, 1.0) # Darker variant
+const COLOR_PRIMARY_LIGHT = Color(0.06, 0.52, 0.18, 1.0) # Lighter variant
 
-const COLOR_SECONDARY = Color(0.702, 0.0, 0.106, 1.0)        # #B3001B Rich Christmas Red
-const COLOR_SECONDARY_DARK = Color(0.5, 0.0, 0.075, 1.0)     # Darker variant
-const COLOR_SECONDARY_LIGHT = Color(0.85, 0.0, 0.13, 1.0)    # Lighter variant
+const COLOR_SECONDARY = Color(0.702, 0.0, 0.106, 1.0) # #B3001B Rich Christmas Red
+const COLOR_SECONDARY_DARK = Color(0.5, 0.0, 0.075, 1.0) # Darker variant
+const COLOR_SECONDARY_LIGHT = Color(0.85, 0.0, 0.13, 1.0) # Lighter variant
 
-const COLOR_ACCENT = Color(1.0, 0.843, 0.0, 1.0)             # #FFD700 Warm Gold
-const COLOR_ACCENT_DIM = Color(0.7, 0.6, 0.0, 1.0)           # Dimmed gold
+const COLOR_ACCENT = Color(1.0, 0.843, 0.0, 1.0) # #FFD700 Warm Gold
+const COLOR_ACCENT_DIM = Color(0.7, 0.6, 0.0, 1.0) # Dimmed gold
 
 # === BACKGROUND COLORS ===
-const COLOR_BG_DARKEST = Color(0.031, 0.11, 0.188, 1.0)      # #081C30 Deep Night Blue
-const COLOR_BG_DARK = Color(0.047, 0.165, 0.282, 1.0)        # Lighter night blue (panels)
-const COLOR_BG_LIGHT = Color(0.941, 0.973, 1.0, 1.0)         # #F0F8FF Snow White
-const COLOR_BG_GAME = Color(0.031, 0.11, 0.188, 1.0)         # Deep Night Blue (gameplay)
-const COLOR_BG_DIFFICULTY = Color(0.047, 0.165, 0.282, 1.0)  # Lighter night blue
-const COLOR_BG_WIN = Color(0.047, 0.165, 0.282, 1.0)         # Lighter night blue
+const COLOR_BG_DARKEST = Color(0.031, 0.11, 0.188, 1.0) # #081C30 Deep Night Blue
+const COLOR_BG_DARK = Color(0.047, 0.165, 0.282, 1.0) # Lighter night blue (panels)
+const COLOR_BG_LIGHT = Color(0.941, 0.973, 1.0, 1.0) # #F0F8FF Snow White
+const COLOR_BG_GAME = Color(0.031, 0.11, 0.188, 1.0) # Deep Night Blue (gameplay)
+const COLOR_BG_DIFFICULTY = Color(0.047, 0.165, 0.282, 1.0) # Lighter night blue
+const COLOR_BG_WIN = Color(0.047, 0.165, 0.282, 1.0) # Lighter night blue
 
 # === TEXT COLORS ===
-const COLOR_TEXT_PRIMARY = Color(0.941, 0.973, 1.0, 1.0)     # #F0F8FF Snow White
-const COLOR_TEXT_SECONDARY = Color(0.8, 0.85, 0.9, 1.0)      # Slightly dimmed snow white
-const COLOR_TEXT_DISABLED = Color(0.5, 0.5, 0.5, 1.0)        # Gray
+const COLOR_TEXT_PRIMARY = Color(0.941, 0.973, 1.0, 1.0) # #F0F8FF Snow White
+const COLOR_TEXT_SECONDARY = Color(0.8, 0.85, 0.9, 1.0) # Slightly dimmed snow white
+const COLOR_TEXT_DISABLED = Color(0.5, 0.5, 0.5, 1.0) # Gray
 
 # === STATE COLORS ===
 const COLOR_STATE_SUCCESS = COLOR_ACCENT
@@ -54,21 +54,21 @@ const COLOR_STATE_LOCKED = Color(0.46, 0.46, 0.46, 0.5)
 const COLOR_STATE_HOVER = Color(1.0, 1.0, 1.0, 0.1)
 
 # === UI ELEMENT COLORS ===
-const COLOR_BORDER_DEFAULT = Color(0.3, 0.3, 0.3, 1.0)       # Dark grey
-const COLOR_BORDER_PRIMARY = COLOR_PRIMARY                    # Green
-const COLOR_BORDER_ACCENT = COLOR_ACCENT                      # Gold
+const COLOR_BORDER_DEFAULT = Color(0.3, 0.3, 0.3, 1.0) # Dark grey
+const COLOR_BORDER_PRIMARY = COLOR_PRIMARY # Green
+const COLOR_BORDER_ACCENT = COLOR_ACCENT # Gold
 const COLOR_BORDER_LOCKED = Color(0.5, 0.5, 0.5, 1.0)
 
-const COLOR_TOGGLE_ON = COLOR_PRIMARY                         # #0B6623 Forest Green (Active)
-const COLOR_TOGGLE_OFF = Color(0.4, 0.4, 0.4, 1.0)           # Inactive grey
+const COLOR_TOGGLE_ON = COLOR_PRIMARY # #0B6623 Forest Green (Active)
+const COLOR_TOGGLE_OFF = Color(0.4, 0.4, 0.4, 1.0) # Inactive grey
 
-const COLOR_OVERLAY = Color(0.031, 0.11, 0.188, 0.9)         # Deep Night Blue overlay
-const COLOR_SHADOW = Color(0, 0, 0, 0.4)                     # Black shadow
+const COLOR_OVERLAY = Color(0.031, 0.11, 0.188, 0.9) # Deep Night Blue overlay
+const COLOR_SHADOW = Color(0, 0, 0, 0.4) # Black shadow
 
 # === MODULATION COLORS ===
-const COLOR_MOD_DESATURATE = Color(0.5, 0.5, 0.5, 1.0)       # Locked state
-const COLOR_MOD_NORMAL = Color(1.0, 1.0, 1.0, 1.0)           # Full color
-const COLOR_MOD_HIGHLIGHT = Color(1.05, 1.05, 1.05, 1.0)     # Slight glow
+const COLOR_MOD_DESATURATE = Color(0.5, 0.5, 0.5, 1.0) # Locked state
+const COLOR_MOD_NORMAL = Color(1.0, 1.0, 1.0, 1.0) # Full color
+const COLOR_MOD_HIGHLIGHT = Color(1.05, 1.05, 1.05, 1.0) # Slight glow
 
 # === BACKWARD COMPATIBILITY (KEEP OLD NAMES) ===
 const COLOR_PRIMARY_GREEN = COLOR_PRIMARY
@@ -83,28 +83,28 @@ const COLOR_BUTTON_DISABLED = COLOR_STATE_LOCKED
 
 # === CORE SPACING SCALE ===
 const SPACING_NONE = 0
-const SPACING_XS = 4       # Tiny (borders, tight padding)
-const SPACING_SM = 10      # Small (HUD margins)
-const SPACING_MD = 20      # Medium (container separation)
-const SPACING_LG = 30      # Large (grid gaps, sections)
-const SPACING_XL = 40      # Extra large (screen margins)
-const SPACING_2XL = 50     # Huge (modal margins)
-const SPACING_3XL = 60     # Massive (top safe area)
+const SPACING_XS = 4 # Tiny (borders, tight padding)
+const SPACING_SM = 10 # Small (HUD margins)
+const SPACING_MD = 20 # Medium (container separation)
+const SPACING_LG = 30 # Large (grid gaps, sections)
+const SPACING_XL = 40 # Extra large (screen margins)
+const SPACING_2XL = 50 # Huge (modal margins)
+const SPACING_3XL = 60 # Massive (top safe area)
 
 # === SEMANTIC SPACING ===
-const MARGIN_SCREEN = SPACING_XL            # 40px
-const MARGIN_SCREEN_TOP = SPACING_3XL       # 60px (safe area)
-const MARGIN_MODAL = SPACING_2XL            # 50px
-const MARGIN_PANEL = SPACING_SM             # 10px
+const MARGIN_SCREEN = SPACING_XL # 40px
+const MARGIN_SCREEN_TOP = SPACING_3XL # 60px (safe area)
+const MARGIN_MODAL = SPACING_2XL # 50px
+const MARGIN_PANEL = SPACING_SM # 10px
 
-const GAP_GRID = SPACING_XL                 # 40px
-const GAP_CONTAINER = SPACING_MD            # 20px
-const GAP_SECTION = SPACING_LG              # 30px
-const GAP_STARS = SPACING_MD                # 20px
+const GAP_GRID = SPACING_XL # 40px
+const GAP_CONTAINER = SPACING_MD # 20px
+const GAP_SECTION = SPACING_LG # 30px
+const GAP_STARS = SPACING_MD # 20px
 
-const PADDING_TIGHT = SPACING_XS            # 4px
-const PADDING_NORMAL = SPACING_SM           # 10px
-const PADDING_LOOSE = SPACING_LG            # 30px
+const PADDING_TIGHT = SPACING_XS # 4px
+const PADDING_NORMAL = SPACING_SM # 10px
+const PADDING_LOOSE = SPACING_LG # 30px
 
 # === COMPONENT SIZES ===
 const BUTTON_MIN_SIZE_ICON = Vector2(80, 80)
@@ -137,10 +137,10 @@ const SHADOW_BLUR = 8
 # ANIMATION SYSTEM
 # ============================================================================
 
-const ANIM_INSTANT = 0.1          # Button press
-const ANIM_FAST = 0.15            # Arrow exit
-const ANIM_NORMAL = 0.2           # Arrow bounce
-const ANIM_SLOW = 0.3             # Tile swap, transitions
+const ANIM_INSTANT = 0.1 # Button press
+const ANIM_FAST = 0.15 # Arrow exit
+const ANIM_NORMAL = 0.2 # Arrow bounce
+const ANIM_SLOW = 0.3 # Tile swap, transitions
 
 const SCALE_PRESSED = 0.95
 const SCALE_HOVER = 1.05
@@ -155,7 +155,7 @@ const TRANS_TILE = Tween.TRANS_CUBIC
 # ENUMS
 # ============================================================================
 
-enum LevelState { LOCKED, UNLOCKED, BEATEN }
+enum LevelState {LOCKED, UNLOCKED, BEATEN}
 
 # ============================================================================
 # HELPER FUNCTIONS - Typography
@@ -261,7 +261,7 @@ static func set_border_width(style: StyleBoxFlat, width: int) -> void:
 ## Create border-only style (transparent background)
 static func create_border_style(border_color: Color, border_width: int = BORDER_NORMAL, corner_radius: int = CORNER_RADIUS_SMALL) -> StyleBoxFlat:
 	var style = StyleBoxFlat.new()
-	style.bg_color = Color(0, 0, 0, 0)  # Transparent
+	style.bg_color = Color(0, 0, 0, 0) # Transparent
 	style.border_color = border_color
 	set_border_width(style, border_width)
 	set_corner_radius(style, corner_radius)
@@ -429,7 +429,7 @@ static func apply_toggle_button_theme(button: Button, is_on: bool, text_on: Stri
 ## Create tile border style
 static func create_tile_border_style(is_draggable: bool) -> StyleBoxFlat:
 	if is_draggable:
-		return create_border_style(COLOR_BORDER_DEFAULT, BORDER_NORMAL, 0)
+		return create_border_style(Color.WHITE, BORDER_NORMAL, 0)
 	else:
 		# No border for correct tiles
 		var style = StyleBoxFlat.new()

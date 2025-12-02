@@ -3,98 +3,36 @@ extends Node
 ## Level Manager AutoLoad Singleton
 ## Loads and manages level data from levels.json, handles image caching
 
-var levels: Array = []  # Array of LevelData objects
 var level_textures: Dictionary = {}  # Cache for loaded level images
 var thumbnail_textures: Dictionary = {}  # Cache for loaded thumbnails
-var total_levels: int = 100  # Total number of levels (can be higher than levels.size())
 
-var _levels_loaded: bool = false
-
-## Load all levels from levels.json
+## Load all levels (now bypassing levels.json)
 func load_levels() -> bool:
-	if _levels_loaded:
-		print("Levels already loaded")
-		return true
-
-	var file = FileAccess.open(GameConstants.LEVELS_DATA_PATH, FileAccess.READ)
-	if file == null:
-		push_error("Failed to open levels.json: " + str(FileAccess.get_open_error()))
-		return false
-
-	var json_string = file.get_as_text()
-	file.close()
-
-	var json = JSON.new()
-	var parse_result = json.parse(json_string)
-
-	if parse_result != OK:
-		push_error("Failed to parse levels.json: " + json.get_error_message())
-		return false
-
-	var data = json.data
-	if typeof(data) != TYPE_DICTIONARY:
-		push_error("Invalid levels.json format: root is not a dictionary")
-		return false
-
-	if not data.has("levels"):
-		push_error("Invalid levels.json format: missing 'levels' array")
-		return false
-
-	var levels_array = data["levels"]
-	if typeof(levels_array) != TYPE_ARRAY:
-		push_error("Invalid levels.json format: 'levels' is not an array")
-		return false
-
-	# Read total_levels from JSON (defaults to 100 if not specified)
-	total_levels = data.get("total_levels", 100)
-
-	# Parse each level
-	levels.clear()
-	for level_dict in levels_array:
-		var level_data = _parse_level_data(level_dict)
-		if level_data != null:
-			levels.append(level_data)
-
-	_levels_loaded = true
-	print("Loaded %d levels from JSON, total_levels set to %d" % [levels.size(), total_levels])
+	print("LevelManager initialized (bypassing levels.json, using puzzle_01-25.png)")
 	return true
 
-## Parse a level dictionary into a LevelData-like dictionary
-func _parse_level_data(level_dict: Dictionary) -> Dictionary:
-	if not level_dict.has("level_id"):
-		push_error("Level missing 'level_id' field")
+## Generate level data dynamically based on level ID
+func _generate_dynamic_level(level_id: int) -> Dictionary:
+	# Validate level_id range
+	if level_id < 1 or level_id > GameConstants.TOTAL_LEVELS:
+		push_error("Invalid level_id: %d (valid range: 1-%d)" % [level_id, GameConstants.TOTAL_LEVELS])
 		return {}
 
-	var level_data = {
-		"level_id": level_dict.get("level_id", 0),
-		"name": level_dict.get("name", "Unnamed Level"),
-		"image_path": level_dict.get("image_path", ""),
-		"thumbnail_path": level_dict.get("thumbnail_path", ""),
-		"puzzle_type": level_dict.get("puzzle_type", "rectangle_jigsaw"),
-		"difficulty_configs": level_dict.get("difficulty_configs", {}),
-		"hint_limit": level_dict.get("hint_limit", GameConstants.DEFAULT_HINT_LIMIT),
-		"tags": level_dict.get("tags", [])
-	}
-
-	return level_data
-
-## Generate a dynamic level (cycles through 3 images, 3-way puzzle type rotation)
-func _generate_dynamic_level(level_id: int) -> Dictionary:
-	# Cycle through 3 images
-	var image_index = ((level_id - 1) % 3) + 1  # 1, 2, or 3
-
-	# Determine puzzle type: 3-way rotation
-	# Level % 3 == 1 -> Spiral Twist
-	# Level % 3 == 2 -> Rectangle Jigsaw
-	# Level % 3 == 0 -> Arrow Puzzle
+	# Determine puzzle type: 4-way rotation
+	# Level % 4 == 1 -> Spiral Twist
+	# Level % 4 == 2 -> Tile Puzzle
+	# Level % 4 == 3 -> Arrow Puzzle
+	# Level % 4 == 0 -> Row Tile Puzzle
 	var puzzle_type: String
-	var mod_result = level_id % 3
+	var mod_result = level_id % 4
 	if mod_result == 1:
 		puzzle_type = "spiral_twist"
 	elif mod_result == 2:
-		puzzle_type = "rectangle_jigsaw"
-	else:  # mod_result == 0
+		puzzle_type = "tile_puzzle"
+	elif mod_result == 3:
 		puzzle_type = "arrow_puzzle"
+	else:  # mod_result == 0
+		puzzle_type = "row_tile_puzzle"
 
 	# Generate difficulty configs based on puzzle type
 	var difficulty_configs = {}
@@ -118,8 +56,18 @@ func _generate_dynamic_level(level_id: int) -> Dictionary:
 				"grid_size": GameConstants.ARROW_GRID_HARD
 			}
 		}
+	elif puzzle_type == "row_tile_puzzle":
+		# Row tile puzzle configs (only Easy and Hard)
+		difficulty_configs = {
+			"easy": {
+				"row_count": GameConstants.ROW_TILE_ROWS_EASY
+			},
+			"hard": {
+				"row_count": GameConstants.ROW_TILE_ROWS_HARD
+			}
+		}
 	else:
-		# Rectangle puzzle configs (only Easy and Hard)
+		# Tile puzzle configs (only Easy and Hard)
 		difficulty_configs = {
 			"easy": {
 				"rows": 2,
@@ -133,31 +81,26 @@ func _generate_dynamic_level(level_id: int) -> Dictionary:
 			}
 		}
 
+	# Use puzzle_XX.png naming convention (01-25)
+	var image_filename = "puzzle_%02d.png" % level_id
+	var thumb_filename = "puzzle_%02d_thumb.png" % level_id
+
 	# Build level data
 	var level_data = {
 		"level_id": level_id,
 		"name": "Level %d" % level_id,
-		"image_path": "res://assets/levels/level_0%d.png" % image_index,
-		"thumbnail_path": "res://assets/levels/thumbnails/level_0%d_thumb.png" % image_index,
+		"image_path": "res://assets/levels/%s" % image_filename,
+		"thumbnail_path": "res://assets/levels/thumbnails/%s" % thumb_filename,
 		"puzzle_type": puzzle_type,
 		"difficulty_configs": difficulty_configs,
 		"hint_limit": 0,  # Hints removed
 		"tags": []
 	}
 
-	print("Generated dynamic level %d: Type=%s, Image=%d" % [level_id, puzzle_type, image_index])
-
 	return level_data
 
-## Get level data by level ID (now generates levels dynamically)
+## Get level data by level ID
 func get_level(level_id: int) -> Dictionary:
-	# Check if level exists in loaded levels (from JSON)
-	for level in levels:
-		if level["level_id"] == level_id:
-			return level
-
-	# Generate level dynamically if not in JSON
-	# This allows infinite levels by cycling through 3 images
 	return _generate_dynamic_level(level_id)
 
 ## Get level texture (loads and caches if not already loaded)
@@ -222,7 +165,7 @@ func get_tile_count(level_id: int, difficulty: String) -> int:
 
 ## Get total number of levels
 func get_total_levels() -> int:
-	return total_levels
+	return GameConstants.TOTAL_LEVELS
 
 ## Unload a level texture from cache to free memory
 func unload_level_texture(level_id: int) -> void:

@@ -13,12 +13,16 @@ var active_ring_count: int = 0  # Number of unmerged rings
 var rotation_count: int = 0  # Number of rotations made
 var hints_used: int = 0  # Hints used this session
 var is_solved: bool = false
-var puzzle_radius: float = 450.0  # Maximum radius of puzzle in pixels
+var puzzle_radius: float  # Maximum radius of puzzle in pixels (calculated dynamically)
 
 ## Check if puzzle is solved (all rings merged)
 func is_puzzle_solved() -> bool:
-	# Puzzle is solved when all inner rings have merged into the locked outer ring
-	return active_ring_count == 0
+	# Win when all puzzle rings have merged into the corner ring
+	# active_ring_count tracks only puzzle rings (excludes corner ring)
+	# When active_ring_count == 0, all puzzle rings are merged with the locked corner ring
+	if active_ring_count == 0:
+		return true
+	return false
 
 ## Update physics for all rings
 func update_physics(delta: float) -> void:
