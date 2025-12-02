@@ -32,17 +32,10 @@ func generate_puzzle(level_id: int, difficulty: int) -> Resource:
 
 ## Generate a tile puzzle (original implementation)
 func _generate_tile_puzzle(level_id: int, difficulty: int, level_data: Dictionary) -> PuzzleState:
-	# Get difficulty configuration
-	var difficulty_str = GameConstants.difficulty_to_string(difficulty)
-	var diff_config = level_data["difficulty_configs"][difficulty_str]
-
-	if diff_config == null:
-		push_error("No difficulty config found for %s" % difficulty_str)
-		return null
-
-	var rows = diff_config["rows"]
-	var columns = diff_config["columns"]
-	var tile_count = diff_config["tile_count"]
+	# Get grid size from constants
+	var grid_size = _get_default_tile_grid_size(difficulty)
+	var columns = grid_size.x
+	var rows = grid_size.y
 
 	# Load level image
 	var texture = LevelManager.get_level_texture(level_id)
@@ -268,6 +261,16 @@ func _get_default_arrow_grid_size(difficulty: int) -> Vector2i:
 			return GameConstants.ARROW_GRID_HARD
 		_:
 			return GameConstants.ARROW_GRID_EASY
+
+## Get default tile grid size based on difficulty
+func _get_default_tile_grid_size(difficulty: int) -> Vector2i:
+	match difficulty:
+		GameConstants.Difficulty.EASY:
+			return GameConstants.TILE_GRID_EASY
+		GameConstants.Difficulty.HARD:
+			return GameConstants.TILE_GRID_HARD
+		_:
+			return GameConstants.TILE_GRID_EASY
 
 ## Create arrows for a grid with specified direction set
 func _create_arrows_for_grid(grid_size: Vector2i, direction_set: Array[int]) -> Array[Arrow]:

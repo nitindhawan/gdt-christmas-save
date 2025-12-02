@@ -17,6 +17,10 @@ const TILE_SWAP_DURATION = 0.3 # seconds
 const TILE_SELECTION_SCALE = 1.05
 const HINT_ANIMATION_DURATION = 0.5
 
+# Tile puzzle grid sizes per difficulty (columns, rows)
+const TILE_GRID_EASY = Vector2i(3, 5) # 3 columns × 5 rows = 15 tiles
+const TILE_GRID_HARD = Vector2i(5, 8) # 5 columns × 8 rows = 40 tiles
+
 # Puzzle mechanics - Spiral Twist
 const SPIRAL_RING_BORDER_WIDTH = 4 # pixels
 const SPIRAL_MERGE_ANGLE_THRESHOLD = 2.0 # degrees
@@ -37,7 +41,7 @@ const ARROW_GRID_SPACING = 10 # Pixels between arrows
 
 # Arrow grid sizes per difficulty (columns, rows)
 const ARROW_GRID_EASY = Vector2i(3, 4) # 12 arrows
-const ARROW_GRID_HARD = Vector2i(5, 6) # 30 arrows
+const ARROW_GRID_HARD = Vector2i(5, 8) # 40 arrows
 
 # Arrow asset paths
 const ARROW_TEXTURE_PATH = "res://assets/ui/up_arrow.png"
@@ -76,7 +80,7 @@ const TOP_HUD_HEIGHT = 80 # Height of top HUD in pixels
 const BOTTOM_HUD_HEIGHT = 180 # Height of bottom HUD in pixels
 
 # Puzzle area margins (per puzzle type)
-const TILE_PUZZLE_MARGIN = 30 # Margin for tile puzzle from each side (top/left/right/bottom)
+const TILE_PUZZLE_MARGIN = 0 # Margin for tile puzzle from each side (top/left/right/bottom)
 const ARROW_PUZZLE_MARGIN = 30 # Margin for arrow puzzle from each side (top/left/right/bottom)
 const ROW_TILE_PUZZLE_MARGIN = 0 # Row tile puzzle uses entire available area
 
