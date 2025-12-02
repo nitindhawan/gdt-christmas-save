@@ -40,6 +40,7 @@ var is_spiral_puzzle: bool = false
 var is_arrow_puzzle: bool = false
 var is_row_tile_puzzle: bool = false
 var puzzle_center: Vector2 = Vector2(540, 960) # Center of 1080x1920 screen
+var overlay_mask: ColorRect = null # Tile puzzle overlay mask reference
 
 # UI references
 @onready var level_label = $TopHUD/MarginContainer/HBoxContainer/LevelLabel
@@ -250,16 +251,18 @@ func _setup_puzzle_grid() -> void:
 	#puzzle_area.add_child(right_border)
 	#print("Right border: pos=%v, size=%v, z_index=%d" % [right_border.position, right_border.size, right_border.z_index])
 
-	# Layer 3: Overlay mask (use existing node from scene)
-	var overlay_mask = $MarginContainer/VBoxContainer/PuzzleArea/TilePuzzleOverlayMask
+	# Layer 3: Overlay mask (create dynamically to avoid CenterContainer layout issues)
+	overlay_mask = ColorRect.new()
+	overlay_mask.name = "TilePuzzleOverlayMask"
 	overlay_mask.visible = true
 	overlay_mask.color = Color.RED # TESTING: Red color to see if visible
 	overlay_mask.position = Vector2(margin, margin)
 	overlay_mask.size = Vector2(active_puzzle_width, active_puzzle_height)
 	overlay_mask.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	overlay_mask.z_index = 1
-	print("Overlay mask configured from scene")
-	print("  overlay_mask path: %s" % overlay_mask.get_path())
+	overlay_mask.layout_mode = 0 # CRITICAL: Use "Position & Size" mode to prevent CenterContainer override
+	puzzle_area.add_child(overlay_mask)
+	print("Overlay mask created dynamically")
 	print("  pos=(%f, %f), size=(%f, %f), z_index=%d, color=(%f, %f, %f, %f), visible=%s" % [
 		overlay_mask.position.x, overlay_mask.position.y,
 		overlay_mask.size.x, overlay_mask.size.y,
@@ -383,6 +386,14 @@ func _spawn_row_tiles() -> void:
 		child.queue_free()
 	tile_nodes.clear()
 
+	# Calculate zoom factor for texture scaling
+	var viewport_size = get_viewport_rect().size
+	var vbox = $MarginContainer/VBoxContainer
+	var vbox_separation = vbox.get_theme_constant("separation")
+	var used_height = GameConstants.TOP_HUD_HEIGHT + GameConstants.BOTTOM_HUD_HEIGHT + (vbox_separation * 2)
+	var available_height = viewport_size.y - used_height
+	var zoom_factor = available_height / GameConstants.PUZZLE_TEXTURE_HEIGHT
+
 	# Calculate row tile size
 	var row_tile_size = _calculate_row_tile_size()
 
@@ -406,13 +417,13 @@ func _spawn_row_tiles() -> void:
 		# Add to tree first
 		puzzle_grid.add_child(tile_node)
 
-		# Setup the row tile with row data
-		tile_node.setup_row_tile(row_data, row_data.row_id, source_texture)
+		# Setup the row tile with row data and zoom factor
+		tile_node.setup_row_tile(row_data, row_data.row_id, source_texture, zoom_factor)
 		tile_node.drag_ended.connect(_on_row_tile_drag_ended)
 
 		tile_nodes.append(tile_node)
 
-	print("Spawned %d row tiles" % tile_nodes.size())
+	print("Spawned %d row tiles with zoom_factor=%.3f" % [tile_nodes.size(), zoom_factor])
 
 ## Calculate row tile size for row puzzle
 func _calculate_row_tile_size() -> Vector2:
@@ -482,6 +493,9 @@ func _check_row_puzzle_solved() -> void:
 	if puzzle_state.is_puzzle_solved():
 		print("Row tile puzzle solved!")
 		puzzle_state.is_solved = true
+		# Hide overlay mask when puzzle solved
+		if overlay_mask != null:
+			overlay_mask.visible = false
 		_save_progress()
 		await _handle_puzzle_completion()
 
@@ -518,6 +532,9 @@ func _check_puzzle_solved() -> void:
 	if PuzzleManager.is_puzzle_solved(puzzle_state):
 		print("Tile puzzle solved!")
 		puzzle_state.is_solved = true
+		# Hide overlay mask when puzzle solved
+		if overlay_mask != null:
+			overlay_mask.visible = false
 		_save_progress()
 		await _handle_puzzle_completion()
 

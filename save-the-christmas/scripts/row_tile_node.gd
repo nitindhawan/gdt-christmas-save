@@ -29,7 +29,7 @@ var hover_target: Control = null
 var tween: Tween
 
 ## Setup the row tile with data and texture
-func setup_row_tile(row_data, index: int, source_texture: Texture2D) -> void:
+func setup_row_tile(row_data, index: int, source_texture: Texture2D, zoom_factor: float = 1.0) -> void:
 	tile_data = row_data
 	tile_index = index
 
@@ -39,6 +39,11 @@ func setup_row_tile(row_data, index: int, source_texture: Texture2D) -> void:
 	atlas_texture.region = row_data.texture_region
 
 	tile_texture.texture = atlas_texture
+
+	# Note: TextureRect stretch modes are set in scene (expand_mode=1, stretch_mode=6)
+	# expand_mode=1 (EXPAND_IGNORE_SIZE) ignores texture size, uses container size
+	# stretch_mode=6 (STRETCH_KEEP_ASPECT_COVERED) scales to cover container maintaining aspect ratio
+	# clip_contents=true clips overflow on left/right edges
 
 	# Row tiles are always draggable until in correct position
 	is_draggable = !row_data.is_correct()
