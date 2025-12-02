@@ -7,7 +7,7 @@ extends Resource
 @export var name: String = ""
 @export var image_path: String = ""
 @export var thumbnail_path: String = ""
-@export var puzzle_type: String = "rectangle_jigsaw"
+@export var puzzle_type: String = "tile_puzzle"
 @export var difficulty_configs: Dictionary = {}  # {easy: {}, normal: {}, hard: {}}
 @export var hint_limit: int = 3
 @export var tags: Array[String] = []

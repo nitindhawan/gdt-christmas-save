@@ -109,10 +109,6 @@ func mark_arrow_exited(arrow_id: int) -> void:
 		arrow.has_exited = true
 		active_arrow_count -= 1
 
-		# Check if puzzle is now solved
-		if is_puzzle_solved():
-			is_solved = true
-
 
 func increment_tap_count() -> void:
 	"""Increment the tap counter"""

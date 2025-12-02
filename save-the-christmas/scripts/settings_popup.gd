@@ -17,6 +17,7 @@ signal settings_closed
 @onready var vibration_toggle = $CenterContainer/ModalPanel/MarginContainer/VBoxContainer/ToggleSection/VibrationToggle/ToggleButton
 @onready var feedback_button = $CenterContainer/ModalPanel/MarginContainer/VBoxContainer/ButtonSection/FeedbackButton
 @onready var remove_ads_button = $CenterContainer/ModalPanel/MarginContainer/VBoxContainer/ButtonSection/RemoveAdsButton
+@onready var reset_progress_button = $CenterContainer/ModalPanel/MarginContainer/VBoxContainer/ButtonSection/ResetProgressButton
 @onready var privacy_button = $CenterContainer/ModalPanel/MarginContainer/VBoxContainer/FooterLinks/PrivacyButton
 @onready var separator_label = $CenterContainer/ModalPanel/MarginContainer/VBoxContainer/FooterLinks/Separator
 @onready var terms_button = $CenterContainer/ModalPanel/MarginContainer/VBoxContainer/FooterLinks/TermsButton
@@ -38,6 +39,7 @@ func _apply_theme() -> void:
 	ThemeManager.apply_large(vibration_toggle)
 	ThemeManager.apply_large(feedback_button)
 	ThemeManager.apply_large(remove_ads_button)
+	ThemeManager.apply_large(reset_progress_button)
 	ThemeManager.apply_large(privacy_button)
 	ThemeManager.apply_small(separator_label, Color(0.5, 0.5, 0.5, 1.0))
 	ThemeManager.apply_large(terms_button)
@@ -160,3 +162,22 @@ func _on_terms_button_pressed() -> void:
 
 	if AudioManager:
 		AudioManager.play_sfx("button_click")
+
+## Handle Reset Progress button - reset all game progress to level 1
+func _on_reset_progress_button_pressed() -> void:
+	print("Reset Progress pressed")
+
+	if AudioManager:
+		AudioManager.play_sfx("button_click")
+
+	# Reset all progress via ProgressManager
+	if ProgressManager:
+		ProgressManager.reset_progress()
+		print("Game progress reset to level 1")
+
+		# Close the settings popup
+		_close_popup()
+
+		# Navigate to gameplay screen for level 1 (will show difficulty popup)
+		if GameManager:
+			GameManager.navigate_to_gameplay_new_flow(1)

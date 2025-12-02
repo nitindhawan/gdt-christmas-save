@@ -10,6 +10,7 @@ signal arrow_tapped(arrow_id: int)
 var arrow_data: Arrow
 var original_position: Vector2
 
+@onready var evil_cloud: TextureRect = $EvilCloud
 @onready var shadow: Panel = $Shadow
 @onready var background: Panel = $Background
 @onready var arrow_texture: TextureRect = $ArrowTexture
@@ -19,6 +20,9 @@ func setup(arrow: Arrow) -> void:
 	"""Initialize the arrow node with arrow data"""
 	arrow_data = arrow
 	original_position = global_position
+
+	# Load and set evil cloud texture (random face from 4x4 grid)
+	_setup_evil_cloud()
 
 	# Load and set arrow texture
 	var texture = load(GameConstants.ARROW_TEXTURE_PATH)
@@ -38,16 +42,62 @@ func setup(arrow: Arrow) -> void:
 	name = "Arrow_" + str(arrow.arrow_id)
 
 
+func _setup_evil_cloud() -> void:
+	"""Setup evil cloud with random face from sprite sheet"""
+	var cloud_texture = load(GameConstants.EVIL_CLOUD_TEXTURE_PATH)
+	if not cloud_texture:
+		push_error("Failed to load evil cloud texture")
+		return
+
+	# Create AtlasTexture to select random face from 4x4 grid
+	var atlas = AtlasTexture.new()
+	atlas.atlas = cloud_texture
+
+	# Calculate cell size (assuming square faces)
+	var texture_size = cloud_texture.get_size()
+	var cell_width = texture_size.x / GameConstants.EVIL_CLOUD_GRID_SIZE.x
+	var cell_height = texture_size.y / GameConstants.EVIL_CLOUD_GRID_SIZE.y
+
+	# Pick random cell from 16 faces
+	var random_index = randi() % (GameConstants.EVIL_CLOUD_GRID_SIZE.x * GameConstants.EVIL_CLOUD_GRID_SIZE.y)
+	var grid_x = random_index % GameConstants.EVIL_CLOUD_GRID_SIZE.x
+	var grid_y = random_index / GameConstants.EVIL_CLOUD_GRID_SIZE.x
+
+	# Set atlas region
+	atlas.region = Rect2(
+		grid_x * cell_width,
+		grid_y * cell_height,
+		cell_width,
+		cell_height
+	)
+
+	# Apply texture
+	evil_cloud.texture = atlas
+
+
 func animate_exit() -> void:
-	"""Animate arrow exiting the puzzle (immediate fade out)"""
+	"""Animate arrow and cloud moving off-screen in arrow's direction"""
 	if arrow_data:
 		arrow_data.is_animating = true
 
-	# Fade out quickly
+	# Calculate exit movement direction (arrow moves in its pointing direction)
+	var exit_direction = arrow_data.get_direction_vector()
+
+	# Move off-screen - distance should be large enough to fully exit viewport
+	var exit_distance = 2000.0  # pixels
+	var exit_offset = Vector2(exit_direction.x * exit_distance, exit_direction.y * exit_distance)
+	var target_position = global_position + exit_offset
+
+	# Animate movement off-screen with fade
 	var tween = create_tween()
 	tween.set_parallel(true)
-	tween.tween_property(self, "modulate:a", 0.0, GameConstants.ARROW_EXIT_DURATION)
-	tween.tween_property(self, "scale", Vector2(0.8, 0.8), GameConstants.ARROW_EXIT_DURATION)
+	tween.set_trans(Tween.TRANS_QUAD)
+	tween.set_ease(Tween.EASE_IN)
+
+	# Move arrow and cloud together (entire Control node moves)
+	tween.tween_property(self, "global_position", target_position, 0.5)
+	# Fade out as it moves
+	tween.tween_property(self, "modulate:a", 0.0, 0.4)
 
 	await tween.finished
 
