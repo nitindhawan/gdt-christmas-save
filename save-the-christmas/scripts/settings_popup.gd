@@ -13,8 +13,6 @@ signal settings_closed
 @onready var sound_toggle = $CenterContainer/ModalPanel/MarginContainer/VBoxContainer/ToggleSection/SoundToggle/ToggleButton
 @onready var music_label = $CenterContainer/ModalPanel/MarginContainer/VBoxContainer/ToggleSection/MusicToggle/Label
 @onready var music_toggle = $CenterContainer/ModalPanel/MarginContainer/VBoxContainer/ToggleSection/MusicToggle/ToggleButton
-@onready var vibration_label = $CenterContainer/ModalPanel/MarginContainer/VBoxContainer/ToggleSection/VibrationToggle/Label
-@onready var vibration_toggle = $CenterContainer/ModalPanel/MarginContainer/VBoxContainer/ToggleSection/VibrationToggle/ToggleButton
 @onready var feedback_button = $CenterContainer/ModalPanel/MarginContainer/VBoxContainer/ButtonSection/FeedbackButton
 @onready var remove_ads_button = $CenterContainer/ModalPanel/MarginContainer/VBoxContainer/ButtonSection/RemoveAdsButton
 @onready var reset_progress_button = $CenterContainer/ModalPanel/MarginContainer/VBoxContainer/ButtonSection/ResetProgressButton
@@ -35,8 +33,6 @@ func _apply_theme() -> void:
 	ThemeManager.apply_large(sound_toggle)
 	ThemeManager.apply_large(music_label, ThemeManager.COLOR_TEXT_SECONDARY)
 	ThemeManager.apply_large(music_toggle)
-	ThemeManager.apply_large(vibration_label, ThemeManager.COLOR_TEXT_SECONDARY)
-	ThemeManager.apply_large(vibration_toggle)
 	ThemeManager.apply_large(feedback_button)
 	ThemeManager.apply_large(remove_ads_button)
 	ThemeManager.apply_large(reset_progress_button)
@@ -55,7 +51,6 @@ func _update_all_toggle_visuals() -> void:
 	if ProgressManager:
 		_update_toggle_visual(sound_toggle, ProgressManager.sound_enabled)
 		_update_toggle_visual(music_toggle, ProgressManager.music_enabled)
-		_update_toggle_visual(vibration_toggle, ProgressManager.vibrations_enabled)
 
 ## Update a single toggle button's appearance
 func _update_toggle_visual(button: Button, is_on: bool) -> void:
@@ -92,17 +87,6 @@ func _on_music_toggle_pressed() -> void:
 
 		# Update visual
 		_update_toggle_visual(music_toggle, new_state)
-		_save_settings()
-
-## Handle Vibration toggle button pressed
-func _on_vibration_toggle_pressed() -> void:
-	if ProgressManager:
-		# Toggle the state
-		var new_state = not ProgressManager.vibrations_enabled
-		ProgressManager.vibrations_enabled = new_state
-
-		# Update visual
-		_update_toggle_visual(vibration_toggle, new_state)
 		_save_settings()
 
 ## Handle Close button pressed

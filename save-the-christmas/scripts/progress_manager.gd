@@ -10,7 +10,7 @@ var completions: Dictionary = {}  # {level_id: {easy: bool, hard: bool}}
 # Settings
 var sound_enabled: bool = true
 var music_enabled: bool = true
-var vibrations_enabled: bool = true
+var vibrations_enabled: bool = false  # Always disabled for this game
 var music_volume: float = GameConstants.DEFAULT_MUSIC_VOLUME
 var sound_volume: float = GameConstants.DEFAULT_SOUND_VOLUME
 
@@ -53,7 +53,7 @@ func load_save_data() -> void:
 	# Load settings
 	sound_enabled = _save_file.get_value("settings", "sound_enabled", true)
 	music_enabled = _save_file.get_value("settings", "music_enabled", true)
-	vibrations_enabled = _save_file.get_value("settings", "vibrations_enabled", true)
+	vibrations_enabled = false  # Always disabled for this game
 	music_volume = _save_file.get_value("settings", "music_volume", GameConstants.DEFAULT_MUSIC_VOLUME)
 	sound_volume = _save_file.get_value("settings", "sound_volume", GameConstants.DEFAULT_SOUND_VOLUME)
 
@@ -74,7 +74,7 @@ func _create_default_save() -> void:
 
 	sound_enabled = true
 	music_enabled = true
-	vibrations_enabled = true
+	vibrations_enabled = false  # Always disabled for this game
 	music_volume = GameConstants.DEFAULT_MUSIC_VOLUME
 	sound_volume = GameConstants.DEFAULT_SOUND_VOLUME
 
@@ -102,7 +102,7 @@ func save_progress() -> void:
 	# Settings
 	_save_file.set_value("settings", "sound_enabled", sound_enabled)
 	_save_file.set_value("settings", "music_enabled", music_enabled)
-	_save_file.set_value("settings", "vibrations_enabled", vibrations_enabled)
+	# Note: vibrations_enabled is always false and not saved
 	_save_file.set_value("settings", "music_volume", music_volume)
 	_save_file.set_value("settings", "sound_volume", sound_volume)
 
