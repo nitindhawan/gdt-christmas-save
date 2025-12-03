@@ -55,6 +55,8 @@ const ROW_TILE_ROWS_HARD = 16 # 16 rows
 # Audio settings
 const DEFAULT_MUSIC_VOLUME = 0.7
 const DEFAULT_SOUND_VOLUME = 0.8
+const BGM_VOLUME = 0.15 # Background music volume level (0.0 to 1.0)
+const BGM_FADE_IN_DURATION = 10.0 # BGM fade-in duration in seconds
 
 # Visual effects flags
 const ENABLE_GAUSSIAN_BLUR = false # Set to true to enable blur shader on popups

@@ -188,7 +188,7 @@ func _end_drag() -> void:
 
 	# Play sound
 	if AudioManager:
-		AudioManager.play_sfx("tile_drop")
+		AudioManager.play_match_sfx()
 
 	# Emit end signal with target
 	drag_ended.emit(self, hover_target)

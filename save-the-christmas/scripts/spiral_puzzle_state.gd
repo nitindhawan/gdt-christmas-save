@@ -72,7 +72,7 @@ func check_and_merge_rings() -> bool:
 
 			# Play merge sound (but not on final merge to avoid interrupting level_complete SFX)
 			if AudioManager and active_ring_count > 0:
-				AudioManager.play_sfx("ring_merge")
+				AudioManager.play_match_sfx()
 
 			# Break and let next frame check again (indices have shifted)
 			break

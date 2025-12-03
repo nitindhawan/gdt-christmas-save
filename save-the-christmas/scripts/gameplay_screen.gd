@@ -105,6 +105,10 @@ func _on_transition_complete() -> void:
 	_initialize_gameplay()
 	current_state = GameplayState.ACTIVE_PUZZLE
 
+	# Start background music with fade-in
+	if AudioManager:
+		AudioManager.play_music(true, true)
+
 ## Initialize gameplay with current level and difficulty
 func _initialize_gameplay() -> void:
 	print("Initializing gameplay: Level %d, Difficulty %d" % [current_level_id, current_difficulty])
@@ -354,7 +358,7 @@ func _on_row_tile_drag_ended(dragged_tile_node, target_tile_node) -> void:
 
 	# Play swap sound
 	if AudioManager:
-		AudioManager.play_sfx("tile_swap")
+		AudioManager.play_match_sfx()
 
 	# Refresh the grid
 	_refresh_row_tile_positions()
@@ -395,7 +399,7 @@ func _on_tile_drag_ended(dragged_tile_node, target_tile_node) -> void:
 
 	# Play swap sound
 	if AudioManager:
-		AudioManager.play_sfx("tile_swap")
+		AudioManager.play_match_sfx()
 
 	# Refresh the entire grid to show new positions and update draggable status
 	_refresh_tile_positions()
@@ -901,9 +905,6 @@ func _calculate_arrow_size(grid_size: Vector2i) -> Vector2:
 
 ## Handle arrow tap
 func _on_arrow_tapped(arrow_id: int) -> void:
-	if AudioManager:
-		AudioManager.play_sfx("button_click")
-
 	var arrow_state = puzzle_state as ArrowPuzzleState
 
 	# Increment tap count
@@ -915,6 +916,10 @@ func _on_arrow_tapped(arrow_id: int) -> void:
 	var arrow_node = arrow_nodes[arrow_id]
 
 	if result.success:
+		# Play success sound
+		if AudioManager:
+			AudioManager.play_sfx("arrow_success")
+
 		# Arrow can exit - animate and remove
 		arrow_state.mark_arrow_exited(arrow_id)
 		arrow_node.animate_exit()
@@ -924,10 +929,12 @@ func _on_arrow_tapped(arrow_id: int) -> void:
 		if arrow_state.is_puzzle_solved():
 			_check_arrow_puzzle_solved()
 	else:
+		# Play fail sound
+		if AudioManager:
+			AudioManager.play_sfx("arrow_fail")
+
 		# Arrow is blocked - bounce back
 		arrow_node.animate_bounce()
-		if AudioManager:
-			AudioManager.play_sfx("error")
 
 ## Check if arrow puzzle is solved
 func _check_arrow_puzzle_solved() -> void:
